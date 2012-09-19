@@ -7,6 +7,8 @@ License: BSD
 Copyright 2012 (c) Patrick Maupin
 """
 
+__version__ = '0.1'
+
 from astor.misc import iter_node, dump, all_symbols, get_anyop
 from astor.misc import get_boolop, get_binop, get_cmpop, get_unaryop
 from astor.misc import ExplicitNodeVisitor
