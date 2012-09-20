@@ -158,7 +158,7 @@ class CodeToAst(object):
 
     def __call__(self, codeobj):
         cache = self.cache
-        fname = getattr(codeobj, '__file__')
+        fname = getattr(codeobj, '__file__', None)
         if fname is None:
             func_code = codeobj.__code__
             fname = func_code.co_filename

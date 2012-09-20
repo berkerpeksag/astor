@@ -10,7 +10,7 @@ def readdoc():
 
 setup(
     name='astor',
-    version='0.1',
+    version='0.2',
     description='Read/rewrite/write Python ASTs',
     long_description=readdoc(),
     author='Patrick Maupin',
