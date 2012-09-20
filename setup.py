@@ -16,7 +16,7 @@ setup(
     author='Patrick Maupin',
     author_email='pmaupin@gmail.com',
     platforms="Independent",
-    #url='',
+    url='https://github.com/pmaupin/astor.git',
     packages=['astor'],
     license="BSD",
     classifiers=[
