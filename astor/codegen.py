@@ -99,19 +99,32 @@ class SourceGenerator(ExplicitNodeVisitor):
             else:
                 want_comma.append(True)
 
-        padding = [None] * (len(node.args) - len(node.defaults))
-        for arg, default in zip(node.args, padding + node.defaults):
-            write_comma()
-            self.visit(arg)
-            if default is not None:
-                self.write('=')
-                self.visit(default)
+        def loop_args(args, defaults):
+            padding = [None] * (len(args) - len(defaults))
+            for arg, default in zip(args, padding + defaults):
+                write_comma()
+                self.visit(arg)
+                if default is not None:
+                    self.write('=')
+                    self.visit(default)
+
+
+        loop_args(node.args, node.defaults)
         if node.vararg is not None:
             write_comma()
             self.write('*' + node.vararg)
         if node.kwarg is not None:
             write_comma()
             self.write('**' + node.kwarg)
+
+        kwonlyargs=getattr(node, 'kwonlyargs', None)
+        if not kwonlyargs:
+            return
+        if node.vararg is None:
+            write_comma()
+            self.write('*')
+        loop_args(kwonlyargs, node.kw_defaults)
+
 
     def decorators(self, node):
         for decorator in node.decorator_list:
@@ -160,7 +173,13 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.newline(node)
         self.write('def %s(' % node.name)
         self.signature(node.args)
-        self.write('):')
+        returns = getattr(node, 'returns', None)
+        if returns is None:
+            self.write('):')
+        else:
+            self.write(') ->')
+            self.visit(returns)
+            self.write(':')
         self.body(node.body)
 
     def visit_ClassDef(self, node):
@@ -536,6 +555,12 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     # Helper Nodes
 
+    def visit_arg(self, node):
+        self.write(node.arg)
+        if node.annotation is not None:
+            self.write(': ')
+            self.visit(node.annotation)
+
     def visit_alias(self, node):
         self.write(node.name)
         if node.asname is not None:
@@ -557,8 +582,12 @@ class SourceGenerator(ExplicitNodeVisitor):
         if node.type is not None:
             self.write(' ')
             self.visit(node.type)
-            if node.name is not None:
+            name = node.name
+            if name is not None:
                 self.write(' as ')
-                self.visit(node.name)
+                if isinstance(name, str):
+                    self.write(name)
+                else:
+                    self.visit(name)
         self.write(':')
         self.body(node.body)

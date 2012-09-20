@@ -38,8 +38,7 @@ def findpy(root):
 def testone(fname, f1=None, f2=None):
     try:
         ast1 = astor.parsefile(fname)
-    except SyntaxError:
-        raise
+    except (SyntaxError, UnicodeDecodeError):
         print("IGNORED %s" % fname)
         return
     dump1 = astor.dump(ast1)
@@ -51,7 +50,7 @@ def testone(fname, f1=None, f2=None):
     if not ok and f1 is not None and f2 is not None:
         f1.write('\n\n***************************************\n%s\n***************************************\n\n\n' % fname)
         f2.write('\n\n***************************************\n%s\n***************************************\n\n\n' % fname)
-        f2.write(dump1)
+        f1.write(dump1)
         f2.write(dump2)
         f = open('bad.txt', 'w')
         f.write(reconstitute)
