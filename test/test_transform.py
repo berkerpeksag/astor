@@ -34,9 +34,9 @@ class FindNames(astor.TreeWalk):
         self.assignments.append(self.current_assign)
         self.current_assign = None
 
-    def pre_targets(self):
+    def pre_targets_name(self):
         self.in_targets = True
-    def post_targets(self):
+    def post_targets_name(self):
         self.in_targets = False
     def post_Name(self):
         if self.current_assign:

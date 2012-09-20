@@ -27,9 +27,12 @@ class TreeWalk(MetaFlatten):
 
        where 'xxx' is one of:
            - A class name
-           - An attribute member name
+           - An attribute member name concatenated with '_name'
+                For example, 'pre_targets_name' will process nodes
+                that are referenced by the name 'targets' in their
+                parent's node.
            - An attribute member name concatenated with '_item'
-                For example, 'targets_item'  will process nodes
+                For example, 'pre_targets_item'  will process nodes
                 that are in a list that is the targets attribute
                 of some node.
 
@@ -80,7 +83,7 @@ class TreeWalk(MetaFlatten):
         while nodestack:
             node, name, subnodes, index = nodestack[-1]
             if index >= len(subnodes):
-                handler = post_handlers(type(node).__name__) or post_handlers(name)
+                handler = post_handlers(type(node).__name__) or post_handlers(name + '_name')
                 if handler is None:
                     pop()
                     continue
@@ -94,7 +97,7 @@ class TreeWalk(MetaFlatten):
                 continue
             nodestack[-1][-1] = index + 1
             if index < 0:
-                handler = pre_handlers(type(node).__name__) or pre_handlers(name)
+                handler = pre_handlers(type(node).__name__) or pre_handlers(name + '_name')
                 if handler is not None:
                     self.cur_node = node
                     self.cur_name = name
