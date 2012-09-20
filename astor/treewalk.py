@@ -10,7 +10,7 @@ Copyright 2012 (c) Patrick Maupin
 
 from astor.misc import iter_node, MetaFlatten
 
-class TreeWalk(object):
+class TreeWalk(MetaFlatten):
     ''' The TreeWalk class can be used as a superclass in order
         to walk an AST or similar tree.
 
@@ -46,7 +46,6 @@ class TreeWalk(object):
        make it easy to keep initialization with use, any number of init_xxx
        methods can be written.  They will be called in alphabetical order.
     '''
-    __metaclass__ = MetaFlatten
     nodestack = None
 
     def __init__(self, node=None, name=''):

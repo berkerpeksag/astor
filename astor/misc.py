@@ -80,14 +80,16 @@ class MetaFlatten(type):
         # Delegate the real work to type
         return type.__new__(clstype, name, newbases, newdict)
 
+MetaFlatten = MetaFlatten('MetaFlatten', (object, ), {})
+
 def _getsymbol(mapping, map_dict=None, type=type):
     ''' This function returns a closure that will map a 
         class type to its corresponding symbol, by looking
         up the class name of an object.
     '''
-    if isinstance(mapping, basestring):
+    if isinstance(mapping, str):
         mapping = mapping.split()
-        mapping = zip(mapping[0::2], (x.replace('_', ' ') for x in mapping[1::2]))
+        mapping = list(zip(mapping[0::2], (x.replace('_', ' ') for x in mapping[1::2])))
         mapping = dict(((getattr(ast, x), y) for x,y in mapping))
     if map_dict is not None:
         map_dict.update(mapping)
@@ -139,6 +141,9 @@ def parsefile(fname):
     f = open(fname, 'r')
     fstr = f.read()
     f.close()
+    fstr = fstr.replace('\r\n', '\n').replace('\r', '\n')
+    if not fstr.endswith('\n'):
+        fstr += '\n'
     return ast.parse(fstr, filename=fname)
 
 class CodeToAst(object):
@@ -155,7 +160,7 @@ class CodeToAst(object):
         cache = self.cache
         fname = getattr(codeobj, '__file__')
         if fname is None:
-            func_code = codeobj.func_code
+            func_code = codeobj.__code__
             fname = func_code.co_filename
             linenum = func_code.co_firstlineno
             key = fname, linenum

@@ -18,7 +18,7 @@ import astor
 
 
 def findpy(root):
-    if isinstance(root, basestring):
+    if isinstance(root, str):
         if os.path.isfile(root):
             if root.endswith('.py'):
                 yield root
@@ -39,19 +39,20 @@ def testone(fname, f1=None, f2=None):
     try:
         ast1 = astor.parsefile(fname)
     except SyntaxError:
-        print "IGNORED", fname
+        raise
+        print("IGNORED %s" % fname)
         return
     dump1 = astor.dump(ast1)
     reconstitute = '# -*- coding: utf-8 -*-\n' + astor.to_source(ast1)
     ast2 = ast.parse(reconstitute, fname)
     dump2 = astor.dump(ast2)
     ok = dump1 == dump2
-    print 'OK     ' if dump1 == dump2 else 'FAIL   ', fname
+    print('%-8s%s' % ('OK' if dump1 == dump2 else 'FAIL', fname))
     if not ok and f1 is not None and f2 is not None:
-        print >> f1, '\n\n***************************************\n%s\n***************************************\n\n\n' % fname
-        print >> f1, dump1
-        print >> f2, '\n\n***************************************\n%s\n***************************************\n\n\n' % fname
-        print >> f2, dump2
+        f1.write('\n\n***************************************\n%s\n***************************************\n\n\n' % fname)
+        f2.write('\n\n***************************************\n%s\n***************************************\n\n\n' % fname)
+        f2.write(dump1)
+        f2.write(dump2)
         f = open('bad.txt', 'w')
         f.write(reconstitute)
         f.close()
