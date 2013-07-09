@@ -1,0 +1,4 @@
+*.egg-info
+bad.txt
+test_codegen_dump_1.txt
+test_codegen_dump_2.txt

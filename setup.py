@@ -1,16 +1,20 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+from setuptools import setup
+import sys
 
 def readdoc():
-    f = open('README.rst', 'rb')
+    if sys.version_info[0] >= 3:
+        f = open('README.rst')
+    else:
+        f = open('README.rst', 'rb')
     data = f.read()
     f.close()
     return data
 
 setup(
     name='astor',
-    version='0.2.1',
+    version='0.2.2',
     description='Read/rewrite/write Python ASTs',
     long_description=readdoc(),
     author='Patrick Maupin',
