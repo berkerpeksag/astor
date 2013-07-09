@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+from setuptools import setup
+
 
 def readdoc():
     with open('README.rst') as fobj:
