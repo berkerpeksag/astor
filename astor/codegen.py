@@ -3,7 +3,7 @@
 
 This module converts an AST into Python source code.
 
-Original code copyright (c) 2008 by Armin Ronacher and
+Original code copyright (c) 2008, 2013 by Armin Ronacher and
 is distributed under the BSD license.
 
 It was derived from a modified version found here:
@@ -158,7 +158,10 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.statement(node, node.target, get_binop(node.op, ' %s= '), node.value)
 
     def visit_ImportFrom(self, node):
-        self.statement(node, 'from ', node.level * '.' , node.module, ' import ')
+        if node.module:
+            self.statement(node, 'from ', node.level * '.' , node.module, ' import ')
+        else:
+            self.statement(node, 'from ', node.level * '. import ')
         self.comma_list(node.names)
 
     def visit_Import(self, node):
@@ -224,10 +227,25 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.body_or_else(node)
 
     def visit_With(self, node):
-        self.statement(node, 'with ', node.context_expr)
-        self.conditional_write(' as ', node.optional_vars)
-        self.write(':')
+        if hasattr(node, "context_expr"):  # Python < 3.3
+            self.statement(node, 'with ', node.context_expr)
+            self.conditional_write(' as ', node.optional_vars)
+            self.write(':')
+        else:                              # Python >= 3.3
+            self.statement(node, 'with ')
+            count = 0
+            for item in node.items:
+                if count > 0:
+                    self.write(" , ")
+                self.visit(item)
+                count += 1
+            self.write(':')
         self.body(node.body)
+
+    # new for Python 3.3
+    def visit_withitem(self, node):
+        self.write(node.context_expr)
+        self.conditional_write(' as ', node.optional_vars)
 
     def visit_Pass(self, node):
         self.statement(node, 'pass')
@@ -250,6 +268,17 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.body(node.body)
         for handler in node.handlers:
             self.visit(handler)
+        self.else_body(node.orelse)
+
+    # new for Python 3.3
+    def visit_Try(self, node):
+        self.statement(node, 'try:')
+        self.body(node.body)
+        for handler in node.handlers:
+            self.visit(handler)
+        if node.finalbody:
+            self.statement(node, 'finally:')
+            self.body(node.finalbody)
         self.else_body(node.orelse)
 
     def visit_ExceptHandler(self, node):
@@ -401,6 +430,11 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_Yield(self, node):
         self.write('yield')
         self.conditional_write(' ', node.value)
+
+    # new for Python 3.3
+    def visit_YieldFrom(self,node):
+        self.write('yield from ')
+        self.visit(node.value)
 
     @enclose('()')
     def visit_Lambda(self, node):
