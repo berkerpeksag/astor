@@ -3,14 +3,13 @@
 from distutils.core import setup
 
 def readdoc():
-    f = open('README.rst', 'rb')
-    data = f.read()
-    f.close()
+    with open('README.rst') as fobj:
+        data = fobj.read()
     return data
 
 setup(
     name='astor',
-    version='0.2.1',
+    version='0.2.2',
     description='Read/rewrite/write Python ASTs',
     long_description=readdoc(),
     author='Patrick Maupin',
@@ -25,9 +24,13 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 3',
         'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3.3',
         'Topic :: Software Development :: Code Generators',
         'Topic :: Software Development :: Compilers',
     ],
