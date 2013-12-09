@@ -57,7 +57,7 @@ class TreeWalk(MetaFlatten):
     """
     nodestack = None
 
-    def __init__(self, node=None, name=''):
+    def __init__(self, node=None):
         self.setup()
         if node is not None:
             self.walk(node)

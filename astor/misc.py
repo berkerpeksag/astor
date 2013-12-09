@@ -144,7 +144,7 @@ class ExplicitNodeVisitor(ast.NodeVisitor):
 
     """
 
-    def abort_visit(node):
+    def abort_visit(node):  # XXX: self?
         msg = 'No defined handler for node of type %s'
         raise AttributeError(msg % node.__class__.__name__)
 
@@ -156,9 +156,8 @@ class ExplicitNodeVisitor(ast.NodeVisitor):
 
 
 def parsefile(fname):
-    f = open(fname, 'r')
-    fstr = f.read()
-    f.close()
+    with open(fname, 'r') as f:
+        fstr = f.read()
     fstr = fstr.replace('\r\n', '\n').replace('\r', '\n')
     if not fstr.endswith('\n'):
         fstr += '\n'
@@ -172,8 +171,8 @@ class CodeToAst(object):
     number of compiles.
 
     """
-    def __init__(self, cache):
-        self.cache = cache
+    def __init__(self, cache=None):
+        self.cache = cache or {}
 
     def __call__(self, codeobj):
         cache = self.cache
@@ -195,4 +194,4 @@ class CodeToAst(object):
             cache[(fname, obj.lineno)] = obj
         return cache[key]
 
-codetoast = CodeToAst({})
+codetoast = CodeToAst()
