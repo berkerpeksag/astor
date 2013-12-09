@@ -1,5 +1,8 @@
-
 0.1     -- Initial release
 0.2     -- Added Python 3 support
 0.2.1   -- Modified TreeWalk to add '_name' suffix for
            functions that work on attribute names
+0.3     -- Added support for Python 3.3. Added YieldFrom and
+           updated Try and With. Also, fixed a packaking bug
+           on Python 3. See pull requests #1 and #2 for more
+           information.
