@@ -8,11 +8,11 @@ Copyright 2012 (c) Patrick Maupin
 Copyright 2013 (c) Berker Peksag
 """
 
-
 from astor.misc import iter_node, MetaFlatten
 
+
 class TreeWalk(MetaFlatten):
-    ''' The TreeWalk class can be used as a superclass in order
+    """The TreeWalk class can be used as a superclass in order
         to walk an AST or similar tree.
 
         Unlike other treewalkers, this class can walk a tree either
@@ -49,7 +49,7 @@ class TreeWalk(MetaFlatten):
        information.  A single init_whatever method could be written, but to
        make it easy to keep initialization with use, any number of init_xxx
        methods can be written.  They will be called in alphabetical order.
-    '''
+    """
     nodestack = None
 
     def __init__(self, node=None, name=''):
@@ -58,9 +58,9 @@ class TreeWalk(MetaFlatten):
             self.walk(node)
 
     def setup(self):
-        ''' All the node-specific handlers are setup
+        """All the node-specific handlers are setup
             at object initialization time.
-        '''
+        """
         self.pre_handlers = pre_handlers = {}
         self.post_handlers = post_handlers = {}
         for name in sorted(vars(type(self))):
@@ -72,9 +72,9 @@ class TreeWalk(MetaFlatten):
                 post_handlers[name[5:]] = getattr(self, name)
 
     def walk(self, node, name='', list=list, len=len, type=type):
-        ''' walk the tree starting at a given node.
+        """Walk the tree starting at a given node.
             Maintain a stack of nodes.
-        '''
+        """
         pre_handlers = self.pre_handlers.get
         post_handlers = self.post_handlers.get
         oldstack = self.nodestack
@@ -84,7 +84,8 @@ class TreeWalk(MetaFlatten):
         while nodestack:
             node, name, subnodes, index = nodestack[-1]
             if index >= len(subnodes):
-                handler = post_handlers(type(node).__name__) or post_handlers(name + '_name')
+                handler = (post_handlers(type(node).__name__) or
+                           post_handlers(name + '_name'))
                 if handler is None:
                     pop()
                     continue
@@ -98,7 +99,8 @@ class TreeWalk(MetaFlatten):
                 continue
             nodestack[-1][-1] = index + 1
             if index < 0:
-                handler = pre_handlers(type(node).__name__) or pre_handlers(name + '_name')
+                handler = (pre_handlers(type(node).__name__) or
+                           pre_handlers(name + '_name'))
                 if handler is not None:
                     self.cur_node = node
                     self.cur_name = name
@@ -111,8 +113,7 @@ class TreeWalk(MetaFlatten):
 
     @property
     def parent(self):
-        ''' Return the parent node of the current node.
-        '''
+        """Return the parent node of the current node."""
         nodestack = self.nodestack
         if len(nodestack) < 2:
             return None
@@ -120,24 +121,22 @@ class TreeWalk(MetaFlatten):
 
     @property
     def parent_name(self):
-        ''' Return the parent node and name.
-        '''
+        """Return the parent node and name."""
         nodestack = self.nodestack
         if len(nodestack) < 2:
             return None
         return nodestack[-2][:2]
 
     def replace(self, new_node):
-        '''  Replaces a node after first checking
-             integrity of node stack.
-        '''
+        """Replaces a node after first checking integrity of node stack."""
         cur_node = self.cur_node
         nodestack = self.nodestack
         cur = nodestack.pop()
         prev = nodestack[-1]
         index = prev[-1] - 1
         oldnode, name = prev[-2][index]
-        assert cur[0] is cur_node is oldnode, (cur[0], cur_node, prev[-2], index, )
+        assert (cur[0] is cur_node is oldnode,
+                (cur[0], cur_node, prev[-2], index))
         parent = prev[0]
         if isinstance(parent, list):
             parent[index] = new_node

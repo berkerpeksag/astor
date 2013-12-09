@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-
 This module converts an AST into Python source code.
 
 Original code copyright (c) 2008 by Armin Ronacher and
@@ -106,6 +105,7 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def signature(self, node):
         want_comma = []
+
         def write_comma():
             if want_comma:
                 self.write(', ')
@@ -118,12 +118,11 @@ class SourceGenerator(ExplicitNodeVisitor):
                 self.write(write_comma, arg)
                 self.conditional_write('=', default)
 
-
         loop_args(node.args, node.defaults)
         self.conditional_write(write_comma, '*', node.vararg)
         self.conditional_write(write_comma, '**', node.kwarg)
 
-        kwonlyargs=getattr(node, 'kwonlyargs', None)
+        kwonlyargs = getattr(node, 'kwonlyargs', None)
         if kwonlyargs:
             if node.vararg is None:
                 self.write(write_comma, '*')
@@ -155,11 +154,13 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.visit(node.value)
 
     def visit_AugAssign(self, node):
-        self.statement(node, node.target, get_binop(node.op, ' %s= '), node.value)
+        self.statement(node, node.target, get_binop(node.op, ' %s= '),
+                       node.value)
 
     def visit_ImportFrom(self, node):
         if node.module:
-            self.statement(node, 'from ', node.level * '.' , node.module, ' import ')
+            self.statement(node, 'from ', node.level * '.',
+                           node.module, ' import ')
         else:
             self.statement(node, 'from ', node.level * '. import ')
         self.comma_list(node.names)
@@ -184,6 +185,7 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def visit_ClassDef(self, node):
         have_args = []
+
         def paren_or_comma():
             if have_args:
                 self.write(', ')
@@ -340,6 +342,7 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def visit_Call(self, node):
         want_comma = []
+
         def write_comma():
             if want_comma:
                 self.write(', ')
@@ -418,7 +421,8 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.conditional_write(node.upper)
         if node.step is not None:
             self.write(':')
-            if not (isinstance(node.step, ast.Name) and node.step.id == 'None'):
+            if not (isinstance(node.step, ast.Name) and
+                    node.step.id == 'None'):
                 self.visit(node.step)
 
     def visit_Index(self, node):
@@ -432,7 +436,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.conditional_write(' ', node.value)
 
     # new for Python 3.3
-    def visit_YieldFrom(self,node):
+    def visit_YieldFrom(self, node):
         self.write('yield from ')
         self.visit(node.value)
 
