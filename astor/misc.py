@@ -5,6 +5,7 @@ Part of the astor library for Python AST manipulation
 License: BSD
 
 Copyright 2012 (c) Patrick Maupin
+Copyright 2013 (c) Berker Peksag
 """
 
 import ast
