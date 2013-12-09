@@ -2,22 +2,20 @@
 
 from setuptools import setup
 
+from setuputils import find_version, read
 
-def readdoc():
-    with open('README.rst') as fobj:
-        data = fobj.read()
-    return data
 
 setup(
     name='astor',
-    version='0.2.2',
+    version=find_version('astor/__init__.py'),
     description='Read/rewrite/write Python ASTs',
-    long_description=readdoc(),
+    long_description=read('README.rst'),
     author='Patrick Maupin',
     author_email='pmaupin@gmail.com',
     platforms="Independent",
     url='https://github.com/pmaupin/astor.git',
     packages=['astor'],
+    py_modules=['setuputils'],
     license="BSD",
     classifiers=[
         'Development Status :: 3 - Alpha',
