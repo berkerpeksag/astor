@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Part of the astor library for Python AST manipulation
+Part of the astor library for Python AST manipulation.
 
 License: BSD
 
 Copyright 2012 (c) Patrick Maupin
 Copyright 2013 (c) Berker Peksag
+
 """
 
 from astor.misc import iter_node, MetaFlatten
@@ -13,42 +14,46 @@ from astor.misc import iter_node, MetaFlatten
 
 class TreeWalk(MetaFlatten):
     """The TreeWalk class can be used as a superclass in order
-        to walk an AST or similar tree.
+    to walk an AST or similar tree.
 
-        Unlike other treewalkers, this class can walk a tree either
-        recursively or non-recursively.  Subclasses can define
-        methods with the following signatures:
+    Unlike other treewalkers, this class can walk a tree either
+    recursively or non-recursively.  Subclasses can define
+    methods with the following signatures::
 
-           def pre_xxx(self):
-               pass
-           def post_xxx(self):
-               pass
-           def init_xxx(self):
-               pass
+        def pre_xxx(self):
+            pass
 
-       where 'xxx' is one of:
-           - A class name
-           - An attribute member name concatenated with '_name'
-                For example, 'pre_targets_name' will process nodes
-                that are referenced by the name 'targets' in their
-                parent's node.
-           - An attribute member name concatenated with '_item'
-                For example, 'pre_targets_item'  will process nodes
-                that are in a list that is the targets attribute
-                of some node.
+        def post_xxx(self):
+            pass
 
-       pre_xxx will process a node before processing any of its subnodes.
-       if the return value from pre_xxx evalates to true, then walk
-       will not process any of the subnodes.  Those can be manually
-       processed, if desired, by calling self.walk(node) on the subnodes
-       before returning True.
+        def init_xxx(self):
+            pass
 
-       post_xxx will process a node after processing all its subnodes.
+    Where 'xxx' is one of:
 
-       init_xxx methods can decorate the class instance with subclass-specific
-       information.  A single init_whatever method could be written, but to
-       make it easy to keep initialization with use, any number of init_xxx
-       methods can be written.  They will be called in alphabetical order.
+      - A class name
+      - An attribute member name concatenated with '_name'
+        For example, 'pre_targets_name' will process nodes
+        that are referenced by the name 'targets' in their
+        parent's node.
+      - An attribute member name concatenated with '_item'
+        For example, 'pre_targets_item'  will process nodes
+        that are in a list that is the targets attribute
+        of some node.
+
+    pre_xxx will process a node before processing any of its subnodes.
+    if the return value from pre_xxx evalates to true, then walk
+    will not process any of the subnodes.  Those can be manually
+    processed, if desired, by calling self.walk(node) on the subnodes
+    before returning True.
+
+    post_xxx will process a node after processing all its subnodes.
+
+    init_xxx methods can decorate the class instance with subclass-specific
+    information.  A single init_whatever method could be written, but to
+    make it easy to keep initialization with use, any number of init_xxx
+    methods can be written.  They will be called in alphabetical order.
+
     """
     nodestack = None
 
@@ -58,8 +63,9 @@ class TreeWalk(MetaFlatten):
             self.walk(node)
 
     def setup(self):
-        """All the node-specific handlers are setup
-            at object initialization time.
+        """All the node-specific handlers are setup at
+        object initialization time.
+
         """
         self.pre_handlers = pre_handlers = {}
         self.post_handlers = post_handlers = {}
@@ -73,7 +79,9 @@ class TreeWalk(MetaFlatten):
 
     def walk(self, node, name='', list=list, len=len, type=type):
         """Walk the tree starting at a given node.
-            Maintain a stack of nodes.
+
+        Maintain a stack of nodes.
+
         """
         pre_handlers = self.pre_handlers.get
         post_handlers = self.post_handlers.get
@@ -128,7 +136,7 @@ class TreeWalk(MetaFlatten):
         return nodestack[-2][:2]
 
     def replace(self, new_node):
-        """Replaces a node after first checking integrity of node stack."""
+        """Replace a node after first checking integrity of node stack."""
         cur_node = self.cur_node
         nodestack = self.nodestack
         cur = nodestack.pop()

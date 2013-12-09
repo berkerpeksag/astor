@@ -8,6 +8,7 @@ is distributed under the BSD license.
 It was derived from a modified version found here:
 
     https://gist.github.com/1250562
+
 """
 
 import ast
@@ -33,6 +34,7 @@ def to_source(node, indent_with=' ' * 4, add_line_information=False):
     If `add_line_information` is set to `True` comments for the line numbers
     of the nodes are added to the output.  This can be used to spot wrong line
     number information of statement nodes.
+
     """
     generator = SourceGenerator(indent_with, add_line_information)
     generator.visit(node)
@@ -50,9 +52,12 @@ def enclose(enclosure):
 
 
 class SourceGenerator(ExplicitNodeVisitor):
-    """This visitor is able to transform a well formed syntax tree into python
-    sourcecode.  For more details have a look at the docstring of the
-    `node_to_source` function.
+    """This visitor is able to transform a well formed syntax tree into Python
+    sourcecode.
+
+    For more details have a look at the docstring of the `node_to_source`
+    function.
+
     """
 
     def __init__(self, indent_with, add_line_information=False):

@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Part of the astor library for Python AST manipulation
+Part of the astor library for Python AST manipulation.
 
 License: BSD
 
 Copyright 2012 (c) Patrick Maupin
 Copyright 2013 (c) Berker Peksag
+
 """
 
 __version__ = '0.2.1'
@@ -16,4 +17,3 @@ from astor.misc import ExplicitNodeVisitor
 from astor.misc import parsefile, CodeToAst, codetoast
 from astor.codegen import to_source
 from astor.treewalk import TreeWalk
-

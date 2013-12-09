@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Part of the astor library for Python AST manipulation
+Part of the astor library for Python AST manipulation.
 
 License: BSD
 
 Copyright 2012 (c) Patrick Maupin
 Copyright 2013 (c) Berker Peksag
+
 """
 
 import ast
@@ -19,14 +20,15 @@ def iter_node(node, name='', list=list, getattr=getattr, isinstance=isinstance,
               enumerate=enumerate, missing=NonExistent):
     """Iterates over an object:
 
-            - If the object has a _fields attribute,
-              it gets attributes in the order of this
-              and returns name, value pairs.
+       - If the object has a _fields attribute,
+         it gets attributes in the order of this
+         and returns name, value pairs.
 
-            - Otherwise, if the object is a list instance,
-              it returns name, value pairs for each item
-              in the list, where the name is passed into
-              this function (defaults to blank).
+       - Otherwise, if the object is a list instance,
+         it returns name, value pairs for each item
+         in the list, where the name is passed into
+         this function (defaults to blank).
+
     """
     fields = getattr(node, '_fields', None)
     if fields is not None:
@@ -43,8 +45,10 @@ def dump(node, name=None, initial_indent='', indentation='    ',
          maxline=120, maxmerged=80, iter_node=iter_node, special=ast.AST,
          list=list, isinstance=isinstance, type=type, len=len):
     """Dumps an AST or similar structure:
-           - Pretty-prints with indentation
-           - Doesn't print line/column/ctx info
+
+       - Pretty-prints with indentation
+       - Doesn't print line/column/ctx info
+
     """
     def dump(node, name=None, indent=''):
         level = indent + indentation
@@ -71,10 +75,11 @@ def dump(node, name=None, initial_indent='', indentation='    ',
 
 class MetaFlatten(type):
     """This metaclass is used to flatten classes to remove
-         class hierarchy.
+    class hierarchy.
 
-         This makes it easier to manipulate classes (find
-         attributes in a single dict, etc.)
+    This makes it easier to manipulate classes (find
+    attributes in a single dict, etc.)
+
     """
     def __new__(clstype, name, bases, clsdict):
         newbases = (object,)
@@ -91,8 +96,9 @@ MetaFlatten = MetaFlatten('MetaFlatten', (object, ), {})
 
 def _getsymbol(mapping, map_dict=None, type=type):
     """This function returns a closure that will map a
-        class type to its corresponding symbol, by looking
-        up the class name of an object.
+    class type to its corresponding symbol, by looking
+    up the class name of an object.
+
     """
     if isinstance(mapping, str):
         mapping = mapping.split()
@@ -133,9 +139,9 @@ get_anyop = _getsymbol(all_symbols)
 
 
 class ExplicitNodeVisitor(ast.NodeVisitor):
-    """
-        This expands on the ast module's NodeVisitor class
-        to remove any implicit visits.
+    """This expands on the ast module's NodeVisitor class
+    to remove any implicit visits.
+
     """
 
     def abort_visit(node):
@@ -161,9 +167,10 @@ def parsefile(fname):
 
 class CodeToAst(object):
     """Given a module, or a function that was compiled as part
-        of a module, re-compile the module into an AST and extract
-        the sub-AST for the function.  Allow caching to reduce
-        number of compiles.
+    of a module, re-compile the module into an AST and extract
+    the sub-AST for the function.  Allow caching to reduce
+    number of compiles.
+
     """
     def __init__(self, cache):
         self.cache = cache
