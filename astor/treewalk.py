@@ -143,8 +143,7 @@ class TreeWalk(MetaFlatten):
         prev = nodestack[-1]
         index = prev[-1] - 1
         oldnode, name = prev[-2][index]
-        assert (cur[0] is cur_node is oldnode,
-                (cur[0], cur_node, prev[-2], index))
+        assert cur[0] is cur_node is oldnode, (cur[0], cur_node, prev[-2], index)
         parent = prev[0]
         if isinstance(parent, list):
             parent[index] = new_node
