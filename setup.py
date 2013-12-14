@@ -13,7 +13,7 @@ setup(
     author='Patrick Maupin',
     author_email='pmaupin@gmail.com',
     platforms='Independent',
-    url='https://github.com/pmaupin/astor.git',
+    url='https://github.com/berkerpeksag/astor',
     packages=['astor'],
     py_modules=['setuputils'],
     license='BSD',
