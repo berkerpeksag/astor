@@ -12,11 +12,11 @@ setup(
     long_description=read('README.rst'),
     author='Patrick Maupin',
     author_email='pmaupin@gmail.com',
-    platforms="Independent",
+    platforms='Independent',
     url='https://github.com/pmaupin/astor.git',
     packages=['astor'],
     py_modules=['setuputils'],
-    license="BSD",
+    license='BSD',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
