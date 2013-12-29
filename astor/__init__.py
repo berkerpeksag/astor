@@ -9,7 +9,7 @@ Copyright 2013 (c) Berker Peksag
 
 """
 
-__version__ = '0.3'
+__version__ = '0.4-dev'
 
 from astor.misc import iter_node, dump, all_symbols, get_anyop
 from astor.misc import get_boolop, get_binop, get_cmpop, get_unaryop
