@@ -5,7 +5,9 @@ import re
 
 def read(*parts):
     file_path = os.path.join(os.path.dirname(__file__), *parts)
-    return codecs.open(file_path, 'r').read()
+    with codecs.open(file_path, 'r') as fobj:
+        content = fobj.read()
+    return content
 
 
 def find_version(*parts):
