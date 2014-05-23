@@ -13,8 +13,8 @@ It was derived from a modified version found here:
 
 import ast
 
-from astor.misc import ExplicitNodeVisitor
-from astor.misc import get_boolop, get_binop, get_cmpop, get_unaryop
+from .misc import (ExplicitNodeVisitor, get_boolop, get_binop, get_cmpop,
+                   get_unaryop)
 
 
 def to_source(node, indent_with=' ' * 4, add_line_information=False):
