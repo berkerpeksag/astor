@@ -9,7 +9,7 @@ Copyright 2013 (c) Berker Peksag
 
 """
 
-from astor.misc import iter_node, MetaFlatten
+from .misc import MetaFlatten, iter_node
 
 
 class TreeWalk(MetaFlatten):
