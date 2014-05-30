@@ -254,6 +254,9 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.write(node.context_expr)
         self.conditional_write(' as ', node.optional_vars)
 
+    def visit_NameConstant(self, node):
+        self.write(node.value)
+
     def visit_Pass(self, node):
         self.statement(node, 'pass')
 
