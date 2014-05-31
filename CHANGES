@@ -6,3 +6,4 @@
            updated Try and With. Also, fixed a packaking bug
            on Python 3. See pull requests #1 and #2 for more
            information.
+0.4     -- Added a visitor for NameConstant.
