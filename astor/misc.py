@@ -2,7 +2,7 @@
 """
 Part of the astor library for Python AST manipulation.
 
-License: BSD
+License: 3-clause BSD
 
 Copyright 2012 (c) Patrick Maupin
 Copyright 2013 (c) Berker Peksag

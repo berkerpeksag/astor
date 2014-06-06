@@ -4,7 +4,7 @@ astor -- AST observe/rewrite
 
 :PyPI: https://pypi.python.org/pypi/astor
 :Source: https://github.com/berkerpeksag/astor
-:License: BSD
+:License: 3-clause BSD
 
 astor is designed to allow easy manipulation of Python source via the AST.
 

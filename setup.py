@@ -16,7 +16,6 @@ setup(
     url='https://github.com/berkerpeksag/astor',
     packages=['astor'],
     py_modules=['setuputils'],
-    license='BSD',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',

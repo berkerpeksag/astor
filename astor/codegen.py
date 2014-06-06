@@ -3,7 +3,7 @@
 This module converts an AST into Python source code.
 
 Original code copyright (c) 2008 by Armin Ronacher and
-is distributed under the BSD license.
+is distributed under the 3-clause BSD license.
 
 It was derived from a modified version found here:
 
