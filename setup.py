@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 from setuputils import find_version, read
 
@@ -14,7 +14,7 @@ setup(
     author_email='pmaupin@gmail.com',
     platforms='Independent',
     url='https://github.com/berkerpeksag/astor',
-    packages=['astor'],
+    packages=find_packages(),
     py_modules=['setuputils'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
