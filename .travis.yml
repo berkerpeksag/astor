@@ -1,0 +1,15 @@
+language: python
+python:
+  - "pypy"
+  - "2.6"
+  - "2.7"
+  - "3.2"
+  - "3.3"
+  - "3.4"
+cache:
+  - $HOME/.pip-cache
+install:
+  - pip install -r requirements-dev.txt --download-cache $HOME/.pip-cache
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install unittest2; fi
+  - pip install --allow-all-external -e .
+script: nosetests
