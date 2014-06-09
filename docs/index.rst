@@ -73,7 +73,7 @@ Functions
 
 
 .. function:: to_source(source, indent_with=' ' * 4, \
-                        add_line_information=False))
+                        add_line_information=False)
 
    Convert a node tree back into Python source code.
 
