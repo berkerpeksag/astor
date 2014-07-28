@@ -14,7 +14,7 @@ setup(
     author_email='pmaupin@gmail.com',
     platforms='Independent',
     url='https://github.com/berkerpeksag/astor',
-    packages=find_packages(),
+    packages=find_packages(exclude=['tests']),
     py_modules=['setuputils'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
