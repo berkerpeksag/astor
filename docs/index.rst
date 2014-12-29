@@ -23,7 +23,7 @@ Install with **pip**:
 
 .. code-block:: bash
 
-    $ [sudo] pip install astor
+    $ pip install astor
 
 or clone the latest version from GitHub_.
 
