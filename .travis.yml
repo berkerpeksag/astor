@@ -1,8 +1,8 @@
-sudo: false # Run travis jobs in containers
+sudo: false  # run travis jobs in containers
 language: python
 cache:
   directories:
-    - $PWD/wheelhouse # cache wheels so that we don't hit network everytime
+    - $PWD/wheelhouse  # cache wheels so that we don't hit network everytime
 env:
   global:
     - PIP_FIND_LINKS=$PWD/wheelhouse
@@ -14,6 +14,6 @@ env:
     - TOXENV=pypy
     - TOXENV=pypy3
 install:
-  - pip wheel tox  # No wheel distribution for tox on pypi yet   
+  - pip wheel tox  # no wheel distribution for tox on pypi yet   
   - pip install tox 
 script: tox
