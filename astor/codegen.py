@@ -507,3 +507,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         if node.ifs:
             for if_ in node.ifs:
                 self.write(' if ', if_)
+
+    def visit_arguments(self, node):
+        self.signature(node)
+
