@@ -47,6 +47,13 @@ class CodegenTestCase(unittest.TestCase):
         source = "del obj.x"
         self.assertAstSourceEqual(source)
 
+    def test_arguments(self):
+        source = textwrap.dedent("""\
+        j = [1, 2, 3]
+
+        def test(a1, a2, b1=j, b2='123', b3={}, b4=[]):
+            pass""")
+        self.assertAstSourceEqual(source)
 
 if __name__ == '__main__':
     unittest.main()

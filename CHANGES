@@ -8,3 +8,4 @@
            information.
 0.4     -- Added a visitor for NameConstant.
            Added initial test suite and documentation.
+0.4.1   -- Added missing SourceGenerator.visit_arguments()
