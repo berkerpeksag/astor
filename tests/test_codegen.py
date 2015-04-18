@@ -60,6 +60,17 @@ class CodegenTestCase(unittest.TestCase):
             pass""")
         self.assertAstSourceEqual(source)
 
+    def test_pass_arguments_node(self):
+        source = textwrap.dedent("""\
+        j = [1, 2, 3]
+        def test(a1, a2, b1=j, b2='123', b3={}, b4=[]):
+            pass""")
+        root_node = ast.parse(source)
+        arguments_node = [n for n in ast.walk(root_node)
+                          if isinstance(n, ast.arguments)][0]
+        self.assertEqual(astor.to_source(arguments_node),
+                         "a1, a2, b1=j, b2='123', b3={}, b4=[]")
+
     def test_matrix_multiplication(self):
         for source in ("(a @ b)", "a @= b"):
             if sys.version_info >= (3, 5):
