@@ -9,7 +9,7 @@ Copyright 2013 (c) Berker Peksag
 
 """
 
-__version__ = '0.4.1'
+__version__ = '0.5'
 
 from .codegen import to_source  # NOQA
 from .misc import iter_node, dump, all_symbols, get_anyop  # NOQA

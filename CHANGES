@@ -9,3 +9,5 @@
 0.4     -- Added a visitor for NameConstant.
            Added initial test suite and documentation.
 0.4.1   -- Added missing SourceGenerator.visit_arguments()
+0.5     -- Added support for Python 3.5 infix matrix
+           multiplication
