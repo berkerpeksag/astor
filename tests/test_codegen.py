@@ -7,8 +7,13 @@ Copyright 2014 (c) Berker Peksag
 """
 
 import ast
-import unittest
+import sys
 import textwrap
+
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 import astor
 
@@ -54,6 +59,15 @@ class CodegenTestCase(unittest.TestCase):
         def test(a1, a2, b1=j, b2='123', b3={}, b4=[]):
             pass""")
         self.assertAstSourceEqual(source)
+
+    def test_matrix_multiplication(self):
+        for source in ("(a @ b)", "a @= b"):
+            if sys.version_info >= (3, 5):
+                self.assertAstSourceEqual(source)
+            else:
+                # matrix multiplication operator introduced in Python 3.5
+                self.assertRaises(SyntaxError, ast.parse, source)
+
 
 if __name__ == '__main__':
     unittest.main()

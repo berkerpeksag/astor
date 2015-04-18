@@ -10,6 +10,7 @@ Copyright 2013 (c) Berker Peksag
 """
 
 import ast
+import sys
 
 
 class NonExistent(object):
@@ -118,13 +119,18 @@ get_boolop = _getsymbol("""
     And and   Or or
 """, all_symbols)
 
-get_binop = _getsymbol("""
+binops = """
     Add +   Mult *   LShift <<   BitAnd &
     Sub -   Div  /   RShift >>   BitOr  |
             Mod  %               BitXor ^
             FloorDiv //
             Pow **
-""", all_symbols)
+"""
+if sys.version_info >= (3, 5):
+    binops += "MatMult @"
+
+
+get_binop = _getsymbol(binops, all_symbols)
 
 get_cmpop = _getsymbol("""
   Eq    ==   Gt >   GtE >=   In    in       Is    is
