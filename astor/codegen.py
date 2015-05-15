@@ -212,7 +212,10 @@ class SourceGenerator(ExplicitNodeVisitor):
         #      with python 2.6.
         if hasattr(node, 'keywords'):
             for keyword in node.keywords:
-                self.write(paren_or_comma, keyword.arg, '=', keyword.value)
+                if keyword.arg is None:
+                    self.write(paren_or_comma, '**', keyword.value)
+                else:
+                    self.write(paren_or_comma, keyword.arg, '=', keyword.value)
             if sys.version_info < (3, 5):
                 self.conditional_write(paren_or_comma, '*', node.starargs)
                 self.conditional_write(paren_or_comma, '**', node.kwargs)

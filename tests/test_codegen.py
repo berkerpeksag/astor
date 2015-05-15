@@ -102,6 +102,12 @@ class CodegenTestCase(unittest.TestCase):
                     return datum""")
         self.assertAstSourceEqualIfAtLeastVersion(source, (3, 5))
 
+    def test_class_definition_with_starbases_and_kwargs(self):
+        source = textwrap.dedent("""\
+        class TreeFactory(*[FactoryMixin, TreeBase], **{'metaclass': Foo}):
+            pass""")
+        self.assertAstSourceEqualIfAtLeastVersion(source, (3, 0))
+
 
 if __name__ == '__main__':
     unittest.main()
