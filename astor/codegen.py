@@ -407,8 +407,10 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     @enclose('{}')
     def visit_Dict(self, node):
-        for key, value in zip(node.keys, node.values):
-            self.write(key, ': ', value, ', ')
+        for idx, (key, value) in enumerate(zip(node.keys, node.values)):
+            if idx:
+                self.write(', ')
+            self.write(key, ': ', value)
 
     @enclose('()')
     def visit_BinOp(self, node):

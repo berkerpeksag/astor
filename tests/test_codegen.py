@@ -31,6 +31,12 @@ class CodegenTestCase(unittest.TestCase):
         source = "from math import floor"
         self.assertAstSourceEqual(source)
 
+    def test_dictionary_literals(self):
+        source = "{'a': 1, 'b': 2}"
+        self.assertAstSourceEqual(source)
+        another_source = "{'nested': ['structures', {'are': 'important'}]}"
+        self.assertAstSourceEqual(another_source)
+
     def test_try_expect(self):
         source = textwrap.dedent("""\
         try:
@@ -80,10 +86,8 @@ class CodegenTestCase(unittest.TestCase):
                 self.assertRaises(SyntaxError, ast.parse, source)
 
     def test_multiple_unpackings(self):
-        # XXX TODO: no human Pythonista would write the contents of a
-        # dictionary literal with a trailing comma-space like that
         source = textwrap.dedent("""\
-        my_function(*[1], *[2], **{'three': 3, }, **{'four': 'four', })""")
+        my_function(*[1], *[2], **{'three': 3}, **{'four': 'four'})""")
         if sys.version_info >= (3, 5):
             self.assertAstSourceEqual(source)
         else:
