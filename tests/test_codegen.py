@@ -23,6 +23,12 @@ class CodegenTestCase(unittest.TestCase):
     def assertAstSourceEqual(self, source):
         self.assertEqual(astor.to_source(ast.parse(source)), source)
 
+    def assertAstSourceEqualIfAtLeastVersion(self, source, version_tuple):
+        if sys.version_info >= version_tuple:
+            self.assertAstSourceEqual(source)
+        else:
+            self.assertRaises(SyntaxError, ast.parse, source)
+
     def test_imports(self):
         source = "import ast"
         self.assertAstSourceEqual(source)
@@ -30,6 +36,12 @@ class CodegenTestCase(unittest.TestCase):
         self.assertAstSourceEqual(source)
         source = "from math import floor"
         self.assertAstSourceEqual(source)
+
+    def test_dictionary_literals(self):
+        source = "{'a': 1, 'b': 2}"
+        self.assertAstSourceEqual(source)
+        another_source = "{'nested': ['structures', {'are': 'important'}]}"
+        self.assertAstSourceEqual(another_source)
 
     def test_try_expect(self):
         source = textwrap.dedent("""\
@@ -73,11 +85,28 @@ class CodegenTestCase(unittest.TestCase):
 
     def test_matrix_multiplication(self):
         for source in ("(a @ b)", "a @= b"):
-            if sys.version_info >= (3, 5):
-                self.assertAstSourceEqual(source)
-            else:
-                # matrix multiplication operator introduced in Python 3.5
-                self.assertRaises(SyntaxError, ast.parse, source)
+            self.assertAstSourceEqualIfAtLeastVersion(source, (3, 5))
+
+    def test_multiple_unpackings(self):
+        source = textwrap.dedent("""\
+        my_function(*[1], *[2], **{'three': 3}, **{'four': 'four'})""")
+        self.assertAstSourceEqualIfAtLeastVersion(source, (3, 5))
+
+    def test_async_def_with_for(self):
+        source = textwrap.dedent("""\
+        async def read_data(db):
+            async with connect(db) as db_cxn:
+                data = await db_cxn.fetch('SELECT foo FROM bar;')
+            async for datum in data:
+                if quux(datum):
+                    return datum""")
+        self.assertAstSourceEqualIfAtLeastVersion(source, (3, 5))
+
+    def test_class_definition_with_starbases_and_kwargs(self):
+        source = textwrap.dedent("""\
+        class TreeFactory(*[FactoryMixin, TreeBase], **{'metaclass': Foo}):
+            pass""")
+        self.assertAstSourceEqualIfAtLeastVersion(source, (3, 0))
 
 
 if __name__ == '__main__':

@@ -12,6 +12,7 @@ It was derived from a modified version found here:
 """
 
 import ast
+import sys
 
 from .misc import (ExplicitNodeVisitor, get_boolop, get_binop, get_cmpop,
                    get_unaryop)
@@ -178,15 +179,20 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.statement(node)
         self.generic_visit(node)
 
-    def visit_FunctionDef(self, node):
+    def visit_FunctionDef(self, node, async=False):
         self.decorators(node, 1)
-        self.statement(node, 'def %s(' % node.name)
+        self.statement(node, '%sdef %s(' %
+                       ('async ' if async else '', node.name))
         self.signature(node.args)
         self.write(')')
         if getattr(node, 'returns', None) is not None:
             self.write(' ->', node.returns)
         self.write(':')
         self.body(node.body)
+
+    # introduced in Python 3.5
+    def visit_AsyncFunctionDef(self, node):
+        self.visit_FunctionDef(node, async=True)
 
     def visit_ClassDef(self, node):
         have_args = []
@@ -206,9 +212,13 @@ class SourceGenerator(ExplicitNodeVisitor):
         #      with python 2.6.
         if hasattr(node, 'keywords'):
             for keyword in node.keywords:
-                self.write(paren_or_comma, keyword.arg, '=', keyword.value)
-            self.conditional_write(paren_or_comma, '*', node.starargs)
-            self.conditional_write(paren_or_comma, '**', node.kwargs)
+                if keyword.arg is None:
+                    self.write(paren_or_comma, '**', keyword.value)
+                else:
+                    self.write(paren_or_comma, keyword.arg, '=', keyword.value)
+            if sys.version_info < (3, 5):
+                self.conditional_write(paren_or_comma, '*', node.starargs)
+                self.conditional_write(paren_or_comma, '**', node.kwargs)
         self.write(have_args and '):' or ':')
         self.body(node.body)
 
@@ -225,21 +235,26 @@ class SourceGenerator(ExplicitNodeVisitor):
                 self.else_body(else_)
                 break
 
-    def visit_For(self, node):
-        self.statement(node, 'for ', node.target, ' in ', node.iter, ':')
+    def visit_For(self, node, async=False):
+        self.statement(node, '%sfor ' % ('async ' if async else ''),
+                       node.target, ' in ', node.iter, ':')
         self.body_or_else(node)
+
+    # introduced in Python 3.5
+    def visit_AsyncFor(self, node):
+        self.visit_For(node, async=True)
 
     def visit_While(self, node):
         self.statement(node, 'while ', node.test, ':')
         self.body_or_else(node)
 
-    def visit_With(self, node):
+    def visit_With(self, node, async=False):
         if hasattr(node, "context_expr"):  # Python < 3.3
             self.statement(node, 'with ', node.context_expr)
             self.conditional_write(' as ', node.optional_vars)
             self.write(':')
         else:                              # Python >= 3.3
-            self.statement(node, 'with ')
+            self.statement(node, '%swith ' % ('async ' if async else ''))
             count = 0
             for item in node.items:
                 if count > 0:
@@ -248,6 +263,10 @@ class SourceGenerator(ExplicitNodeVisitor):
                 count += 1
             self.write(':')
         self.body(node.body)
+
+    # new for Python 3.5
+    def visit_AsyncWith(self, node):
+        self.visit_With(node, async=True)
 
     # new for Python 3.3
     def visit_withitem(self, node):
@@ -362,9 +381,17 @@ class SourceGenerator(ExplicitNodeVisitor):
         for arg in node.args:
             self.write(write_comma, arg)
         for keyword in node.keywords:
-            self.write(write_comma, keyword.arg, '=', keyword.value)
-        self.conditional_write(write_comma, '*', node.starargs)
-        self.conditional_write(write_comma, '**', node.kwargs)
+            if keyword.arg is None:
+                # a keyword.arg of None indicates dictionary unpacking
+                # (Python >= 3.5)
+                self.write(write_comma, '**', keyword.value)
+            else:
+                self.write(write_comma, keyword.arg, '=', keyword.value)
+        if sys.version_info < (3, 5):
+            # starargs and kwargs attributes went away in Python
+            # 3.5 during the implementation of PEP 448
+            self.conditional_write(write_comma, '*', node.starargs)
+            self.conditional_write(write_comma, '**', node.kwargs)
         self.write(')')
 
     def visit_Name(self, node):
@@ -397,8 +424,10 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     @enclose('{}')
     def visit_Dict(self, node):
-        for key, value in zip(node.keys, node.values):
-            self.write(key, ': ', value, ', ')
+        for idx, (key, value) in enumerate(zip(node.keys, node.values)):
+            if idx:
+                self.write(', ')
+            self.write(key, ': ', value)
 
     @enclose('()')
     def visit_BinOp(self, node):
@@ -446,6 +475,11 @@ class SourceGenerator(ExplicitNodeVisitor):
     # new for Python 3.3
     def visit_YieldFrom(self, node):
         self.write('yield from ')
+        self.visit(node.value)
+
+    # new for Python 3.5
+    def visit_Await(self, node):
+        self.write('await ')
         self.visit(node.value)
 
     @enclose('()')
