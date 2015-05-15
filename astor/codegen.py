@@ -12,6 +12,7 @@ It was derived from a modified version found here:
 """
 
 import ast
+import sys
 
 from .misc import (ExplicitNodeVisitor, get_boolop, get_binop, get_cmpop,
                    get_unaryop)
@@ -207,8 +208,9 @@ class SourceGenerator(ExplicitNodeVisitor):
         if hasattr(node, 'keywords'):
             for keyword in node.keywords:
                 self.write(paren_or_comma, keyword.arg, '=', keyword.value)
-            self.conditional_write(paren_or_comma, '*', node.starargs)
-            self.conditional_write(paren_or_comma, '**', node.kwargs)
+            if sys.version_info < (3, 5):
+                self.conditional_write(paren_or_comma, '*', node.starargs)
+                self.conditional_write(paren_or_comma, '**', node.kwargs)
         self.write(have_args and '):' or ':')
         self.body(node.body)
 
@@ -362,9 +364,17 @@ class SourceGenerator(ExplicitNodeVisitor):
         for arg in node.args:
             self.write(write_comma, arg)
         for keyword in node.keywords:
-            self.write(write_comma, keyword.arg, '=', keyword.value)
-        self.conditional_write(write_comma, '*', node.starargs)
-        self.conditional_write(write_comma, '**', node.kwargs)
+            if keyword.arg is None:
+                # a keyword.arg of None indicates dictionary unpacking
+                # (Python >= 3.5)
+                self.write(write_comma, '**', keyword.value)
+            else:
+                self.write(write_comma, keyword.arg, '=', keyword.value)
+        if sys.version_info < (3, 5):
+            # starargs and kwargs attributes went away in Python
+            # 3.5 during the implementation of PEP 448
+            self.conditional_write(write_comma, '*', node.starargs)
+            self.conditional_write(write_comma, '**', node.kwargs)
         self.write(')')
 
     def visit_Name(self, node):

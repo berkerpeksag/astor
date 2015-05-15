@@ -79,6 +79,16 @@ class CodegenTestCase(unittest.TestCase):
                 # matrix multiplication operator introduced in Python 3.5
                 self.assertRaises(SyntaxError, ast.parse, source)
 
+    def test_multiple_unpackings(self):
+        # XXX TODO: no human Pythonista would write the contents of a
+        # dictionary literal with a trailing comma-space like that
+        source = textwrap.dedent("""\
+        my_function(*[1], *[2], **{'three': 3, }, **{'four': 'four', })""")
+        if sys.version_info >= (3, 5):
+            self.assertAstSourceEqual(source)
+        else:
+            self.assertRaises(SyntaxError, ast.parse, source)
+
 
 if __name__ == '__main__':
     unittest.main()
