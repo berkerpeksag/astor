@@ -179,15 +179,20 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.statement(node)
         self.generic_visit(node)
 
-    def visit_FunctionDef(self, node):
+    def visit_FunctionDef(self, node, async=False):
         self.decorators(node, 1)
-        self.statement(node, 'def %s(' % node.name)
+        self.statement(node, '%sdef %s(' %
+                       ('async ' if async else '', node.name))
         self.signature(node.args)
         self.write(')')
         if getattr(node, 'returns', None) is not None:
             self.write(' ->', node.returns)
         self.write(':')
         self.body(node.body)
+
+    # introduced in Python 3.5
+    def visit_AsyncFunctionDef(self, node):
+        self.visit_FunctionDef(node, async=True)
 
     def visit_ClassDef(self, node):
         have_args = []
@@ -458,6 +463,11 @@ class SourceGenerator(ExplicitNodeVisitor):
     # new for Python 3.3
     def visit_YieldFrom(self, node):
         self.write('yield from ')
+        self.visit(node.value)
+
+    # new for Python 3.5
+    def visit_Await(self, node):
+        self.write('await ')
         self.visit(node.value)
 
     @enclose('()')
