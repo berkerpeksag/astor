@@ -93,11 +93,14 @@ class CodegenTestCase(unittest.TestCase):
         else:
             self.assertRaises(SyntaxError, ast.parse, source)
 
-    def test_async_function_definition(self):
+    def test_async_def_with_for(self):
         source = textwrap.dedent("""\
         async def read_data(db):
-            data = await db.fetch('SELECT foo FROM bar;')
-            return quux(data)""")
+            async with connect(db) as db_cxn:
+                data = await db_cxn.fetch('SELECT foo FROM bar;')
+            async for datum in data:
+                if quux(datum):
+                    return datum""")
         if sys.version_info >= (3, 5):
             self.assertAstSourceEqual(source)
         else:

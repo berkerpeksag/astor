@@ -232,21 +232,26 @@ class SourceGenerator(ExplicitNodeVisitor):
                 self.else_body(else_)
                 break
 
-    def visit_For(self, node):
-        self.statement(node, 'for ', node.target, ' in ', node.iter, ':')
+    def visit_For(self, node, async=False):
+        self.statement(node, '%sfor ' % ('async ' if async else ''),
+                       node.target, ' in ', node.iter, ':')
         self.body_or_else(node)
+
+    # introduced in Python 3.5
+    def visit_AsyncFor(self, node):
+        self.visit_For(node, async=True)
 
     def visit_While(self, node):
         self.statement(node, 'while ', node.test, ':')
         self.body_or_else(node)
 
-    def visit_With(self, node):
+    def visit_With(self, node, async=False):
         if hasattr(node, "context_expr"):  # Python < 3.3
             self.statement(node, 'with ', node.context_expr)
             self.conditional_write(' as ', node.optional_vars)
             self.write(':')
         else:                              # Python >= 3.3
-            self.statement(node, 'with ')
+            self.statement(node, '%swith ' % ('async ' if async else ''))
             count = 0
             for item in node.items:
                 if count > 0:
@@ -255,6 +260,10 @@ class SourceGenerator(ExplicitNodeVisitor):
                 count += 1
             self.write(':')
         self.body(node.body)
+
+    # new for Python 3.5
+    def visit_AsyncWith(self, node):
+        self.visit_With(node, async=True)
 
     # new for Python 3.3
     def visit_withitem(self, node):
