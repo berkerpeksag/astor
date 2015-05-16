@@ -87,9 +87,14 @@ class CodegenTestCase(unittest.TestCase):
         for source in ("(a @ b)", "a @= b"):
             self.assertAstSourceEqualIfAtLeastVersion(source, (3, 5))
 
-    def test_multiple_unpackings(self):
+    def test_multiple_call_unpackings(self):
         source = textwrap.dedent("""\
         my_function(*[1], *[2], **{'three': 3}, **{'four': 'four'})""")
+        self.assertAstSourceEqualIfAtLeastVersion(source, (3, 5))
+
+    def test_right_hand_side_dictionary_unpacking(self):
+        source = textwrap.dedent("""\
+        our_dict = {'a': 1, **{'b': 2, 'c': 3}}""")
         self.assertAstSourceEqualIfAtLeastVersion(source, (3, 5))
 
     def test_async_def_with_for(self):

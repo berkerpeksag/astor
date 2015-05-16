@@ -427,7 +427,10 @@ class SourceGenerator(ExplicitNodeVisitor):
         for idx, (key, value) in enumerate(zip(node.keys, node.values)):
             if idx:
                 self.write(', ')
-            self.write(key, ': ', value)
+            if key is None:
+                self.write('**', value)
+            else:
+                self.write(key, ': ', value)
 
     @enclose('()')
     def visit_BinOp(self, node):
