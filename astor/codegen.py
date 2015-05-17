@@ -126,13 +126,13 @@ class SourceGenerator(ExplicitNodeVisitor):
 
         loop_args(node.args, node.defaults)
         self.conditional_write(write_comma, '*', node.vararg)
-        self.conditional_write(write_comma, '**', node.kwarg)
 
         kwonlyargs = getattr(node, 'kwonlyargs', None)
         if kwonlyargs:
             if node.vararg is None:
                 self.write(write_comma, '*')
             loop_args(kwonlyargs, node.kw_defaults)
+        self.conditional_write(write_comma, '**', node.kwarg)
 
     def statement(self, node, *params, **kw):
         self.newline(node)
@@ -168,7 +168,7 @@ class SourceGenerator(ExplicitNodeVisitor):
             self.statement(node, 'from ', node.level * '.',
                            node.module, ' import ')
         else:
-            self.statement(node, 'from ', node.level * '. import ')
+            self.statement(node, 'from ', node.level * '.', ' import ')
         self.comma_list(node.names)
 
     def visit_Import(self, node):
@@ -305,10 +305,10 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.body(node.body)
         for handler in node.handlers:
             self.visit(handler)
+        self.else_body(node.orelse)
         if node.finalbody:
             self.statement(node, 'finally:')
             self.body(node.finalbody)
-        self.else_body(node.orelse)
 
     def visit_ExceptHandler(self, node):
         self.statement(node, 'except')
@@ -365,7 +365,10 @@ class SourceGenerator(ExplicitNodeVisitor):
     # Expressions
 
     def visit_Attribute(self, node):
-        self.write(node.value, '.', node.attr)
+        if isinstance(node.value, ast.Num):
+            self.write('(', node.value, ')', '.', node.attr)
+        else:
+            self.write(node.value, '.', node.attr)
 
     def visit_Call(self, node):
         want_comma = []
@@ -468,14 +471,19 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_ExtSlice(self, node):
         self.comma_list(node.dims, len(node.dims) == 1)
 
-    def visit_Yield(self, node):
+    def visit_Yield(self, node, dofrom=False):
+        is_stmt = self.new_lines
+        if not is_stmt:
+            self.write('(')
         self.write('yield')
+        self.conditional_write(' from' if dofrom else None)
         self.conditional_write(' ', node.value)
+        if not is_stmt:
+            self.write(')')
 
     # new for Python 3.3
     def visit_YieldFrom(self, node):
-        self.write('yield from ')
-        self.visit(node.value)
+        self.visit_Yield(node, True)
 
     # new for Python 3.5
     def visit_Await(self, node):
