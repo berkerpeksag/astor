@@ -75,6 +75,9 @@ def convert(srctree, dsttree='tmp_anti8'):
     logging.info('Trashing ' + dsttree)
     shutil.rmtree(dsttree, True)
 
+    badfiles = set()
+    handled_exceptions = SyntaxError, UnicodeDecodeError
+
     for srcpath, _, fnames in os.walk(srctree):
         # Avoid infinite recursion for silly users
         if dsttree in srcpath:
@@ -87,7 +90,11 @@ def convert(srctree, dsttree='tmp_anti8'):
             logging.info('    Converting ' + fname)
             srcfname = os.path.join(srcpath, fname)
             dstfname = os.path.join(dstpath, fname)
-            srcast = astor.parsefile(srcfname)
+            try:
+                srcast = astor.parsefile(srcfname)
+            except handled_exceptions:
+                badfiles.add(srcfname)
+                continue
             with open(dstfname, 'w') as f:
                 f.write(astor.to_source(srcast))
 
@@ -97,8 +104,15 @@ def convert(srctree, dsttree='tmp_anti8'):
             if striplinecol(srcast) != striplinecol(dstast):
                 raise ValueError('Round trip of %s failed' % srcfname)
 
+    if badfiles:
+        logging.warning('')
+        logging.warning('Files not processed due to syntax errors:')
+        for fname in sorted(badfiles):
+            logging.warning('    ' + fname)
+    return badfiles
 
 if __name__ == '__main__':
     srctree, = sys.argv[1:]
     logging.basicConfig(format='%(msg)s', level=logging.INFO)
-    convert(srctree)
+    if convert(srctree):
+        raise SystemExit('\nWARNING: Not all files converted\n')
