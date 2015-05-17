@@ -77,7 +77,6 @@ def convert(srctree, dsttree='tmp_anti8'):
 
     for srcpath, _, fnames in os.walk(srctree):
         # Avoid infinite recursion for silly users
-        print dsttree, srcpath, dsttree in srcpath
         if dsttree in srcpath:
             continue
         dstpath = srcpath.replace(srctree, dsttree, 1)
