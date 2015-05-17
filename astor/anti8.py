@@ -9,7 +9,7 @@ Copyright 2015 (c) Patrick Maupin
 
 Usage:
 
-    python -m astor.anti8 [-r] <srcdir>
+    python -m astor.anti8 [readonly] <srcdir>
 
 This will create a mirror directory named tmp_anti8 and will
 recursively round-trip all the Python source from the srcdir
@@ -41,10 +41,12 @@ Note 3: This tools WILL CRASH if you don't give it exactly one parameter
         on the command line -- the top of the tree you want to apply
         anti8 to.  You can read the traceback and figure this out, right?
 
-Note 4: I lied a little bit in notes 2 and 3.  You can also pass -r as
+Note 4: I lied a little bit in notes 2 and 3.  You can also pass "readonly" as
         a command line option for readonly (non-destructive mode).
         This is primarily useful for testing astor itself.
 
+Note 5: Why is it "readonly" and not "-r"?  Because python -m slurps
+        all the thingies starting with the dash.
 """
 
 import sys
