@@ -23,10 +23,12 @@ class CodegenTestCase(unittest.TestCase):
     def assertAstSourceEqual(self, source):
         self.assertEqual(astor.to_source(ast.parse(source)), source)
 
-    def assertAstSourceEqualIfAtLeastVersion(self, source, version_tuple):
+    def assertAstSourceEqualIfAtLeastVersion(self, source, version_tuple, version2=None):
+        if version2 is None:
+            version2 = version_tuple[0], version_tuple[1] - 1
         if sys.version_info >= version_tuple:
             self.assertAstSourceEqual(source)
-        else:
+        elif sys.version_info <= version2:
             self.assertRaises(SyntaxError, ast.parse, source)
 
     def test_imports(self):
@@ -35,6 +37,8 @@ class CodegenTestCase(unittest.TestCase):
         source = "import operator as op"
         self.assertAstSourceEqual(source)
         source = "from math import floor"
+        self.assertAstSourceEqual(source)
+        source = "from .. import foobar"
         self.assertAstSourceEqual(source)
 
     def test_dictionary_literals(self):
@@ -57,6 +61,20 @@ class CodegenTestCase(unittest.TestCase):
         except IndexError as exc:
             sys.stdout.write(exc)""")
         self.assertAstSourceEqual(source)
+
+        source = textwrap.dedent("""\
+        try:
+            'spam'[10]
+        except IndexError as exc:
+            sys.stdout.write(exc)
+        else:
+            pass
+        finally:
+            pass""")
+        # This is interesting -- the latest 2.7 compiler seems to
+        # handle this OK, but creates an AST with nested try/finally
+        # and try/except, so the source code doesn't match.
+        self.assertAstSourceEqualIfAtLeastVersion(source, (3, 4), (1, 0))
 
     def test_del_statement(self):
         source = "del l[0]"
@@ -82,6 +100,11 @@ class CodegenTestCase(unittest.TestCase):
                           if isinstance(n, ast.arguments)][0]
         self.assertEqual(astor.to_source(arguments_node),
                          "a1, a2, b1=j, b2='123', b3={}, b4=[]")
+        source = textwrap.dedent("""\
+        def call(*popenargs, timeout=None, **kwargs):
+            pass""")
+        # Probably also works on < 3.4, but doesn't work on 2.7...
+        self.assertAstSourceEqualIfAtLeastVersion(source, (3, 4), (2, 7))
 
     def test_matrix_multiplication(self):
         for source in ("(a @ b)", "a @= b"):
@@ -112,6 +135,19 @@ class CodegenTestCase(unittest.TestCase):
         class TreeFactory(*[FactoryMixin, TreeBase], **{'metaclass': Foo}):
             pass""")
         self.assertAstSourceEqualIfAtLeastVersion(source, (3, 0))
+
+    def test_yield(self):
+        source = "yield"
+        self.assertAstSourceEqual(source)
+        source = textwrap.dedent("""\
+        def dummy():
+            yield""")
+        self.assertAstSourceEqual(source)
+        source = "foo((yield bar))"
+        self.assertAstSourceEqual(source)
+        source = "return (yield from sam())"
+        # Probably also works on < 3.4, but doesn't work on 2.7...
+        self.assertAstSourceEqualIfAtLeastVersion(source, (3, 4), (2, 7))
 
 
 if __name__ == '__main__':
