@@ -180,9 +180,9 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.generic_visit(node)
 
     def visit_FunctionDef(self, node, async=False):
+        prefix = 'async ' if async else ''
         self.decorators(node, 1)
-        self.statement(node, '%sdef %s(' %
-                       ('async ' if async else '', node.name))
+        self.statement(node, '%sdef %s(' % (prefix, node.name))
         self.signature(node.args)
         self.write(')')
         if getattr(node, 'returns', None) is not None:
@@ -236,7 +236,8 @@ class SourceGenerator(ExplicitNodeVisitor):
                 break
 
     def visit_For(self, node, async=False):
-        self.statement(node, '%sfor ' % ('async ' if async else ''),
+        prefix = 'async ' if async else ''
+        self.statement(node, '%sfor ' % prefix,
                        node.target, ' in ', node.iter, ':')
         self.body_or_else(node)
 
@@ -254,7 +255,8 @@ class SourceGenerator(ExplicitNodeVisitor):
             self.conditional_write(' as ', node.optional_vars)
             self.write(':')
         else:                              # Python >= 3.3
-            self.statement(node, '%swith ' % ('async ' if async else ''))
+            prefix = 'async ' if async else ''
+            self.statement(node, '%swith ' % prefix)
             count = 0
             for item in node.items:
                 if count > 0:
