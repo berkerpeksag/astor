@@ -11,7 +11,7 @@ astor -- AST observe/rewrite
 :Build status:
     .. image:: https://secure.travis-ci.org/berkerpeksag/astor.png
         :alt: Travis CI
-        :target: http://travis-ci.org/berkerpeksag/astor/
+        :target: https://travis-ci.org/berkerpeksag/astor/
 
 astor is designed to allow easy manipulation of Python source via the AST.
 
@@ -83,6 +83,94 @@ Functions
    If *add_line_information* is set to ``True`` comments for the line numbers
    of the nodes are added to the output. This can be used to spot wrong line
    number information of statement nodes.
+
+.. function:: parsefile(fname)
+
+   Parse a python file into an AST.
+
+   This is a very thin wrapper around ast.parse
+
+   It does not yet handle all possible Python source
+   encodings (issue #26).
+
+
+.. function:: finfo(codeobj)
+
+   Returns the file and line number of a code object.
+
+   If the code object has a __file__ attribute (e.g. if
+   it is a module), then the returned line number will be 0.
+
+
+.. function:: codetoast(codeobj)
+
+   Given a module, or a function that was compiled as part
+   of a module, re-compile the module into an AST and extract
+   the sub-AST for the function.  Allow caching to reduce
+   number of compiles.
+
+
+.. function:: striplinecol(node)
+
+   Strip the line and column numbers from the tree
+   of nodes so they do not interfere with a comparision.
+
+.. function:: pyfiles(srctree, ignore=None)
+
+
+    Recursively returns the path and filename for all
+    .py files under the srctree directory.
+
+    If ignore is not None, it will ignore any path
+    that contains the ignore string.
+
+Command line utilities
+--------------------------
+
+anti8
+''''''
+
+There is currently one command-line utility::
+
+    python -m astor.anti8 [readonly] <srcdir>
+
+This will create a mirror directory named tmp_anti8 and will
+recursively round-trip all the Python source from the srcdir
+into the tmp_anti8 dir, after compiling it and then reconstituting
+it through codegen.
+
+The purpose of anti8 is to place Python code into a canonical form --
+     that just happens to be about as far away from PEP 8 as you can get.
+
+How is this possibly useful?
+
+Well, for a start, since it is a canonical form, you can compare the anti8
+representation of a source tree against the anti8 representation of the
+same tree after a PEP8 tool was run on it.
+
+Or, maybe more importantly, after manual edits were made in the name
+of PEP8.  Trust, but verify.
+
+Note 1:
+        The canonical form is only canonical for a given version of
+        this module and the astor toolbox.  It is not guaranteed to
+        be stable.  The only desired guarantee is that two source modules
+        that parse to the same AST will be converted back into the same
+        canonical form.
+
+Note 2:
+        This tool WILL TRASH the tmp_anti8 directory -- as far as it is
+        concerned, it OWNS that directory.
+
+Note 3:
+        This tools WILL CRASH if you don't give it exactly one parameter
+        on the command line -- the top of the tree you want to apply
+        anti8 to.  You can read the traceback and figure this out, right?
+
+Note 4:
+        I lied a little bit in notes 2 and 3.  You can also pass **readonly**
+        as a command line option for readonly (non-destructive mode).
+        This is primarily useful for testing astor itself.
 
 
 .. _GitHub: https://github.com/berkerpeksag/astor/

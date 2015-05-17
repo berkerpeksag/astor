@@ -11,6 +11,7 @@ Copyright 2013 (c) Berker Peksag
 
 import ast
 import sys
+import os
 
 
 class NonExistent(object):
@@ -162,12 +163,35 @@ class ExplicitNodeVisitor(ast.NodeVisitor):
 
 
 def parsefile(fname):
+    """Parse a python file into an AST.
+
+       This is a very thin wrapper around ast.parse
+
+        TODO: Handle encodings other than the default (issue #26)
+    """
     with open(fname, 'r') as f:
         fstr = f.read()
     fstr = fstr.replace('\r\n', '\n').replace('\r', '\n')
     if not fstr.endswith('\n'):
         fstr += '\n'
     return ast.parse(fstr, filename=fname)
+
+
+def finfo(codeobj):
+    """Returns the file and line number of a code object.
+        If the code object has a __file__ attribute (e.g. if
+        it is a module), then the returned line number will
+        be 0
+
+    """
+    fname = getattr(codeobj, '__file__', None)
+    linenum = 0
+    if fname is None:
+        func_code = codeobj.__code__
+        fname = func_code.co_filename
+        linenum = func_code.co_firstlineno
+    fname = fname.replace('.pyc', '.py')
+    return fname, linenum
 
 
 class CodeToAst(object):
@@ -182,18 +206,12 @@ class CodeToAst(object):
 
     def __call__(self, codeobj):
         cache = self.cache
-        fname = getattr(codeobj, '__file__', None)
-        if fname is None:
-            func_code = codeobj.__code__
-            fname = func_code.co_filename
-            linenum = func_code.co_firstlineno
-            key = fname, linenum
-        else:
-            fname = key = fname.replace('.pyc', '.py')
+        key = finfo(codeobj)
         result = cache.get(key)
         if result is not None:
             return result
-        cache[fname] = mod_ast = parsefile(fname)
+        fname = key[0]
+        cache[(fname, 0)] = mod_ast = parsefile(fname)
         for obj in mod_ast.body:
             if not isinstance(obj, ast.FunctionDef):
                 continue
@@ -201,3 +219,31 @@ class CodeToAst(object):
         return cache[key]
 
 codetoast = CodeToAst()
+
+
+class StripLineCol(ast.NodeVisitor):
+    """Strip the line and column numbers from the tree
+
+    """
+
+    def visit(self, node):
+        """Visit a node."""
+        for kill in ('lineno', 'col_offset'):
+            if hasattr(node, kill):
+                delattr(node, kill)
+
+striplinecol = StripLineCol().visit
+
+
+def pyfiles(srctree, ignore=None):
+    """Return all the python files in a source tree
+
+       Ignores any path that contains the ignore string
+    """
+
+    for srcpath, _, fnames in os.walk(srctree):
+        # Avoid infinite recursion for silly users
+        if ignore is not None and ignore in srcpath:
+            continue
+        for fname in (x for x in fnames if x.endswith('.py')):
+            yield srcpath, fname
