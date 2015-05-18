@@ -476,19 +476,16 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_ExtSlice(self, node):
         self.comma_list(node.dims, len(node.dims) == 1)
 
-    def visit_Yield(self, node, dofrom=False):
-        is_stmt = self.new_lines
-        if not is_stmt:
-            self.write('(')
+    @enclose('()')
+    def visit_Yield(self, node):
         self.write('yield')
-        self.conditional_write(' from' if dofrom else None)
         self.conditional_write(' ', node.value)
-        if not is_stmt:
-            self.write(')')
 
     # new for Python 3.3
+    @enclose('()')
     def visit_YieldFrom(self, node):
-        self.visit_Yield(node, True)
+        self.write('yield from')
+        self.conditional_write(' ', node.value)
 
     # new for Python 3.5
     def visit_Await(self, node):
