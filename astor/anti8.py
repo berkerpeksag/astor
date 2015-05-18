@@ -59,6 +59,23 @@ import logging
 from .misc import parsefile, striplinecol,  pyfiles
 from .codegen import to_source
 
+def dump(top, dict=dict, list=list, type=type, isinstance=isinstance, len=len):
+
+    def dump(node, indent):
+        if isinstance(node, dict):
+            for key, value in sorted(node.items()):
+                result.append('%s%s' % (indent, key))
+                dump(value, indent+'    ')
+        elif isinstance(node, list):
+            for i, value in enumerate(node):
+                result.append('%s[%s]' % (indent, i))
+                dump(value, indent+'    ')
+        else:
+            result.append('%s%s' % (indent, repr(node)))
+
+    result = []
+    dump(top, '')
+    return '\n'.join(result)
 
 def convert(srctree, dsttree='tmp_anti8', readonly=False):
     """Walk the srctree, and convert/copy all python files
@@ -75,6 +92,7 @@ def convert(srctree, dsttree='tmp_anti8', readonly=False):
         shutil.rmtree(dsttree, True)
 
     badfiles = set()
+    broken = []
     #TODO: When issue #26 resolved, remove UnicodeDecodeError
     handled_exceptions = SyntaxError, UnicodeDecodeError
 
@@ -107,15 +125,25 @@ def convert(srctree, dsttree='tmp_anti8', readonly=False):
         # As a sanity check, make sure that ASTs themselves
         # round-trip OK
         dstast = ast.parse(dsttxt) if readonly else parsefile(dstfname)
-        if striplinecol(srcast) != striplinecol(dstast):
-            raise ValueError('Round trip of %s failed' % srcfname)
+        srcast = striplinecol(srcast)
+        dstast = striplinecol(dstast)
+        if srcast != dstast:
+            broken.append((srcfname, srcast, dstast))
 
     if badfiles:
         logging.warning('')
         logging.warning('Files not processed due to syntax errors:')
         for fname in sorted(badfiles):
             logging.warning('    ' + fname)
-    return badfiles
+    if broken:
+        logging.warning('')
+        logging.warning('Files failed to round-trip to AST:')
+        for i, (fname, srcast, dstast) in enumerate(sorted(broken)):
+            logging.warning('    ' + fname)
+            with open('1_bad_anti8_%d.txt' % i, 'w') as f:
+                f.write(dump(srcast))
+            with open('2_bad_anti8_%d.txt' % i, 'w') as f:
+                f.write(dump(dstast))
 
 if __name__ == '__main__':
     readonly = 'readonly' in sys.argv

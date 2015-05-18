@@ -16,5 +16,5 @@ from .misc import iter_node, dump, all_symbols, get_anyop  # NOQA
 from .misc import get_boolop, get_binop, get_cmpop, get_unaryop  # NOQA
 from .misc import ExplicitNodeVisitor  # NOQA
 from .misc import parsefile, finfo, CodeToAst, codetoast  # NOQA
-from .misc import StripLineCol, striplinecol,  pyfiles# NOQA
+from .misc import striplinecol,  pyfiles# NOQA
 from .treewalk import TreeWalk  # NOQA

@@ -221,18 +221,25 @@ class CodeToAst(object):
 codetoast = CodeToAst()
 
 
-class StripLineCol(ast.NodeVisitor):
-    """Strip the line and column numbers from the tree
+def striplinecol(node, kill = 'lineno col_offset ctx',
+         list=list, isinstance=isinstance, dict=dict, vars=vars):
+    AST = ast.AST
+    kill = set(kill.split())
 
-    """
+    def recurse(node):
+        if isinstance(node, AST):
+            result = dict((key, recurse(value))
+              for key, value in vars(node).items()
+              if key not in kill)
+            assert '_type' not in result
+            result['_type'] = node.__class__.__name__
+            return result
+        elif isinstance(node, list):
+            return [recurse(value) for value in node]
+        else:
+            return node
+    return recurse(node)
 
-    def visit(self, node):
-        """Visit a node."""
-        for kill in ('lineno', 'col_offset'):
-            if hasattr(node, kill):
-                delattr(node, kill)
-
-striplinecol = StripLineCol().visit
 
 
 def pyfiles(srctree, ignore=None):
