@@ -4,8 +4,8 @@ Part of the astor library for Python AST manipulation.
 
 License: 3-clause BSD
 
-Copyright 2012-2015 (c) Patrick Maupin
-Copyright 2013-2015 (c) Berker Peksag
+Copyright (c) 2012-2015 Patrick Maupin
+Copyright (c) 2013-2015 Berker Peksag
 
 Functions that interact with the filesystem go here.
 

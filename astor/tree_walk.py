@@ -7,6 +7,9 @@ License: 3-clause BSD
 Copyright 2012 (c) Patrick Maupin
 Copyright 2013 (c) Berker Peksag
 
+This file contains a TreeWalk class that views a node tree
+as a unified whole and allows several modes of traversal.
+
 """
 
 from .node_util import iter_node
@@ -31,6 +34,7 @@ class MetaFlatten(type):
         return type.__new__(clstype, name, newbases, newdict)
 
 MetaFlatten = MetaFlatten('MetaFlatten', (object, ), {})
+
 
 
 class TreeWalk(MetaFlatten):
@@ -76,9 +80,9 @@ class TreeWalk(MetaFlatten):
     methods can be written.  They will be called in alphabetical order.
 
     """
-    nodestack = None
 
     def __init__(self, node=None):
+        self.nodestack = []
         self.setup()
         if node is not None:
             self.walk(node)
@@ -106,11 +110,11 @@ class TreeWalk(MetaFlatten):
         """
         pre_handlers = self.pre_handlers.get
         post_handlers = self.post_handlers.get
-        oldstack = self.nodestack
-        self.nodestack = nodestack = []
+        nodestack = self.nodestack
+        emptystack = len(nodestack)
         append, pop = nodestack.append, nodestack.pop
         append([node, name, list(iter_node(node, name + '_item')), -1])
-        while nodestack:
+        while len(nodestack) > emptystack:
             node, name, subnodes, index = nodestack[-1]
             if index >= len(subnodes):
                 handler = (post_handlers(type(node).__name__) or
@@ -138,7 +142,6 @@ class TreeWalk(MetaFlatten):
             else:
                 node, name = subnodes[index]
                 append([node, name, list(iter_node(node, name + '_item')), -1])
-        self.nodestack = oldstack
 
     @property
     def parent(self):

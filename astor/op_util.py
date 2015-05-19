@@ -4,7 +4,7 @@ Part of the astor library for Python AST manipulation.
 
 License: 3-clause BSD
 
-Copyright (c) 2012-2015 Patrick Maupin
+Copyright (c) 2015 Patrick Maupin
 
 This module provides data and functions for mapping
 AST nodes to symbols and precedences.
@@ -14,6 +14,9 @@ AST nodes to symbols and precedences.
 import ast
 
 op_data = """
+          Yield                  0
+          Lambda                 0
+           IfExp                 2
               Or   or            4
              And   and           6
              Not   not           8
@@ -42,13 +45,20 @@ op_data = """
             UAdd   +            24
             USub   -            24
           Invert   ~            24
-             Pow   **           26
+          NegNum   negativenum  26
+             Pow   **           28
+             Num                30
+       Attribute                40
+   comprehension                40
+            Call                40
+       Subscript                40
 """
 
 op_data = [x.split() for x in op_data.splitlines()]
 op_data = [(x[0], ' '.join(x[1:-1]), int(x[-1])) for x in op_data if x]
 precedence_data = dict((getattr(ast, x, None), z) for x, y, z in op_data)
 symbol_data = dict((getattr(ast, x, None), y) for x, y, z in op_data)
+
 
 def get_op_symbol(obj, fmt='%s', symbol_data=symbol_data, type=type):
     """Given an AST node object, returns a string containing the symbol.
@@ -59,3 +69,8 @@ def get_op_precedence(obj, precedence_data=precedence_data, type=type):
     """Given an AST node object, returns the precedence.
     """
     return precedence_data[type(obj)]
+
+class OpLookup(object):
+    vars().update((x, (y, z)) for x, y, z in op_data)
+
+neg_offset = OpLookup.NegNum[1] - OpLookup.Num[1]

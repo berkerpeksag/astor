@@ -3,7 +3,7 @@ Part of the astor library for Python AST manipulation
 
 License: 3-clause BSD
 
-Copyright 2014 (c) Berker Peksag
+Copyright (c) 2014 Berker Peksag
 """
 
 import ast
@@ -137,11 +137,11 @@ class CodegenTestCase(unittest.TestCase):
         self.assertAstSourceEqualIfAtLeastVersion(source, (3, 0))
 
     def test_yield(self):
-        source = "(yield)"
+        source = "yield"
         self.assertAstSourceEqual(source)
         source = textwrap.dedent("""\
         def dummy():
-            (yield)""")
+            yield""")
         self.assertAstSourceEqual(source)
         source = "foo((yield bar))"
         self.assertAstSourceEqual(source)
