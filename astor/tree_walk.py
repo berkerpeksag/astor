@@ -12,6 +12,27 @@ Copyright 2013 (c) Berker Peksag
 from .misc import MetaFlatten, iter_node
 
 
+class MetaFlatten(type):
+    """This metaclass is used to flatten classes to remove
+    class hierarchy.
+
+    This makes it easier to manipulate classes (find
+    attributes in a single dict, etc.)
+
+    """
+    def __new__(clstype, name, bases, clsdict):
+        newbases = (object,)
+        newdict = {}
+        for base in reversed(bases):
+            if base not in newbases:
+                newdict.update(vars(base))
+        newdict.update(clsdict)
+        # Delegate the real work to type
+        return type.__new__(clstype, name, newbases, newdict)
+
+MetaFlatten = MetaFlatten('MetaFlatten', (object, ), {})
+
+
 class TreeWalk(MetaFlatten):
     """The TreeWalk class can be used as a superclass in order
     to walk an AST or similar tree.
