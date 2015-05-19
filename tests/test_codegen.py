@@ -137,13 +137,15 @@ class CodegenTestCase(unittest.TestCase):
         self.assertAstSourceEqualIfAtLeastVersion(source, (3, 0))
 
     def test_yield(self):
-        source = "yield"
+        source = "(yield)"
         self.assertAstSourceEqual(source)
         source = textwrap.dedent("""\
         def dummy():
-            yield""")
+            (yield)""")
         self.assertAstSourceEqual(source)
         source = "foo((yield bar))"
+        self.assertAstSourceEqual(source)
+        source = "(yield bar)()"
         self.assertAstSourceEqual(source)
         source = "return (yield from sam())"
         # Probably also works on < 3.4, but doesn't work on 2.7...
