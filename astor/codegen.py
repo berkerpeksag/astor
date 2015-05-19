@@ -179,6 +179,25 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.statement(node)
         self.generic_visit(node)
 
+    def write_docstring(self, docstring):
+        self.indentation += 1
+        self.newline()
+        self.write('"""')
+        self.newline()
+        self.write(docstring)
+        self.newline()
+        self.write('"""')
+        self.newline()
+        self.indentation -=1
+
+    def body_with_docstring(self, node):
+        docstring = ast.get_docstring(node)
+        if docstring is not None:
+            self.write_docstring(docstring)
+            self.body(node.body[1:])
+        else:
+            self.body(node.body)
+
     def visit_FunctionDef(self, node, async=False):
         prefix = 'async ' if async else ''
         self.decorators(node, 1)
@@ -188,7 +207,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         if getattr(node, 'returns', None) is not None:
             self.write(' ->', node.returns)
         self.write(':')
-        self.body(node.body)
+        self.body_with_docstring(node)
 
     # introduced in Python 3.5
     def visit_AsyncFunctionDef(self, node):
@@ -220,7 +239,7 @@ class SourceGenerator(ExplicitNodeVisitor):
                 self.conditional_write(paren_or_comma, '*', node.starargs)
                 self.conditional_write(paren_or_comma, '**', node.kwargs)
         self.write(have_args and '):' or ':')
-        self.body(node.body)
+        self.body_with_docstring(node)
 
     def visit_If(self, node):
         self.statement(node, 'if ', node.test, ':')

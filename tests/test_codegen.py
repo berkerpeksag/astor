@@ -150,6 +150,15 @@ class CodegenTestCase(unittest.TestCase):
         source = "return (yield from sam())"
         # Probably also works on < 3.4, but doesn't work on 2.7...
         self.assertAstSourceEqualIfAtLeastVersion(source, (3, 4), (2, 7))
+        
+    def test_pretty_docstring(self):
+        source = textwrap.dedent('''\
+        def my_function():
+            """
+            docstring
+            """
+            return 1''')        
+        self.assertAstSourceEqual(source)
 
 
 if __name__ == '__main__':
