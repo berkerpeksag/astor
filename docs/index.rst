@@ -11,7 +11,7 @@ astor -- AST observe/rewrite
 :Build status:
     .. image:: https://secure.travis-ci.org/berkerpeksag/astor.png
         :alt: Travis CI
-        :target: http://travis-ci.org/berkerpeksag/astor/
+        :target: https://travis-ci.org/berkerpeksag/astor/
 
 astor is designed to allow easy manipulation of Python source via the AST.
 
@@ -62,6 +62,30 @@ areas:
     names
   - Enjoy easy access to parent node(s) for tree rewriting
 
+Classes
+---------
+
+.. class:: CodeToAst
+
+    This is the base class for the helper function code_to_ast.
+    It may be subclassed, but probably will not need to be.
+
+
+.. class:: TreeWalk(node=None)
+
+    The TreeWalk class is designed to be subclassed in order
+    to walk a tree in arbitrary fashion.  TreeWalk deserves
+    its own treatise, but there is no time to write it
+    at present :(
+
+
+.. class:: ExplicitNodeVisitor
+
+    The ExplicitNodeVisitor class subclasses the ast.NodeVisitor
+    class, and removes the ability to perform implicit visits.
+    This allows for rapid failure when your code encounters a
+    tree with a node type it was not expecting.
+
 
 Functions
 ---------
@@ -75,14 +99,113 @@ Functions
 .. function:: to_source(source, indent_with=' ' * 4, \
                         add_line_information=False)
 
-   Convert a node tree back into Python source code.
+    Convert a node tree back into Python source code.
 
-   Each level of indentation is replaced with *indent_with*. Per default this
-   parameter is equal to four spaces as suggested by :pep:`8`.
+    Each level of indentation is replaced with *indent_with*. Per default this
+    parameter is equal to four spaces as suggested by :pep:`8`.
 
-   If *add_line_information* is set to ``True`` comments for the line numbers
-   of the nodes are added to the output. This can be used to spot wrong line
-   number information of statement nodes.
+    If *add_line_information* is set to ``True`` comments for the line numbers
+    of the nodes are added to the output. This can be used to spot wrong line
+    number information of statement nodes.
+
+.. function:: code_to_ast(codeobj)
+
+    Given a module, or a function that was compiled as part
+    of a module, re-compile the module into an AST and extract
+    the sub-AST for the function.  Allow caching to reduce
+    number of compiles.
+
+    .. versionadded:: 0.6
+
+        Was previously named codetoast
+
+
+.. function:: astor.code_to_ast.parse_file(fname)
+
+    Parse a python file into an AST.
+
+    This is a very thin wrapper around ast.parse
+
+    It does not yet handle all possible Python source
+    encodings (issue #26).
+
+    .. versionadded:: 0.6
+
+        Was previously named parsefile.
+
+
+.. function:: astor.code_to_ast.get_file_info(codeobj)
+
+    Returns the file and line number of a code object.
+
+    If the code object has a __file__ attribute (e.g. if
+    it is a module), then the returned line number will be 0.
+
+
+    .. versionadded:: 0.6
+
+
+.. function:: astor.code_to_ast.find_py_files(srctree, ignore=None)
+
+    Recursively returns the path and filename for all
+    .py files under the srctree directory.
+
+    If ignore is not None, it will ignore any path
+    that contains the ignore string.
+
+    .. versionadded:: 0.6
+
+
+.. function:: iter_node(node, unknown=None)
+
+    This function iterates over an AST node object:
+
+       - If the object has a _fields attribute,
+         it gets attributes in the order of this
+         and returns name, value pairs.
+
+       - Otherwise, if the object is a list instance,
+         it returns name, value pairs for each item
+         in the list, where the name is passed into
+         this function (defaults to blank).
+
+       - Can update an unknown set with information about
+         attributes that do not exist in fields.
+
+
+.. function:: dump_tree(node, name=None, initial_indent='', \
+                        indentation='    ', maxline=120, maxmerged=80)
+
+    This function pretty prints an AST or similar structure
+    with indentation.
+
+    .. versionadded:: 0.6
+
+        Was previously named dump
+
+
+.. function:: strip_tree(node)
+
+    This function recursively removes all attributes from
+    an AST tree that are not referenced by the _fields member.
+
+    Returns a set of the names of all attributes stripped.
+    By default, this should just be the line number and column.
+
+    This canonicalizes two trees for comparison purposes.
+
+    .. versionadded:: 0.6
+
+
+.. function:: get_op_symbol(node, fmt='%s')
+
+    Given an ast node, returns the string representing the
+    corresponding symbol.
+
+    .. versionadded:: 0.6
+
+        Replaces and deprecates get_boolop, get_binop, get_cmpop,
+        get_unaryop, and get_anyop.
 
 
 .. _GitHub: https://github.com/berkerpeksag/astor/
