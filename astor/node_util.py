@@ -21,9 +21,9 @@ class NonExistent(object):
     pass
 
 
-def iter_node(node, name='',
+def iter_node(node, name='', unknown=None,
               # Runtime optimization
-              unknown=None, list=list, getattr=getattr, isinstance=isinstance,
+              list=list, getattr=getattr, isinstance=isinstance,
               enumerate=enumerate, missing=NonExistent):
     """Iterates over an object:
 
@@ -36,7 +36,7 @@ def iter_node(node, name='',
          in the list, where the name is passed into
          this function (defaults to blank).
 
-       - Can update a list with information about
+       - Can update an unknown set with information about
          attributes that do not exist in fields.
     """
     fields = getattr(node, '_fields', None)
