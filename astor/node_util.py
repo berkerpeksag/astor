@@ -41,7 +41,7 @@ def iter_node(node, name='',
     """
     fields = getattr(node, '_fields', None)
     if fields is not None:
-        for name in list(fields):
+        for name in fields:
             value = getattr(node, name, missing)
             if value is not missing:
                 yield value, name
