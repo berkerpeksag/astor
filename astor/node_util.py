@@ -4,20 +4,26 @@ Part of the astor library for Python AST manipulation.
 
 License: 3-clause BSD
 
-Copyright 2012 (c) Patrick Maupin
-Copyright 2013 (c) Berker Peksag
+Copyright 2012-2015 (c) Patrick Maupin
+Copyright 2013-2015 (c) Berker Peksag
+
+Utilities for node (and, by extension, tree) manipulation.
+For a whole-tree approach, see the treewalk submodule.
 
 """
 
 import ast
-import sys
 
 
 class NonExistent(object):
+    """This is not the class you are looking for.
+    """
     pass
 
 
-def iter_node(node, name='', list=list, getattr=getattr, isinstance=isinstance,
+def iter_node(node, name='',
+              # Runtime optimization
+              unknown=None, list=list, getattr=getattr, isinstance=isinstance,
               enumerate=enumerate, missing=NonExistent):
     """Iterates over an object:
 
@@ -30,20 +36,26 @@ def iter_node(node, name='', list=list, getattr=getattr, isinstance=isinstance,
          in the list, where the name is passed into
          this function (defaults to blank).
 
+       - Can update a list with information about
+         attributes that do not exist in fields.
     """
     fields = getattr(node, '_fields', None)
     if fields is not None:
-        for name in fields:
+        for name in list(fields):
             value = getattr(node, name, missing)
             if value is not missing:
                 yield value, name
+        if unknown is not None:
+            unknown.update(set(vars(node)) - set(fields))
     elif isinstance(node, list):
         for value in node:
             yield value, name
 
 
-def dump(node, name=None, initial_indent='', indentation='    ',
-         maxline=120, maxmerged=80, iter_node=iter_node, special=ast.AST,
+def dump_tree(node, name=None, initial_indent='', indentation='    ',
+         maxline=120, maxmerged=80,
+         #Runtime optimization
+         iter_node=iter_node, special=ast.AST,
          list=list, isinstance=isinstance, type=type, len=len):
     """Dumps an AST or similar structure:
 
@@ -74,3 +86,51 @@ def dump(node, name=None, initial_indent='', indentation='    ',
     return dump(node, name, initial_indent)
 
 
+def strip_tree(node,
+         #Runtime optimization
+         iter_node=iter_node, special=ast.AST,
+         list=list, isinstance=isinstance, type=type, len=len):
+    """Strips an AST by removing all attributes not in _fields.
+
+    Returns a set of the names of all attributes stripped.
+
+    This canonicalizes two trees for comparison purposes.
+    """
+    stripped = set()
+    def strip(node, indent):
+        unknown = set()
+        leaf = True
+        for subnode, _ in iter_node(node, unknown=unknown):
+            leaf = False
+            strip(subnode, indent + '    ')
+        if leaf:
+            if isinstance(node, special):
+                unknown = set(vars(node))
+        stripped.update(unknown)
+        for name in unknown:
+            delattr(node, name)
+        if hasattr(node, 'ctx'):
+            delattr(node, 'ctx')
+            if 'ctx' in node._fields:
+                mylist = list(node._fields)
+                mylist.remove('ctx')
+                node._fields = mylist
+    strip(node, '')
+    return stripped
+
+
+class ExplicitNodeVisitor(ast.NodeVisitor):
+    """This expands on the ast module's NodeVisitor class
+    to remove any implicit visits.
+
+    """
+
+    def abort_visit(node):  # XXX: self?
+        msg = 'No defined handler for node of type %s'
+        raise AttributeError(msg % node.__class__.__name__)
+
+    def visit(self, node, abort=abort_visit):
+        """Visit a node."""
+        method = 'visit_' + node.__class__.__name__
+        visitor = getattr(self, method, abort)
+        return visitor(node)

@@ -9,7 +9,7 @@ Copyright 2013 (c) Berker Peksag
 
 """
 
-from .misc import MetaFlatten, iter_node
+from .node_util import iter_node
 
 
 class MetaFlatten(type):

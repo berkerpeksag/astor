@@ -1,11 +1,17 @@
 # -*- coding: utf-8 -*-
 """
+Part of the astor library for Python AST manipulation.
+
+License: 3-clause BSD
+
+Copyright (c) 2008      Armin Ronacher
+Copyright (c) 2012-2015 Patrick Maupin
+Copyright (c) 2013-2015 Berker Peksag
+
 This module converts an AST into Python source code.
 
-Original code copyright (c) 2008 by Armin Ronacher and
-is distributed under the 3-clause BSD license.
-
-It was derived from a modified version found here:
+Before being version-controlled as part of astor,
+this code came from here (in 2012):
 
     https://gist.github.com/1250562
 
@@ -14,8 +20,8 @@ It was derived from a modified version found here:
 import ast
 import sys
 
-from .misc import (ExplicitNodeVisitor, get_boolop, get_binop, get_cmpop,
-                   get_unaryop)
+from .op_util import get_op_symbol
+from .node_util import ExplicitNodeVisitor
 
 
 def to_source(node, indent_with=' ' * 4, add_line_information=False):
@@ -160,7 +166,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.visit(node.value)
 
     def visit_AugAssign(self, node):
-        self.statement(node, node.target, get_binop(node.op, ' %s= '),
+        self.statement(node, node.target, get_op_symbol(node.op, ' %s= '),
                        node.value)
 
     def visit_ImportFrom(self, node):
@@ -439,11 +445,11 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     @enclose('()')
     def visit_BinOp(self, node):
-        self.write(node.left, get_binop(node.op, ' %s '), node.right)
+        self.write(node.left, get_op_symbol(node.op, ' %s '), node.right)
 
     @enclose('()')
     def visit_BoolOp(self, node):
-        op = get_boolop(node.op, ' %s ')
+        op = get_op_symbol(node.op, ' %s ')
         for idx, value in enumerate(node.values):
             self.write(idx and op or '', value)
 
@@ -451,11 +457,11 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_Compare(self, node):
         self.visit(node.left)
         for op, right in zip(node.ops, node.comparators):
-            self.write(get_cmpop(op, ' %s '), right)
+            self.write(get_op_symbol(op, ' %s '), right)
 
     @enclose('()')
     def visit_UnaryOp(self, node):
-        self.write(get_unaryop(node.op), ' ', node.operand)
+        self.write(get_op_symbol(node.op), ' ', node.operand)
 
     def visit_Subscript(self, node):
         self.write(node.value, '[', node.slice, ']')
