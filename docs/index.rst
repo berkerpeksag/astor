@@ -208,4 +208,53 @@ Functions
         get_unaryop, and get_anyop.
 
 
+Command line utilities
+--------------------------
+
+anti8
+''''''
+
+There is currently one command-line utility::
+
+    python -m astor.anti8 [readonly] <srcdir>
+
+This will create a mirror directory named tmp_anti8 and will
+recursively round-trip all the Python source from the srcdir
+into the tmp_anti8 dir, after compiling it and then reconstituting
+it through codegen.
+
+The purpose of anti8 is to place Python code into a canonical form --
+     that just happens to be about as far away from PEP 8 as you can get.
+
+How is this possibly useful?
+
+Well, for a start, since it is a canonical form, you can compare the anti8
+representation of a source tree against the anti8 representation of the
+same tree after a PEP8 tool was run on it.
+
+Or, maybe more importantly, after manual edits were made in the name
+of PEP8.  Trust, but verify.
+
+Note 1:
+        The canonical form is only canonical for a given version of
+        this module and the astor toolbox.  It is not guaranteed to
+        be stable.  The only desired guarantee is that two source modules
+        that parse to the same AST will be converted back into the same
+        canonical form.
+
+Note 2:
+        This tool WILL TRASH the tmp_anti8 directory -- as far as it is
+        concerned, it OWNS that directory.
+
+Note 3:
+        This tools WILL CRASH if you don't give it exactly one parameter
+        on the command line -- the top of the tree you want to apply
+        anti8 to.  You can read the traceback and figure this out, right?
+
+Note 4:
+        I lied a little bit in notes 2 and 3.  You can also pass **readonly**
+        as a command line option for readonly (non-destructive mode).
+        This is primarily useful for testing astor itself.
+
+
 .. _GitHub: https://github.com/berkerpeksag/astor/
