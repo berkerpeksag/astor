@@ -36,5 +36,5 @@ setup(
         'Topic :: Software Development :: Code Generators',
         'Topic :: Software Development :: Compilers',
     ],
-    keywords='ast, codegen, PEP8, anti8',
+    keywords='ast, codegen, PEP8',
 )
