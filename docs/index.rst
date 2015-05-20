@@ -211,29 +211,50 @@ Functions
 Command line utilities
 --------------------------
 
-anti8
+rtrip
 ''''''
 
 There is currently one command-line utility::
 
-    python -m astor.anti8 [readonly] <srcdir>
+    python -m astor.rtrip [readonly] [<srcdir>]
 
-This will create a mirror directory named tmp_anti8 and will
+This utility tests round-tripping of Python source to AST
+and back to source.
+
+    .. versionadded:: 0.6
+
+
+If readonly is specified, then the source will be tested,
+but no files will be written.
+
+If srcdir is not specified, the standard library will be used.
+
+This will create a mirror directory named tmp_rtrip and will
 recursively round-trip all the Python source from the srcdir
-into the tmp_anti8 dir, after compiling it and then reconstituting
-it through codegen.
+into the tmp_rtrip dir, after compiling it and then reconstituting
+it through code_gen.to_source.
 
-The purpose of anti8 is to place Python code into a canonical form --
-     that just happens to be about as far away from PEP 8 as you can get.
+The purpose of rtrip is to place Python code into a canonical form.
 
-How is this possibly useful?
+This is useful both for functional testing of astor, and for
+validating code edits.
 
-Well, for a start, since it is a canonical form, you can compare the anti8
-representation of a source tree against the anti8 representation of the
-same tree after a PEP8 tool was run on it.
+For example, if you make manual edits for PEP8 compliance,
+you can diff the rtrip output of the original code against
+the rtrip output of the edited code, to insure that you
+didn't make any functional changes.
 
-Or, maybe more importantly, after manual edits were made in the name
-of PEP8.  Trust, but verify.
+For testing astor itself, it is useful to point to a big codebase,
+e.g::
+
+    python -m astor.rtrip
+
+to round-trip the standard library.
+
+If any round-tripped files fail to be built or to match, the
+tmp_rtrip directory will also contain fname.srcdmp and fname.dstdmp,
+which are textual representations of the ASTs.
+
 
 Note 1:
         The canonical form is only canonical for a given version of
@@ -243,18 +264,8 @@ Note 1:
         canonical form.
 
 Note 2:
-        This tool WILL TRASH the tmp_anti8 directory -- as far as it is
-        concerned, it OWNS that directory.
-
-Note 3:
-        This tools WILL CRASH if you don't give it exactly one parameter
-        on the command line -- the top of the tree you want to apply
-        anti8 to.  You can read the traceback and figure this out, right?
-
-Note 4:
-        I lied a little bit in notes 2 and 3.  You can also pass **readonly**
-        as a command line option for readonly (non-destructive mode).
-        This is primarily useful for testing astor itself.
+        This tool WILL TRASH the tmp_rtrip directory (unless readonly
+        is specified) -- as far as it is concerned, it OWNS that directory.
 
 
 .. _GitHub: https://github.com/berkerpeksag/astor/

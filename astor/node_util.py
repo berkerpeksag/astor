@@ -134,3 +134,29 @@ class ExplicitNodeVisitor(ast.NodeVisitor):
         method = 'visit_' + node.__class__.__name__
         visitor = getattr(self, method, abort)
         return visitor(node)
+
+def allow_ast_comparison():
+    """This ugly little monkey-patcher adds in a helper class
+    to all the AST node types.  This helper class allows
+    eq/ne comparisons to work, so that entire trees can
+    be easily compared by Python's comparison machinery.
+    Used by the anti8 functions to compare old and new ASTs.
+    Could also be used by the test library.
+
+
+    """
+
+    class CompareHelper(object):
+        def __eq__(self, other):
+            return type(self) == type(other) and vars(self) == vars(other)
+        def __ne__(self, other):
+            return type(self) != type(other) or vars(self) != vars(other)
+
+    for item in vars(ast).values():
+        if type(item) != type:
+            continue
+        if issubclass(item, ast.AST):
+            try:
+                item.__bases__ = tuple(list(item.__bases__) + [CompareHelper])
+            except TypeError:
+                pass
