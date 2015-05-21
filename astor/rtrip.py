@@ -65,10 +65,9 @@ import ast
 import shutil
 import logging
 
-#Avoid import loops
-from .code_gen import to_source
-from .file_util import code_to_ast
-from .node_util import allow_ast_comparison, dump_tree, strip_tree
+from astor.code_gen import to_source
+from astor.file_util import code_to_ast
+from astor.node_util import allow_ast_comparison, dump_tree, strip_tree
 
 
 def convert(srctree, dsttree='tmp_rtrip', readonly=False):
