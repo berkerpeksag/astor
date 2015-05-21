@@ -17,7 +17,7 @@ import ast
 import sys
 
 from .tree_walk import TreeWalk
-from .op_util import get_op_precedence, neg_offset
+from .op_util import get_op_precedence
 
 class SetPrecedence(TreeWalk):
     """This class is used to decorate the ast.  Currently it adds
@@ -137,6 +137,7 @@ class SetPrecedence(TreeWalk):
         node._precedence = get_op_precedence(node)
     pre_comprehension = pre_Attribute
     pre_Call = pre_Attribute
+    pre_Return = pre_Attribute
 
     def pre_Num(self):
         """There are two reasons we might need to place
@@ -152,7 +153,5 @@ class SetPrecedence(TreeWalk):
         """
         parent_precedence = getattr(self.parent, '_precedence', -1)
         node = self.cur_node
-        # Hack because ** binds more closely than '-'
         precedence = get_op_precedence(node)
-        precedence += neg_offset if repr(node.n).startswith('-') else 0
         node._use_parens = precedence < parent_precedence

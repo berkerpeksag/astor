@@ -42,16 +42,16 @@ op_data = """
              Mod   %            22
         FloorDiv   //           22
          MatMult   @            22
-            UAdd   +            24
-            USub   -            24
           Invert   ~            24
-          NegNum   negativenum  26
-             Pow   **           28
-             Num                30
+             Num                26
+            UAdd   +            28
+            USub   -            28
+             Pow   **           30
        Attribute                40
    comprehension                40
             Call                40
        Subscript                40
+          Return                42
 """
 
 op_data = [x.split() for x in op_data.splitlines()]
@@ -72,5 +72,3 @@ def get_op_precedence(obj, precedence_data=precedence_data, type=type):
 
 class OpLookup(object):
     vars().update((x, (y, z)) for x, y, z in op_data)
-
-neg_offset = OpLookup.NegNum[1] - OpLookup.Num[1]
