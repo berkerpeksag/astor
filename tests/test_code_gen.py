@@ -72,6 +72,8 @@ class CodegenTestCase(unittest.TestCase):
         self.assertAstSourceEqual(source)
         source = "from .. import foobar"
         self.assertAstSourceEqual(source)
+        source = "from ..aaa import foo, bar as bar2"
+        self.assertAstSourceEqual(source)
 
     def test_dictionary_literals(self):
         source = "{'a': 1, 'b': 2}"
@@ -179,6 +181,29 @@ class CodegenTestCase(unittest.TestCase):
         self.assertAstEqual(source)
         source = "return (yield from sam())"
         self.assertAstEqualIfAtLeastVersion(source, (3, 3))
+
+    def test_with(self):
+        source = """
+            with foo:
+                pass
+        """
+        self.assertAstSourceEqual(source)
+        source = """
+            with foo as bar:
+                pass
+        """
+        self.assertAstSourceEqual(source)
+        source = """
+            with foo as bar, mary, william as bill:
+                pass
+        """
+        self.assertAstSourceEqualIfAtLeastVersion(source, (3, 3), (1, 0))
+
+    def test_inf(self):
+        source = """
+            (1e1000) + (-1e1000) + (1e1000j) + (-1e1000j)
+        """
+        self.assertAstEqual(source)
 
 
 if __name__ == '__main__':
