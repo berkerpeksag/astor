@@ -111,7 +111,7 @@ class SourceGenerator(ExplicitNodeVisitor):
                 item()
             elif item == '\n':
                 self.newline()
-            else:
+            elif item != '':
                 if self.new_lines:
                     if self.result:
                         self.result.append('\n' * self.new_lines)
@@ -122,6 +122,7 @@ class SourceGenerator(ExplicitNodeVisitor):
     def conditional_write(self, *stuff):
         if stuff[-1] is not None:
             self.write(*stuff)
+            return True
 
     def newline(self, node=None, extra=0):
         self.new_lines = max(self.new_lines, 1 + extra)
@@ -131,8 +132,7 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def body(self, statements):
         self.indentation += 1
-        for stmt in statements:
-            self.visit(stmt)
+        self.write(*statements)
         self.indentation -= 1
 
     def else_body(self, elsewhat):
@@ -144,7 +144,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.body(node.body)
         self.else_body(node.orelse)
 
-    def signature(self, node):
+    def visit_arguments(self, node):
         want_comma = []
 
         def write_comma():
@@ -180,11 +180,8 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def comma_list(self, items, trailing=False):
         for idx, item in enumerate(items):
-            if idx:
-                self.write(', ')
-            self.visit(item)
-        if trailing:
-            self.write(',')
+            self.write(', ' if idx else '', item)
+        self.write(',' if trailing else '')
 
     # Statements
 
@@ -199,11 +196,8 @@ class SourceGenerator(ExplicitNodeVisitor):
                        node.value)
 
     def visit_ImportFrom(self, node):
-        if node.module:
-            self.statement(node, 'from ', node.level * '.',
-                           node.module, ' import ')
-        else:
-            self.statement(node, 'from ', node.level * '.', ' import ')
+        self.statement(node, 'from ', node.level * '.',
+                           node.module or '', ' import ')
         self.comma_list(node.names)
 
     def visit_Import(self, node):
@@ -218,10 +212,9 @@ class SourceGenerator(ExplicitNodeVisitor):
         prefix = 'async ' if async else ''
         self.decorators(node, 1)
         self.statement(node, '%sdef %s(' % (prefix, node.name))
-        self.signature(node.args)
+        self.visit_arguments(node.args)
         self.write(')')
-        if getattr(node, 'returns', None) is not None:
-            self.write(' ->', node.returns)
+        self.conditional_write(' ->', getattr(node, 'returns', None))
         self.write(':')
         self.body(node.body)
 
@@ -243,17 +236,14 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.statement(node, 'class %s' % node.name)
         for base in node.bases:
             self.write(paren_or_comma, base)
-        # XXX: the if here is used to keep this module compatible
-        #      with python 2.6.
-        if hasattr(node, 'keywords'):
-            for keyword in node.keywords:
-                if keyword.arg is None:
-                    self.write(paren_or_comma, '**', keyword.value)
-                else:
-                    self.write(paren_or_comma, keyword.arg, '=', keyword.value)
-            if sys.version_info < (3, 5):
-                self.conditional_write(paren_or_comma, '*', node.starargs)
-                self.conditional_write(paren_or_comma, '**', node.kwargs)
+        #keywords not available in early version
+        for keyword in getattr(node, 'keywords', ()):
+            self.write(paren_or_comma, keyword.arg or '',
+                       '=' if keyword.arg else '**', keyword.value)
+        self.conditional_write(paren_or_comma, '*',
+                                   getattr(node, 'starargs', None))
+        self.conditional_write(paren_or_comma, '**',
+                                   getattr(node, 'kwargs', None))
         self.write(have_args and '):' or ':')
         self.body(node.body)
 
@@ -285,20 +275,13 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.body_or_else(node)
 
     def visit_With(self, node, async=False):
+        prefix = 'async ' if async else ''
+        self.statement(node, '%swith ' % prefix)
         if hasattr(node, "context_expr"):  # Python < 3.3
-            self.statement(node, 'with ', node.context_expr)
-            self.conditional_write(' as ', node.optional_vars)
-            self.write(':')
+            self.visit_withitem(node)
         else:                              # Python >= 3.3
-            prefix = 'async ' if async else ''
-            self.statement(node, '%swith ' % prefix)
-            count = 0
-            for item in node.items:
-                if count > 0:
-                    self.write(" , ")
-                self.visit(item)
-                count += 1
-            self.write(':')
+            self.comma_list(node.items)
+        self.write(':')
         self.body(node.body)
 
     # new for Python 3.5
@@ -332,16 +315,14 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_TryExcept(self, node):
         self.statement(node, 'try:')
         self.body(node.body)
-        for handler in node.handlers:
-            self.visit(handler)
+        self.write(*node.handlers)
         self.else_body(node.orelse)
 
     # new for Python 3.3
     def visit_Try(self, node):
         self.statement(node, 'try:')
         self.body(node.body)
-        for handler in node.handlers:
-            self.visit(handler)
+        self.write(*node.handlers)
         self.else_body(node.orelse)
         if node.finalbody:
             self.statement(node, 'finally:')
@@ -349,8 +330,7 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def visit_ExceptHandler(self, node):
         self.statement(node, 'except')
-        if node.type is not None:
-            self.write(' ', node.type)
+        if self.conditional_write(' ', node.type):
             self.conditional_write(' as ', node.name)
         self.write(':')
         self.body(node.body)
@@ -391,11 +371,9 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_Raise(self, node):
         # XXX: Python 2.6 / 3.0 compatibility
         self.statement(node, 'raise')
-        if hasattr(node, 'exc') and node.exc is not None:
-            self.write(' ', node.exc)
+        if self.conditional_write(' ', getattr(node, 'exc', None)):
             self.conditional_write(' from ', node.cause)
-        elif hasattr(node, 'type') and node.type is not None:
-            self.write(' ', node.type)
+        elif self.conditional_write(' ', getattr(node, 'type', None)):
             self.conditional_write(', ', node.inst)
             self.conditional_write(', ', node.tback)
 
@@ -418,17 +396,15 @@ class SourceGenerator(ExplicitNodeVisitor):
         for arg in node.args:
             self.write(write_comma, arg)
         for keyword in node.keywords:
-            if keyword.arg is None:
-                # a keyword.arg of None indicates dictionary unpacking
-                # (Python >= 3.5)
-                self.write(write_comma, '**', keyword.value)
-            else:
-                self.write(write_comma, keyword.arg, '=', keyword.value)
-        if sys.version_info < (3, 5):
-            # starargs and kwargs attributes went away in Python
-            # 3.5 during the implementation of PEP 448
-            self.conditional_write(write_comma, '*', node.starargs)
-            self.conditional_write(write_comma, '**', node.kwargs)
+            # a keyword.arg of None indicates dictionary unpacking
+            # (Python >= 3.5)
+            arg = keyword.arg or ''
+            self.write(write_comma, arg, '=' if arg else '**',keyword.value)
+        # 3.5 no longer has these
+        self.conditional_write(write_comma, '*',
+                                   getattr(node, 'starargs', None))
+        self.conditional_write(write_comma, '**',
+                                   getattr(node, 'kwargs', None))
         self.write(')')
 
     def visit_Name(self, node):
@@ -442,11 +418,15 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     @set_precedence()
     def visit_Num(self, node):
-        n = repr(node.n)
-        if n[0].isalpha():
-            assert n == 'inf'
-            n = '1e1000'
-        self.write(n)
+        """Deal with infinities
+        """
+        s = repr(node.n)
+        signed = s.startswith('-')
+        if s[signed].isalpha():
+            im = s[-1] == 'j' and 'j' or ''
+            assert s[signed:signed+3] == 'inf', s
+            s = '%s1e1000%s' % ('-' if signed else '', im)
+        self.write(s)
 
     @enclose('()')
     def visit_Tuple(self, node):
@@ -463,12 +443,9 @@ class SourceGenerator(ExplicitNodeVisitor):
     @enclose('{}')
     def visit_Dict(self, node):
         for idx, (key, value) in enumerate(zip(node.keys, node.values)):
-            if idx:
-                self.write(', ')
-            if key is None:
-                self.write('**', value)
-            else:
-                self.write(key, ': ', value)
+            self.write(', ' if idx else '',
+                       key if key else '',
+                       ': ' if key else '**', value)
 
     @set_precedence()
     def visit_BinOp(self, node):
@@ -488,8 +465,8 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     @set_precedence()
     def visit_UnaryOp(self, node):
-        spacer = '' if isinstance(node.operand, ast.Num) else ' '
-        self.write(get_op_symbol(node.op), spacer, node.operand)
+        sym = get_op_symbol(node.op)
+        self.write(sym, ' ' if sym.isalpha() else '', node.operand)
 
     def visit_Subscript(self, node):
         self.write(node.value, '[', node.slice, ']')
@@ -523,36 +500,32 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     # new for Python 3.5
     def visit_Await(self, node):
-        self.write('await ')
-        self.visit(node.value)
+        self.write('await ', node.value)
 
     @set_precedence()
     def visit_Lambda(self, node):
         self.write('lambda ')
-        self.signature(node.args)
+        self.visit_arguments(node.args)
         self.write(': ', node.body)
 
     def visit_Ellipsis(self, node):
         self.write('...')
 
-    def generator_visit(left, right):
-        def visit(self, node):
-            self.write(left, node.elt)
-            for comprehension in node.generators:
-                self.visit(comprehension)
-            self.write(right)
-        return visit
+    @enclose('[]')
+    def visit_ListComp(self, node):
+        self.write(node.elt, *node.generators)
 
-    visit_ListComp = generator_visit('[', ']')
-    visit_GeneratorExp = generator_visit('(', ')')
-    visit_SetComp = generator_visit('{', '}')
-    del generator_visit
+    @enclose('()')
+    def visit_GeneratorExp(self, node):
+        self.write(node.elt, *node.generators)
+
+    @enclose('{}')
+    def visit_SetComp(self, node):
+        self.write(node.elt, *node.generators)
 
     @enclose('{}')
     def visit_DictComp(self, node):
-        self.write(node.key, ': ', node.value)
-        for comprehension in node.generators:
-            self.visit(comprehension)
+        self.write(node.key, ': ', node.value, *node.generators)
 
     @set_precedence()
     def visit_IfExp(self, node):
@@ -567,8 +540,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.visit(node.value)
 
     def visit_Module(self, node):
-        for stmt in node.body:
-            self.visit(stmt)
+        self.write(*node.body)
 
     # Helper Nodes
 
@@ -582,9 +554,5 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def visit_comprehension(self, node):
         self.write(' for ', node.target, ' in ', node.iter)
-        if node.ifs:
-            for if_ in node.ifs:
-                self.write(' if ', if_)
-
-    def visit_arguments(self, node):
-        self.signature(node)
+        for if_ in node.ifs:
+            self.write(' if ', if_)
