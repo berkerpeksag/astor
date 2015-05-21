@@ -179,6 +179,8 @@ class CodegenTestCase(unittest.TestCase):
         self.assertAstEqual(source)
         source = "(yield bar)()"
         self.assertAstEqual(source)
+        source = "return (yield 1)"
+        self.assertAstEqual(source)
         source = "return (yield from sam())"
         self.assertAstEqualIfAtLeastVersion(source, (3, 3))
 
@@ -205,6 +207,33 @@ class CodegenTestCase(unittest.TestCase):
         """
         self.assertAstEqual(source)
 
+    def test_unary(self):
+        source = """
+            -(1) + ~(2) + +(3)
+        """
+        self.assertAstEqual(source)
+
+    def test_pow(self):
+        source = """
+            (-2) ** (-3)
+        """
+        self.assertAstEqual(source)
+        source = """
+            (+2) ** (+3)
+        """
+        self.assertAstEqual(source)
+        source = """
+            2 ** 3 ** 4
+        """
+        self.assertAstEqual(source)
+        source = """
+            -2 ** -3
+        """
+        self.assertAstEqual(source)
+        source = """
+            -2 ** -3 ** -4
+        """
+        self.assertAstEqual(source)
 
 if __name__ == '__main__':
     unittest.main()
