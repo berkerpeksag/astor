@@ -9,18 +9,29 @@ Copyright (c) 2015 Patrick Maupin
 
 Usage:
 
-    python -m astor.rtrip [readonly] [<srcdir>]
+    python -m astor.rtrip [readonly] [<source>]
 
+
+This utility tests round-tripping of Python source to AST
+and back to source.
+
+    .. versionadded:: 0.6
 
 If readonly is specified, then the source will be tested,
 but no files will be written.
 
-If srcdir is not specified, the standard library will be used.
+if the source is specified to be "stdin" (without quotes)
+then any source entered at the command line will be compiled
+into an AST, converted back to text, and then compiled to
+an AST again, and the results will be displayed to stdout.
 
-This will create a mirror directory named tmp_rtrip and will
-recursively round-trip all the Python source from the srcdir
+If neither readonly nor stdin is specified, then rtrip
+will create a mirror directory named tmp_rtrip and will
+recursively round-trip all the Python source from the source
 into the tmp_rtrip dir, after compiling it and then reconstituting
 it through code_gen.to_source.
+
+If the source is not specified, the entire Python library will be used.
 
 The purpose of rtrip is to place Python code into a canonical form.
 
@@ -70,7 +81,9 @@ from astor.file_util import code_to_ast
 from astor.node_util import allow_ast_comparison, dump_tree, strip_tree
 
 
-def convert(srctree, dsttree='tmp_rtrip', readonly=False):
+dsttree = 'tmp_rtrip'
+
+def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False):
     """Walk the srctree, and convert/copy all python files
     into the dsttree
 
@@ -95,21 +108,25 @@ def convert(srctree, dsttree='tmp_rtrip', readonly=False):
     #TODO: When issue #26 resolved, remove UnicodeDecodeError
     handled_exceptions = SyntaxError, UnicodeDecodeError
 
-    oldpath = ''
+    oldpath = None
 
     allfiles = find_py_files(srctree, None if readonly else dsttree)
     for srcpath, fname in allfiles:
         # Create destination directory
         if not readonly and srcpath != oldpath:
             oldpath = srcpath
-            dstpath = srcpath.replace(srctree, dsttree, 1)
-            if not dstpath.startswith(dsttree):
-                raise ValueError("%s not a subdirectory of %s" %
-                                                (dstpath, dsttree))
+            if srcpath >= srctree:
+                dstpath = srcpath.replace(srctree, dsttree, 1)
+                if not dstpath.startswith(dsttree):
+                    raise ValueError("%s not a subdirectory of %s" %
+                                                    (dstpath, dsttree))
+            else:
+                assert srctree.startswith(srcpath)
+                dstpath = dsttree
             os.makedirs(dstpath)
 
         srcfname = os.path.join(srcpath, fname)
-        logging.info('Converting ' + srcfname)
+        logging.info('Converting %s' % srcfname)
         try:
             srcast = parse_file(srcfname)
         except handled_exceptions:
@@ -134,13 +151,14 @@ def convert(srctree, dsttree='tmp_rtrip', readonly=False):
             dstast = []
         unknown_src_nodes.update(strip_tree(srcast))
         unknown_dst_nodes.update(strip_tree(dstast))
-        if srcast != dstast:
+        if dumpall or srcast != dstast:
             srcdump = dump_tree(srcast)
             dstdump = dump_tree(dstast)
             bad = srcdump != dstdump
             logging.warning('    calculating dump -- %s' % ('bad' if bad else 'OK'))
             if bad:
                 broken.append(srcfname)
+            if dumpall or bad:
                 if not readonly:
                     try:
                         with open(dstfname[:-3] +'.srcdmp', 'w') as f:
@@ -152,6 +170,15 @@ def convert(srctree, dsttree='tmp_rtrip', readonly=False):
                             f.write(dstdump)
                     except UnicodeEncodeError:
                         badfiles.add(dstfname[:-3] +'.dstdmp')
+                elif not bad:
+                    sys.stdout.write('\n\nAST:\n\n    ')
+                    sys.stdout.write(srcdump.replace('\n', '\n    '))
+                    sys.stdout.write('\n\nDecompile:\n\n    ')
+                    sys.stdout.write(dsttxt.replace('\n', '\n    '))
+                    sys.stdout.write('\n\nNew AST:\n\n    ')
+                    sys.stdout.write('(same as old)' if dstdump == srcdump
+                                     else dstdump.replace('\n', '\n    '))
+                    sys.stdout.write('\n')
 
     if badfiles:
         logging.warning('\nFiles not processed due to syntax errors:')
@@ -168,6 +195,37 @@ def convert(srctree, dsttree='tmp_rtrip', readonly=False):
         logging.error('\nERROR -- UNKNOWN NODES STRIPPED: %s' % bad_nodes)
     logging.info('\n')
 
+def usage(msg):
+    raise SystemExit(textwrap.dedent("""
+
+        Error: %s
+
+        Usage:
+
+            python -m astor.rtrip [readonly] [<source>]
+
+
+        This utility tests round-tripping of Python source to AST
+        and back to source.
+
+        If readonly is specified, then the source will be tested,
+        but no files will be written.
+
+        if the source is specified to be "stdin" (without quotes)
+        then any source entered at the command line will be compiled
+        into an AST, converted back to text, and then compiled to
+        an AST again, and the results will be displayed to stdout.
+
+        If neither readonly nor stdin is specified, then rtrip
+        will create a mirror directory named tmp_rtrip and will
+        recursively round-trip all the Python source from the source
+        into the tmp_rtrip dir, after compiling it and then reconstituting
+        it through code_gen.to_source.
+
+        If the source is not specified, the entire Python library will be used.
+
+        """) % msg)
+
 if __name__ == '__main__':
     import textwrap
 
@@ -179,32 +237,14 @@ if __name__ == '__main__':
 
     if not args:
         args = [os.path.dirname(textwrap.__file__)]
-    msg = "Too many arguments" if len(args) != 1 else (
-          "%s is not a directory" % args[0] if not os.path.isdir(args[0])
-          else "")
 
-    if msg:
-        raise SystemExit(textwrap.dedent("""
+    if len(args) > 1:
+        usage("Too many arguments")
 
-            Error: %s
-
-            Usage:
-
-                python -m astor.rtrip [readonly] [<srcdir>]
-
-
-            If readonly is specified, then the source will be tested,
-            but no files will be written.
-
-            If srcdir is not specified, the standard library will be used.
-
-            This will create a mirror directory named tmp_rtrip and will
-            recursively round-trip all the Python source from the srcdir
-            into the tmp_rtrip dir, after compiling it and then reconstituting
-            it through code_gen.to_source.
-
-            """) % msg)
+    fname, = args
+    dumpall = False
+    if not os.path.exists(fname):
+        dumpall = fname == 'stdin' or usage("Cannot find directory %s" % fname)
 
     logging.basicConfig(format='%(msg)s', level=logging.INFO)
-    if convert(args[0], readonly=readonly):
-        raise SystemExit('\nWARNING: Not all files converted\n')
+    convert(fname, readonly=readonly or dumpall, dumpall=dumpall)

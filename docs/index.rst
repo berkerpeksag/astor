@@ -216,23 +216,28 @@ rtrip
 
 There is currently one command-line utility::
 
-    python -m astor.rtrip [readonly] [<srcdir>]
+    python -m astor.rtrip [readonly] [<source>]
 
 This utility tests round-tripping of Python source to AST
 and back to source.
 
     .. versionadded:: 0.6
 
-
 If readonly is specified, then the source will be tested,
 but no files will be written.
 
-If srcdir is not specified, the standard library will be used.
+if the source is specified to be "stdin" (without quotes)
+then any source entered at the command line will be compiled
+into an AST, converted back to text, and then compiled to
+an AST again, and the results will be displayed to stdout.
 
-This will create a mirror directory named tmp_rtrip and will
-recursively round-trip all the Python source from the srcdir
+If neither readonly nor stdin is specified, then rtrip
+will create a mirror directory named tmp_rtrip and will
+recursively round-trip all the Python source from the source
 into the tmp_rtrip dir, after compiling it and then reconstituting
 it through code_gen.to_source.
+
+If the source is not specified, the entire Python library will be used.
 
 The purpose of rtrip is to place Python code into a canonical form.
 
