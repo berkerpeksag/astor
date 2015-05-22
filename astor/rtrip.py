@@ -170,7 +170,7 @@ def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False):
                             f.write(dstdump)
                     except UnicodeEncodeError:
                         badfiles.add(dstfname[:-3] +'.dstdmp')
-                elif not bad:
+                elif dumpall:
                     sys.stdout.write('\n\nAST:\n\n    ')
                     sys.stdout.write(srcdump.replace('\n', '\n    '))
                     sys.stdout.write('\n\nDecompile:\n\n    ')
