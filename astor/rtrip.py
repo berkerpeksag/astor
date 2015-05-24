@@ -189,7 +189,8 @@ def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False):
         for srcfname in broken:
             logging.warning('    %s' % srcfname)
 
-    ok_to_strip = set(['col_offset', '_precedence', '_use_parens', 'lineno'])
+    ok_to_strip = 'col_offset _precedence _use_parens lineno _p_op _pp'
+    ok_to_strip = set(ok_to_strip.split())
     bad_nodes = (unknown_dst_nodes | unknown_src_nodes) - ok_to_strip
     if bad_nodes:
         logging.error('\nERROR -- UNKNOWN NODES STRIPPED: %s' % bad_nodes)
