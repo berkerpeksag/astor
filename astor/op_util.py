@@ -21,6 +21,7 @@ op_data = """
             Expr                0
               If                0
            Yield                1
+          Return                1
 
            Slice                1
        Subscript                0
@@ -31,8 +32,6 @@ op_data = """
 
            Comma                1
     call_one_arg                1
-
-          Return                1
 
           Lambda                1
            IfExp                0
