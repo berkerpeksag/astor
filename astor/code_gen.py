@@ -182,7 +182,9 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.body(node.body)
         self.else_body(node.orelse)
 
-    def visit_arguments(self, node):
+    def visit_arguments(self, node,
+                        # constants
+                        Comma=OpLookup.Comma[-1]):
         want_comma = []
 
         def write_comma():
@@ -192,6 +194,7 @@ class SourceGenerator(ExplicitNodeVisitor):
                 want_comma.append(True)
 
         def loop_args(args, defaults):
+            set_precedence(Comma, *(x for x in defaults if x is not None))
             padding = [None] * (len(args) - len(defaults))
             for arg, default in zip(args, padding + defaults):
                 self.write(write_comma, arg)
@@ -306,6 +309,7 @@ class SourceGenerator(ExplicitNodeVisitor):
                 break
 
     def visit_For(self, node, async=False):
+        set_precedence(get_op_precedence(node), node.target)
         prefix = 'async ' if async else ''
         self.statement(node, '%sfor ' % prefix,
                        node.target, ' in ', node.iter, ':')
@@ -316,6 +320,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.visit_For(node, async=True)
 
     def visit_While(self, node):
+        set_precedence(get_op_precedence(node), node.test)
         self.statement(node, 'while ', node.test, ':')
         self.body_or_else(node)
 
@@ -394,8 +399,12 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.conditional_write(', ', dicts[1])
 
     def visit_Assert(self, node):
-        self.statement(node, 'assert ', node.test)
-        self.conditional_write(', ', node.msg)
+        test, msg = node.test, node.msg
+        set_precedence(get_op_precedence(node), test)
+        self.statement(node, 'assert ', test)
+        if msg is not None:
+            set_precedence(get_op_precedence(node), msg)
+            self.write(', ', msg)
 
     def visit_Global(self, node):
         self.statement(node, 'global ', ', '.join(node.names))
@@ -422,8 +431,11 @@ class SourceGenerator(ExplicitNodeVisitor):
         if self.conditional_write(' ', self.get_exc(node)):
             self.conditional_write(' from ', node.cause)
         elif self.conditional_write(' ', self.get_type(node)):
-            self.conditional_write(', ', node.inst)
-            self.conditional_write(', ', node.tback)
+            inst, tback = node.inst, node.tback
+            if inst is not None:
+                set_precedence(get_op_precedence(node), inst)
+            self.conditional_write(', ', inst)
+            self.conditional_write(', ', tback)
 
     # Expressions
 
@@ -454,6 +466,8 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.write('(')
         for arg in args:
             self.write(write_comma, arg)
+
+        set_precedence(Comma, *(x.value for x in keywords))
         for keyword in keywords:
             # a keyword.arg of None indicates dictionary unpacking
             # (Python >= 3.5)

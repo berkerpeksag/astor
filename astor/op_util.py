@@ -20,6 +20,8 @@ op_data = """
        AugAssign                0
             Expr                0
               If                0
+             For                0
+           While                0
            Yield                1
           Return                1
 
@@ -31,6 +33,8 @@ op_data = """
            Tuple                0
 
            Comma                1
+          Assert                0
+           Raise                0
     call_one_arg                1
 
           Lambda                1
