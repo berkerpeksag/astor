@@ -215,14 +215,26 @@ def delimiter_groups(line, begin_delim=begin_delim,
             assert not text, text
             break
 
+statements = set(['del ', 'return', 'yield ', 'if ', 'while '])
 
-def add_parens(line, maxline, indent, count=count):
+
+def add_parens(line, maxline, indent, statements=statements, count=count):
     """Attempt to add parentheses around the line
        in order to make it splittable.
-
-       Currently, the function only knows about assignments.
     """
 
+    if line[0] in statements:
+        index = 1
+        if not line[0].endswith(' '):
+            index = 2
+            assert line[1] == ' '
+        line.insert(index, '(')
+        if line[-1] == ':':
+            line.insert(-1, ')')
+        else:
+            line.append(')')
+
+    # That was the easy stuff.  Now for assignments.
     groups = list(get_assign_groups(line))
     if len(groups) == 1:
         # So sad, too bad

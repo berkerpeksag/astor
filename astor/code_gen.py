@@ -255,7 +255,7 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_FunctionDef(self, node, async=False):
         prefix = 'async ' if async else ''
         self.decorators(node, 1)
-        self.statement(node, '%sdef %s(' % (prefix, node.name))
+        self.statement(node, '%sdef %s' % (prefix, node.name), '(')
         self.visit_arguments(node.args)
         self.write(')')
         self.conditional_write(' ->', self.get_returns(node))
