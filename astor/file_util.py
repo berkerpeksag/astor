@@ -67,7 +67,6 @@ class CodeToAst(object):
             fstr += '\n'
         return ast.parse(fstr, filename=fname)
 
-
     @staticmethod
     def get_file_info(codeobj):
         """Returns the file and line number of a code object.

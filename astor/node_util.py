@@ -53,10 +53,10 @@ def iter_node(node, name='', unknown=None,
 
 
 def dump_tree(node, name=None, initial_indent='', indentation='    ',
-         maxline=120, maxmerged=80,
-         #Runtime optimization
-         iter_node=iter_node, special=ast.AST,
-         list=list, isinstance=isinstance, type=type, len=len):
+              maxline=120, maxmerged=80,
+              # Runtime optimization
+              iter_node=iter_node, special=ast.AST,
+              list=list, isinstance=isinstance, type=type, len=len):
     """Dumps an AST or similar structure:
 
        - Pretty-prints with indentation
@@ -87,9 +87,9 @@ def dump_tree(node, name=None, initial_indent='', indentation='    ',
 
 
 def strip_tree(node,
-         #Runtime optimization
-         iter_node=iter_node, special=ast.AST,
-         list=list, isinstance=isinstance, type=type, len=len):
+               # Runtime optimization
+               iter_node=iter_node, special=ast.AST,
+               list=list, isinstance=isinstance, type=type, len=len):
     """Strips an AST by removing all attributes not in _fields.
 
     Returns a set of the names of all attributes stripped.
@@ -97,6 +97,7 @@ def strip_tree(node,
     This canonicalizes two trees for comparison purposes.
     """
     stripped = set()
+
     def strip(node, indent):
         unknown = set()
         leaf = True
@@ -135,6 +136,7 @@ class ExplicitNodeVisitor(ast.NodeVisitor):
         visitor = getattr(self, method, abort)
         return visitor(node)
 
+
 def allow_ast_comparison():
     """This ugly little monkey-patcher adds in a helper class
     to all the AST node types.  This helper class allows
@@ -149,6 +151,7 @@ def allow_ast_comparison():
     class CompareHelper(object):
         def __eq__(self, other):
             return type(self) == type(other) and vars(self) == vars(other)
+
         def __ne__(self, other):
             return type(self) != type(other) or vars(self) != vars(other)
 

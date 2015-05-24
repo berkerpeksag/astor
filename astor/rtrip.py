@@ -83,6 +83,7 @@ from astor.node_util import allow_ast_comparison, dump_tree, strip_tree
 
 dsttree = 'tmp_rtrip'
 
+
 def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False):
     """Walk the srctree, and convert/copy all python files
     into the dsttree
@@ -105,7 +106,7 @@ def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False):
     unknown_dst_nodes = set()
     badfiles = set()
     broken = []
-    #TODO: When issue #26 resolved, remove UnicodeDecodeError
+    # TODO: When issue #26 resolved, remove UnicodeDecodeError
     handled_exceptions = SyntaxError, UnicodeDecodeError
 
     oldpath = None
@@ -119,7 +120,7 @@ def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False):
                 dstpath = srcpath.replace(srctree, dsttree, 1)
                 if not dstpath.startswith(dsttree):
                     raise ValueError("%s not a subdirectory of %s" %
-                                                    (dstpath, dsttree))
+                                     (dstpath, dsttree))
             else:
                 assert srctree.startswith(srcpath)
                 dstpath = dsttree
@@ -155,21 +156,22 @@ def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False):
             srcdump = dump_tree(srcast)
             dstdump = dump_tree(dstast)
             bad = srcdump != dstdump
-            logging.warning('    calculating dump -- %s' % ('bad' if bad else 'OK'))
+            logging.warning('    calculating dump -- %s' %
+                            ('bad' if bad else 'OK'))
             if bad:
                 broken.append(srcfname)
             if dumpall or bad:
                 if not readonly:
                     try:
-                        with open(dstfname[:-3] +'.srcdmp', 'w') as f:
+                        with open(dstfname[:-3] + '.srcdmp', 'w') as f:
                             f.write(srcdump)
                     except UnicodeEncodeError:
-                        badfiles.add(dstfname[:-3] +'.srcdmp')
+                        badfiles.add(dstfname[:-3] + '.srcdmp')
                     try:
-                        with open(dstfname[:-3] +'.dstdmp', 'w') as f:
+                        with open(dstfname[:-3] + '.dstdmp', 'w') as f:
                             f.write(dstdump)
                     except UnicodeEncodeError:
-                        badfiles.add(dstfname[:-3] +'.dstdmp')
+                        badfiles.add(dstfname[:-3] + '.dstdmp')
                 elif dumpall:
                     sys.stdout.write('\n\nAST:\n\n    ')
                     sys.stdout.write(srcdump.replace('\n', '\n    '))
@@ -195,6 +197,7 @@ def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False):
     if bad_nodes:
         logging.error('\nERROR -- UNKNOWN NODES STRIPPED: %s' % bad_nodes)
     logging.info('\n')
+
 
 def usage(msg):
     raise SystemExit(textwrap.dedent("""
