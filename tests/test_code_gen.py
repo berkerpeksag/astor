@@ -54,7 +54,7 @@ class CodegenTestCase(unittest.TestCase):
            which may not always be appropriate.
         """
         srctxt = canonical(srctxt)
-        self.assertEqual(astor.to_source(ast.parse(srctxt)), srctxt)
+        self.assertEqual(astor.to_source(ast.parse(srctxt)).rstrip(), srctxt)
 
     def assertAstSourceEqualIfAtLeastVersion(self, source, min_should_work,
                                              max_should_error=None):
@@ -141,7 +141,7 @@ class CodegenTestCase(unittest.TestCase):
         root_node = ast.parse(source)
         arguments_node = [n for n in ast.walk(root_node)
                           if isinstance(n, ast.arguments)][0]
-        self.assertEqual(astor.to_source(arguments_node),
+        self.assertEqual(astor.to_source(arguments_node).rstrip(),
                          "a1, a2, b1=j, b2='123', b3={}, b4=[]")
         source = """
             def call(*popenargs, timeout=None, **kwargs):

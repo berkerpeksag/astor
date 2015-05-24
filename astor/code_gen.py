@@ -49,6 +49,7 @@ def to_source(node, indent_with=' ' * 4, add_line_information=False,
     generator = SourceGenerator(indent_with, add_line_information,
                                 pretty_string)
     generator.visit(node)
+    generator.result.append('\n')
     return pretty_source(str(s) for s in generator.result)
 
 
