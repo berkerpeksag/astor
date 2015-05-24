@@ -193,6 +193,10 @@ class CodegenTestCase(unittest.TestCase):
         self.assertAstEqual(source)
         source = "return (yield from sam())"
         self.assertAstEqualIfAtLeastVersion(source, (3, 3))
+        source = "((yield a) for b in c)"
+        self.assertAstEqual(source)
+        source = "[(yield)]"
+        self.assertAstEqual(source)
 
     def test_with(self):
         source = """
