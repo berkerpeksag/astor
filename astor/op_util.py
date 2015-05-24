@@ -13,49 +13,76 @@ AST nodes to symbols and precedences.
 
 import ast
 
+# first column = name (usually but not always maps to ast)
+# last column = 1 to bump precedence from preceding
+# intermediate columns = symbol (if any)
+
 op_data = """
-          Yield                  0
-          Lambda                 0
-           IfExp                 2
-              Or   or            4
-             And   and           6
-             Not   not           8
-              Eq   ==           10
-              Gt   >            10
-             GtE   >=           10
-              In   in           10
-              Is   is           10
-           NotEq   !=           10
-              Lt   <            10
-             LtE   <=           10
-           NotIn   not in       10
-           IsNot   is not       10
-           BitOr   |            12
-          BitXor   ^            14
-          BitAnd   &            16
-          LShift   <<           18
-          RShift   >>           18
-             Add   +            20
-             Sub   -            20
-            Mult   *            22
-             Div   /            22
-             Mod   %            22
-        FloorDiv   //           22
-         MatMult   @            22
-          Invert   ~            24
-             Num                26
-            UAdd   +            28
-            USub   -            28
-             Pow   **           30
-       Attribute                40
-   comprehension                40
-            Call                40
-       Subscript                40
-          Return                42
+    GeneratorExp                1
+
+          Assign                1
+       AugAssign                0
+            Expr                0
+              If                0
+           Yield                1
+
+           Slice                1
+       Subscript                0
+           Index                1
+        ExtSlice                1
+    comprehension_target        1
+           Tuple                0
+
+           Comma                1
+    call_one_arg                1
+
+          Return                1
+
+          Lambda                1
+           IfExp                0
+
+   comprehension                1
+              Or   or           1
+             And   and          1
+             Not   not          1
+
+              Eq   ==           1
+              Gt   >            0
+             GtE   >=           0
+              In   in           0
+              Is   is           0
+           NotEq   !=           0
+              Lt   <            0
+             LtE   <=           0
+           NotIn   not in       0
+           IsNot   is not       0
+
+           BitOr   |            1
+          BitXor   ^            1
+          BitAnd   &            1
+          LShift   <<           1
+          RShift   >>           0
+             Add   +            1
+             Sub   -            0
+            Mult   *            1
+             Div   /            0
+             Mod   %            0
+        FloorDiv   //           0
+         MatMult   @            0
+          PowRHS                1
+          Invert   ~            1
+            UAdd   +            0
+            USub   -            0
+             Pow   **           1
+             Num                1
 """
 
 op_data = [x.split() for x in op_data.splitlines()]
-op_data = [(x[0], ' '.join(x[1:-1]), int(x[-1])) for x in op_data if x]
+op_data = [[x[0], ' '.join(x[1:-1]), int(x[-1])] for x in op_data if x]
+for index in range(1, len(op_data)):
+    op_data[index][2] *= 2
+    op_data[index][2] += op_data[index - 1][2]
+
 precedence_data = dict((getattr(ast, x, None), z) for x, y, z in op_data)
 symbol_data = dict((getattr(ast, x, None), y) for x, y, z in op_data)
 
@@ -72,3 +99,4 @@ def get_op_precedence(obj, precedence_data=precedence_data, type=type):
 
 class OpLookup(object):
     vars().update((x, (y, z)) for x, y, z in op_data)
+    high_precedence = max(x[2] for x in op_data) + 2

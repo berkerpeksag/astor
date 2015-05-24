@@ -20,11 +20,11 @@ this code came from here (in 2012):
 import ast
 import sys
 
-from .op_util import get_op_symbol
+from .op_util import get_op_symbol, get_op_precedence, OpLookup
 from .node_util import ExplicitNodeVisitor
 from .string_repr import pretty_string
 from .source_repr import pretty_source
-from .py_precedence import SetPrecedence
+
 
 def to_source(node, indent_with=' ' * 4, add_line_information=False,
               pretty_string=pretty_string, pretty_source=pretty_source):
@@ -46,43 +46,61 @@ def to_source(node, indent_with=' ' * 4, add_line_information=False,
     number information of statement nodes.
 
     """
-    SetPrecedence(node)
     generator = SourceGenerator(indent_with, add_line_information,
                                 pretty_string)
     generator.visit(node)
     return pretty_source(str(s) for s in generator.result)
 
 
-def enclose(enclosure):
-    """A decorator function that adds enclosing
-       delimeters around the output of a SourceGenerator
-       method.
-    """
-    def decorator(func):
-        def newfunc(self, node):
-            self.write(enclosure[0])
-            func(self, node)
-            self.write(enclosure[-1])
-        return newfunc
-    return decorator
+def set_precedence(value, *nodes):
+    for node in nodes:
+        node._pp = value
 
-def set_precedence():
-    """A decorator function that can add enclosing
-       parentheses around the output of a SourceGenerator
-       method.  By default, the parentheses are added,
-       but if the attribute _use_parens is defined and
-       False, they are not.
+
+class Delimit(object):
+    """A context manager that can add enclosing
+       delimiters around the output of a
+       SourceGenerator method.  By default, the
+       parentheses are added, but the enclosed code
+       may set discard=True to get rid of them.
     """
-    def decorator(func):
-        def newfunc(self, node):
-            if getattr(node, '_use_parens', True):
-                self.write('(')
-                func(self, node)
-                self.write(')')
+
+    discard = False
+
+    def __init__(self, tree, *args):
+        """ use write instead of using result directly
+            for initial data, because it may flush
+            preceding data into result.
+        """
+        delimiters = '()'
+        node = None
+        op = None
+        for arg in args:
+            if isinstance(arg, ast.AST):
+                if node is None:
+                    node = arg
+                else:
+                    op = arg
             else:
-                func(self, node)
-        return newfunc
-    return decorator
+                delimiters = arg
+        tree.write(delimiters[0])
+        result = self.result = tree.result
+        self.index = len(result)
+        self.closing = delimiters[1]
+        if node is not None:
+            self.p = p = get_op_precedence(op or node)
+            self.pp = pp = tree.get__pp(node)
+            self.discard = p >= pp
+            #print node, p, pp
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc_info):
+        if self.discard:
+            self.result[self.index - 1] = ''
+        else:
+            self.result.append(self.closing)
 
 
 class SourceGenerator(ExplicitNodeVisitor):
@@ -102,6 +120,24 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.indentation = 0
         self.new_lines = 0
         self.pretty_string = pretty_string
+
+    def __getattr__(self, name, defaults=dict(keywords=(),
+                    _pp=OpLookup.high_precedence).get):
+        """ Get an attribute of the node.
+            like dict.get (returns None if doesn't exist)
+        """
+        if not name.startswith('get_'):
+            raise AttributeError
+        geta = getattr
+        shortname = name[4:]
+        default = defaults(shortname)
+        def getter(node):
+            return geta(node, shortname, default)
+        setattr(self, name, getter)
+        return getter
+
+    def delimit(self, *args):
+        return Delimit(self, *args)
 
     def write(self, *params):
         for item in params:
@@ -162,7 +198,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         loop_args(node.args, node.defaults)
         self.conditional_write(write_comma, '*', node.vararg)
 
-        kwonlyargs = getattr(node, 'kwonlyargs', None)
+        kwonlyargs = self.get_kwonlyargs(node)
         if kwonlyargs:
             if node.vararg is None:
                 self.write(write_comma, '*')
@@ -178,7 +214,10 @@ class SourceGenerator(ExplicitNodeVisitor):
         for decorator in node.decorator_list:
             self.statement(decorator, '@', decorator)
 
-    def comma_list(self, items, trailing=False):
+    def comma_list(self, items, trailing=False,
+                        #constants
+                        Comma=OpLookup.Comma[-1]):
+        set_precedence(Comma, *items)
         for idx, item in enumerate(items):
             self.write(', ' if idx else '', item)
         self.write(',' if trailing else '')
@@ -186,12 +225,14 @@ class SourceGenerator(ExplicitNodeVisitor):
     # Statements
 
     def visit_Assign(self, node):
+        set_precedence(get_op_precedence(node), node.value, *node.targets)
         self.newline(node)
         for target in node.targets:
             self.write(target, ' = ')
         self.visit(node.value)
 
     def visit_AugAssign(self, node):
+        set_precedence(get_op_precedence(node), node.value, node.target)
         self.statement(node, node.target, get_op_symbol(node.op, ' %s= '),
                        node.value)
 
@@ -205,6 +246,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.comma_list(node.names)
 
     def visit_Expr(self, node):
+        set_precedence(get_op_precedence(node), node.value)
         self.statement(node)
         self.generic_visit(node)
 
@@ -214,7 +256,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.statement(node, '%sdef %s(' % (prefix, node.name))
         self.visit_arguments(node.args)
         self.write(')')
-        self.conditional_write(' ->', getattr(node, 'returns', None))
+        self.conditional_write(' ->', self.get_returns(node))
         self.write(':')
         self.body(node.body)
 
@@ -237,23 +279,24 @@ class SourceGenerator(ExplicitNodeVisitor):
         for base in node.bases:
             self.write(paren_or_comma, base)
         #keywords not available in early version
-        for keyword in getattr(node, 'keywords', ()):
+        for keyword in self.get_keywords(node):
             self.write(paren_or_comma, keyword.arg or '',
                        '=' if keyword.arg else '**', keyword.value)
-        self.conditional_write(paren_or_comma, '*',
-                                   getattr(node, 'starargs', None))
-        self.conditional_write(paren_or_comma, '**',
-                                   getattr(node, 'kwargs', None))
+        self.conditional_write(paren_or_comma, '*', self.get_starargs(node))
+        self.conditional_write(paren_or_comma, '**', self.get_kwargs(node))
         self.write(have_args and '):' or ':')
         self.body(node.body)
 
     def visit_If(self, node):
+        p = get_op_precedence(node)
+        set_precedence(p, node.test)
         self.statement(node, 'if ', node.test, ':')
         self.body(node.body)
         while True:
             else_ = node.orelse
             if len(else_) == 1 and isinstance(else_[0], ast.If):
                 node = else_[0]
+                set_precedence(p, node.test)
                 self.write('\n', 'elif ', node.test, ':')
                 self.body(node.body)
             else:
@@ -360,7 +403,10 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def visit_Return(self, node):
         self.statement(node, 'return')
-        self.conditional_write(' ', node.value)
+        value = node.value
+        if value is not None:
+            set_precedence(get_op_precedence(node), value)
+            self.write(' ', value)
 
     def visit_Break(self, node):
         self.statement(node, 'break')
@@ -371,9 +417,9 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_Raise(self, node):
         # XXX: Python 2.6 / 3.0 compatibility
         self.statement(node, 'raise')
-        if self.conditional_write(' ', getattr(node, 'exc', None)):
+        if self.conditional_write(' ', self.get_exc(node)):
             self.conditional_write(' from ', node.cause)
-        elif self.conditional_write(' ', getattr(node, 'type', None)):
+        elif self.conditional_write(' ', self.get_type(node)):
             self.conditional_write(', ', node.inst)
             self.conditional_write(', ', node.tback)
 
@@ -382,7 +428,10 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_Attribute(self, node):
         self.write(node.value, '.', node.attr)
 
-    def visit_Call(self, node):
+    def visit_Call(self, node,
+                   #constant
+                   Comma=OpLookup.Comma[-1],
+                   call_one_arg=OpLookup.call_one_arg[-1]):
         want_comma = []
 
         def write_comma():
@@ -391,153 +440,220 @@ class SourceGenerator(ExplicitNodeVisitor):
             else:
                 want_comma.append(True)
 
+        args = node.args
+        keywords = node.keywords
+        starargs = self.get_starargs(node)
+        kwargs = self.get_kwargs(node)
+        numargs = len(args) + len(keywords)
+        numargs += starargs is not None
+        numargs += kwargs is not None
+        set_precedence(Comma if numargs > 1 else call_one_arg, *args)
         self.visit(node.func)
         self.write('(')
-        for arg in node.args:
+        for arg in args:
             self.write(write_comma, arg)
-        for keyword in node.keywords:
+        for keyword in keywords:
             # a keyword.arg of None indicates dictionary unpacking
             # (Python >= 3.5)
             arg = keyword.arg or ''
             self.write(write_comma, arg, '=' if arg else '**',keyword.value)
         # 3.5 no longer has these
-        self.conditional_write(write_comma, '*',
-                                   getattr(node, 'starargs', None))
-        self.conditional_write(write_comma, '**',
-                                   getattr(node, 'kwargs', None))
+        self.conditional_write(write_comma, '*', starargs)
+        self.conditional_write(write_comma, '**', kwargs)
         self.write(')')
 
     def visit_Name(self, node):
         self.write(node.id)
 
     def visit_Str(self, node):
-        self.write(self.pretty_string(node.s, self.result))
+        result = self.result
+        # Cheesy way to force a flush
+        self.write('foo')
+        result.pop()
+        result.append(self.pretty_string(node.s, result))
 
     def visit_Bytes(self, node):
         self.write(repr(node.s))
 
-    @set_precedence()
-    def visit_Num(self, node):
-        """Deal with infinities
-        """
-        s = repr(node.n)
-        signed = s.startswith('-')
-        if s[signed].isalpha():
-            im = s[-1] == 'j' and 'j' or ''
-            assert s[signed:signed+3] == 'inf', s
-            s = '%s1e1000%s' % ('-' if signed else '', im)
-        self.write(s)
+    def visit_Num(self, node,
+                    # constants
+                    new=sys.version_info >= (3, 0),
+                    pow_lhs=OpLookup.Pow[-1] + 1):
+        with self.delimit(node) as delimiters:
+            s = repr(node.n)
 
-    @enclose('()')
+            # Deal with infinities -- if detected, we can
+            # generate them with 1e1000.
+            signed = s.startswith('-')
+            if s[signed].isalpha():
+                im = s[-1] == 'j' and 'j' or ''
+                assert s[signed:signed + 3] == 'inf', s
+                s = '%s1e1000%s' % ('-' if signed else '', im)
+            self.write(s)
+
+            # Deal with 2.x compiler premature optimization
+            if not new and delimiters.discard:
+                if signed:
+                    delimiters.discard = delimiters.pp != pow_lhs
+                else:
+                    op = self.get__p_op(node)
+                    delimiters.discard = not isinstance(op, ast.USub)
+
+
     def visit_Tuple(self, node):
-        self.comma_list(node.elts, len(node.elts) == 1)
+        with self.delimit(node) as delimiters:
+            elts = node.elts
+            delimiters.discard = delimiters.discard and elts
+            self.comma_list(elts, len(elts) == 1)
 
-    @enclose('[]')
     def visit_List(self, node):
-        self.comma_list(node.elts)
+        with self.delimit('[]'):
+            self.comma_list(node.elts)
 
-    @enclose('{}')
     def visit_Set(self, node):
-        self.comma_list(node.elts)
+        with self.delimit('{}'):
+            self.comma_list(node.elts)
 
-    @enclose('{}')
-    def visit_Dict(self, node):
-        for idx, (key, value) in enumerate(zip(node.keys, node.values)):
-            self.write(', ' if idx else '',
-                       key if key else '',
-                       ': ' if key else '**', value)
+    def visit_Dict(self, node,
+                        #constants
+                        Comma=OpLookup.Comma[-1]):
+        keys, values = node.keys, node.values
+        set_precedence(Comma, *values)
 
-    @set_precedence()
-    def visit_BinOp(self, node):
-        self.write(node.left, get_op_symbol(node.op, ' %s '), node.right)
+        with self.delimit('{}'):
+            for idx, (key, value) in enumerate(zip(keys, values)):
+                self.write(', ' if idx else '',
+                            key if key else '',
+                            ': ' if key else '**', value)
 
-    @set_precedence()
+    def visit_BinOp(self, node,
+                    # constants
+                    pow_lhs=OpLookup.Pow[-1] + 1,
+                    pow_rhs=OpLookup.PowRHS[-1]):
+        op, left, right = node.op, node.left, node.right
+        with self.delimit(node, op) as delimiters:
+            ispow = isinstance(op, ast.Pow)
+            p = delimiters.p
+            set_precedence(pow_lhs if ispow else p, left)
+            set_precedence(pow_rhs if ispow else (p + 1), right)
+            self.write(left, get_op_symbol(op, ' %s '), right)
+
     def visit_BoolOp(self, node):
-        op = get_op_symbol(node.op, ' %s ')
-        for idx, value in enumerate(node.values):
-            self.write(idx and op or '', value)
+        op, values = node.op, node.values
+        with self.delimit(node, op) as delimiters:
+            set_precedence(delimiters.p + 1, *values)
+            for idx, value in enumerate(node.values):
+                self.write(idx and get_op_symbol(op, ' %s ') or '', value)
 
-    @set_precedence()
     def visit_Compare(self, node):
-        self.visit(node.left)
-        for op, right in zip(node.ops, node.comparators):
-            self.write(get_op_symbol(op, ' %s '), right)
+        left, ops, comparators = node.left, node.ops, node.comparators
+        with self.delimit(node, ops[0]) as delimiters:
+            set_precedence(delimiters.p + 1, left, *comparators)
+            self.visit(node.left)
+            for op, right in zip(ops, comparators):
+                self.write(get_op_symbol(op, ' %s '), right)
 
-    @set_precedence()
     def visit_UnaryOp(self, node):
-        sym = get_op_symbol(node.op)
-        self.write(sym, ' ' if sym.isalpha() else '', node.operand)
+        op, operand = node.op, node.operand
+        with self.delimit(node, op) as delimiters:
+            set_precedence(delimiters.p, operand)
+            operand._p_op = op  # Hack for 2.x numbers
+            sym = get_op_symbol(op)
+            self.write(sym, ' ' if sym.isalpha() else '', operand)
 
     def visit_Subscript(self, node):
+        set_precedence(get_op_precedence(node), node.slice)
         self.write(node.value, '[', node.slice, ']')
 
     def visit_Slice(self, node):
-        self.conditional_write(node.lower)
+        subnodes = lower, upper, step = node.lower, node.upper, node.step
+        subnodes = [x for x in subnodes if x is not None]
+        set_precedence(get_op_precedence(node), *subnodes)
+        self.conditional_write(lower)
         self.write(':')
-        self.conditional_write(node.upper)
-        if node.step is not None:
+        self.conditional_write(upper)
+        if step is not None:
             self.write(':')
-            if not (isinstance(node.step, ast.Name) and
+            if not (isinstance(step, ast.Name) and
                     node.step.id == 'None'):
-                self.visit(node.step)
+                self.visit(step)
 
     def visit_Index(self, node):
-        self.visit(node.value)
+        value = node.value
+        with self.delimit(node) as delimiters:
+            set_precedence(delimiters.p, value)
+            self.visit(value)
 
     def visit_ExtSlice(self, node):
-        self.comma_list(node.dims, len(node.dims) == 1)
+        dims = node.dims
+        set_precedence(get_op_precedence(node), *dims)
+        self.comma_list(dims, len(dims) == 1)
 
-    @set_precedence()
     def visit_Yield(self, node):
-        self.write('yield')
-        self.conditional_write(' ', node.value)
+        value = node.value
+        with self.delimit(node):
+            if value is not None:
+                set_precedence(get_op_precedence(node) + 1, value)
+            self.write('yield')
+            self.conditional_write(' ', value)
 
-    @set_precedence()
     # new for Python 3.3
     def visit_YieldFrom(self, node):
-        self.write('yield from')
-        self.conditional_write(' ', node.value)
+        with self.delimit():
+            self.write('yield from')
+            self.conditional_write(' ', node.value)
 
     # new for Python 3.5
     def visit_Await(self, node):
         self.write('await ', node.value)
 
-    @set_precedence()
     def visit_Lambda(self, node):
-        self.write('lambda ')
-        self.visit_arguments(node.args)
-        self.write(': ', node.body)
+        with self.delimit(node) as delimiters:
+            set_precedence(delimiters.p, node.body)
+            self.write('lambda ')
+            self.visit_arguments(node.args)
+            self.write(': ', node.body)
 
     def visit_Ellipsis(self, node):
         self.write('...')
 
-    @enclose('[]')
     def visit_ListComp(self, node):
-        self.write(node.elt, *node.generators)
+        with self.delimit('[]'):
+            self.write(node.elt, *node.generators)
 
-    @enclose('()')
-    def visit_GeneratorExp(self, node):
-        self.write(node.elt, *node.generators)
+    def visit_GeneratorExp(self, node,
+                   #constant
+                   Comma=OpLookup.Comma[-1],
+                   call_one_arg=OpLookup.call_one_arg[-1]):
+        elt = node.elt
+        with self.delimit(node) as delimiters:
+            if delimiters.pp == call_one_arg:
+                delimiters.discard = True
+            set_precedence(Comma, elt)
+            self.write(elt, *node.generators)
 
-    @enclose('{}')
     def visit_SetComp(self, node):
-        self.write(node.elt, *node.generators)
+        with self.delimit('{}'):
+            self.write(node.elt, *node.generators)
 
-    @enclose('{}')
     def visit_DictComp(self, node):
-        self.write(node.key, ': ', node.value, *node.generators)
+        with self.delimit('{}'):
+            self.write(node.key, ': ', node.value, *node.generators)
 
-    @set_precedence()
     def visit_IfExp(self, node):
-        self.write(node.body, ' if ', node.test, ' else ', node.orelse)
+        with self.delimit(node) as delimiters:
+            body, test, orelse = node.body, node.test, node.orelse
+            set_precedence(delimiters.p + 1, body, test)
+            set_precedence(delimiters.p, orelse)
+            self.write(body, ' if ', test, ' else ', orelse)
 
     def visit_Starred(self, node):
         self.write('*', node.value)
 
-    @enclose('``')
     def visit_Repr(self, node):
         # XXX: python 2.6 only
-        self.visit(node.value)
+        with self.delimit('``'):
+            self.visit(node.value)
 
     def visit_Module(self, node):
         self.write(*node.body)
@@ -552,7 +668,12 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.write(node.name)
         self.conditional_write(' as ', node.asname)
 
-    def visit_comprehension(self, node):
-        self.write(' for ', node.target, ' in ', node.iter)
-        for if_ in node.ifs:
+    def visit_comprehension(self, node,
+                   #constant
+                   comprehension_target=OpLookup.comprehension_target[-1]):
+        target, iter, ifs = node.target, node.iter, node.ifs
+        set_precedence(get_op_precedence(node), target, iter, *ifs)
+        set_precedence(comprehension_target, target)
+        self.write(' for ', target, ' in ', iter)
+        for if_ in ifs:
             self.write(' if ', if_)
