@@ -4,8 +4,8 @@ Part of the astor library for Python AST manipulation.
 
 License: 3-clause BSD
 
-Copyright 2012-2015 (c) Patrick Maupin
-Copyright 2013-2015 (c) Berker Peksag
+Copyright (c) 2012-2015 Patrick Maupin
+Copyright (c) 2013-2015 Berker Peksag
 
 Functions that interact with the filesystem go here.
 
@@ -37,6 +37,8 @@ class CodeToAst(object):
         designed to be used in code that uses this class.
         """
 
+        if not os.path.isdir(srctree):
+            yield os.path.split(srctree)
         for srcpath, _, fnames in os.walk(srctree):
             # Avoid infinite recursion for silly users
             if ignore is not None and ignore in srcpath:
@@ -52,13 +54,18 @@ class CodeToAst(object):
 
             TODO: Handle encodings other than the default (issue #26)
         """
-        with open(fname, 'r') as f:
-            fstr = f.read()
+        try:
+            with open(fname, 'r') as f:
+                fstr = f.read()
+        except IOError:
+            if fname != 'stdin':
+                raise
+            sys.stdout.write('\nReading from stdin:\n\n')
+            fstr = sys.stdin.read()
         fstr = fstr.replace('\r\n', '\n').replace('\r', '\n')
         if not fstr.endswith('\n'):
             fstr += '\n'
         return ast.parse(fstr, filename=fname)
-
 
     @staticmethod
     def get_file_info(codeobj):
