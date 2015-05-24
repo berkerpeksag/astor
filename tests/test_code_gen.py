@@ -22,6 +22,7 @@ import astor
 def canonical(srctxt):
     return textwrap.dedent(srctxt).strip()
 
+
 class CodegenTestCase(unittest.TestCase):
 
     def assertAstEqual(self, srctxt):
@@ -38,7 +39,7 @@ class CodegenTestCase(unittest.TestCase):
         self.assertEqual(dstdmp, srcdmp)
 
     def assertAstEqualIfAtLeastVersion(self, source, min_should_work,
-                                                max_should_error=None):
+                                       max_should_error=None):
         if max_should_error is None:
             max_should_error = min_should_work[0], min_should_work[1] - 1
         if sys.version_info >= min_should_work:
@@ -56,7 +57,7 @@ class CodegenTestCase(unittest.TestCase):
         self.assertEqual(astor.to_source(ast.parse(srctxt)), srctxt)
 
     def assertAstSourceEqualIfAtLeastVersion(self, source, min_should_work,
-                                                max_should_error=None):
+                                             max_should_error=None):
         if max_should_error is None:
             max_should_error = min_should_work[0], min_should_work[1] - 1
         if sys.version_info >= min_should_work:
@@ -254,7 +255,6 @@ class CodegenTestCase(unittest.TestCase):
         """
         self.assertAstEqual(source)
 
-
     def test_comprehension(self):
         source = """
             ((x,y) for x,y in zip(a,b))
@@ -265,7 +265,8 @@ class CodegenTestCase(unittest.TestCase):
         """
         self.assertAstEqual(source)
         source = """
-            ra = np.fromiter(((i * 3, i * 2) for i in range(10)), n, dtype='i8,f8')
+            ra = np.fromiter(((i * 3, i * 2) for i in range(10)),
+                                n, dtype='i8,f8')
         """
         self.assertAstEqual(source)
 

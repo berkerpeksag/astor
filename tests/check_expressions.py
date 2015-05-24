@@ -83,7 +83,8 @@ def checklib():
                         print('******************')
                         print()
                         print()
-                f.write(('%s      %s\n' % (repr(srctxt), repr(dsttxt))).encode('utf-8'))
+                f.write(('%s      %s\n' % (repr(srctxt),
+                                           repr(dsttxt))).encode('utf-8'))
 
 if __name__ == '__main__':
     checklib()

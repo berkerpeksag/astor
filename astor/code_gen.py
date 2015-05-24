@@ -91,7 +91,6 @@ class Delimit(object):
             self.p = p = get_op_precedence(op or node)
             self.pp = pp = tree.get__pp(node)
             self.discard = p >= pp
-            #print node, p, pp
 
     def __enter__(self):
         return self
@@ -131,8 +130,10 @@ class SourceGenerator(ExplicitNodeVisitor):
         geta = getattr
         shortname = name[4:]
         default = defaults(shortname)
+
         def getter(node):
             return geta(node, shortname, default)
+
         setattr(self, name, getter)
         return getter
 
@@ -215,8 +216,8 @@ class SourceGenerator(ExplicitNodeVisitor):
             self.statement(decorator, '@', decorator)
 
     def comma_list(self, items, trailing=False,
-                        #constants
-                        Comma=OpLookup.Comma[-1]):
+                   # constants
+                   Comma=OpLookup.Comma[-1]):
         set_precedence(Comma, *items)
         for idx, item in enumerate(items):
             self.write(', ' if idx else '', item)
@@ -238,7 +239,7 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def visit_ImportFrom(self, node):
         self.statement(node, 'from ', node.level * '.',
-                           node.module or '', ' import ')
+                       node.module or '', ' import ')
         self.comma_list(node.names)
 
     def visit_Import(self, node):
@@ -278,7 +279,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.statement(node, 'class %s' % node.name)
         for base in node.bases:
             self.write(paren_or_comma, base)
-        #keywords not available in early version
+        # keywords not available in early version
         for keyword in self.get_keywords(node):
             self.write(paren_or_comma, keyword.arg or '',
                        '=' if keyword.arg else '**', keyword.value)
@@ -429,7 +430,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.write(node.value, '.', node.attr)
 
     def visit_Call(self, node,
-                   #constant
+                   # constant
                    Comma=OpLookup.Comma[-1],
                    call_one_arg=OpLookup.call_one_arg[-1]):
         want_comma = []
@@ -456,7 +457,7 @@ class SourceGenerator(ExplicitNodeVisitor):
             # a keyword.arg of None indicates dictionary unpacking
             # (Python >= 3.5)
             arg = keyword.arg or ''
-            self.write(write_comma, arg, '=' if arg else '**',keyword.value)
+            self.write(write_comma, arg, '=' if arg else '**', keyword.value)
         # 3.5 no longer has these
         self.conditional_write(write_comma, '*', starargs)
         self.conditional_write(write_comma, '**', kwargs)
@@ -476,9 +477,9 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.write(repr(node.s))
 
     def visit_Num(self, node,
-                    # constants
-                    new=sys.version_info >= (3, 0),
-                    pow_lhs=OpLookup.Pow[-1] + 1):
+                  # constants
+                  new=sys.version_info >= (3, 0),
+                  pow_lhs=OpLookup.Pow[-1] + 1):
         with self.delimit(node) as delimiters:
             s = repr(node.n)
 
@@ -499,7 +500,6 @@ class SourceGenerator(ExplicitNodeVisitor):
                     op = self.get__p_op(node)
                     delimiters.discard = not isinstance(op, ast.USub)
 
-
     def visit_Tuple(self, node):
         with self.delimit(node) as delimiters:
             elts = node.elts
@@ -515,16 +515,16 @@ class SourceGenerator(ExplicitNodeVisitor):
             self.comma_list(node.elts)
 
     def visit_Dict(self, node,
-                        #constants
-                        Comma=OpLookup.Comma[-1]):
+                   # constants
+                   Comma=OpLookup.Comma[-1]):
         keys, values = node.keys, node.values
         set_precedence(Comma, *values)
 
         with self.delimit('{}'):
             for idx, (key, value) in enumerate(zip(keys, values)):
                 self.write(', ' if idx else '',
-                            key if key else '',
-                            ': ' if key else '**', value)
+                           key if key else '',
+                           ': ' if key else '**', value)
 
     def visit_BinOp(self, node,
                     # constants
@@ -622,9 +622,9 @@ class SourceGenerator(ExplicitNodeVisitor):
             self.write(node.elt, *node.generators)
 
     def visit_GeneratorExp(self, node,
-                   #constant
-                   Comma=OpLookup.Comma[-1],
-                   call_one_arg=OpLookup.call_one_arg[-1]):
+                           # constant
+                           Comma=OpLookup.Comma[-1],
+                           call_one_arg=OpLookup.call_one_arg[-1]):
         elt = node.elt
         with self.delimit(node) as delimiters:
             if delimiters.pp == call_one_arg:
@@ -669,8 +669,8 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.conditional_write(' as ', node.asname)
 
     def visit_comprehension(self, node,
-                   #constant
-                   comprehension_target=OpLookup.comprehension_target[-1]):
+                            # constant
+                      comprehension_target=OpLookup.comprehension_target[-1]):
         target, iter, ifs = node.target, node.iter, node.ifs
         set_precedence(get_op_precedence(node), target, iter, *ifs)
         set_precedence(comprehension_target, target)

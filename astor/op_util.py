@@ -13,10 +13,6 @@ AST nodes to symbols and precedences.
 
 import ast
 
-# first column = name (usually but not always maps to ast)
-# last column = 1 to bump precedence from preceding
-# intermediate columns = symbol (if any)
-
 op_data = """
     GeneratorExp                1
 
@@ -92,10 +88,12 @@ def get_op_symbol(obj, fmt='%s', symbol_data=symbol_data, type=type):
     """
     return fmt % symbol_data[type(obj)]
 
+
 def get_op_precedence(obj, precedence_data=precedence_data, type=type):
     """Given an AST node object, returns the precedence.
     """
     return precedence_data[type(obj)]
+
 
 class OpLookup(object):
     vars().update((x, (y, z)) for x, y, z in op_data)

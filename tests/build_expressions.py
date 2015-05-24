@@ -26,29 +26,29 @@ import ast
 import astor
 
 all_operators = (
-            #Selected special operands
+            # Selected special operands
             '3 -3 () yield',
-            #operators with one parameter
+            # operators with one parameter
             'yield lambda_: not + - ~ $, yield_from',
-            #operators with two parameters
+            # operators with two parameters
             'or and == != > >= < <= in not_in is is_not '
             '| ^ & << >> + - * / % // @ ** for$in$ $($) $[$] . '
             '$,$ ',
-            #operators with 3 parameters
+            # operators with 3 parameters
             '$if$else$ $for$in$'
         )
 
 
 select_operators = (
-            #Selected special operands -- remove
-            #some at redundant precedence levels
+            # Selected special operands -- remove
+            # some at redundant precedence levels
             '-3',
-            #operators with one parameter
+            # operators with one parameter
             'yield lambda_: not - ~ $,',
-            #operators with two parameters
+            # operators with two parameters
             'or and == in is '
             '| ^ & >> - % ** for$in$ $($) . ',
-            #operators with 3 parameters
+            # operators with 3 parameters
             '$if$else$  $for$in$'
         )
 
@@ -111,9 +111,9 @@ def get_sub_combinations(maxop):
         if numops:
             combo[numops, 1].append((numops-1,))
         for op1 in range(numops):
-            combo[numops, 2].append((op1, numops - op1 -1))
+            combo[numops, 2].append((op1, numops - op1 - 1))
             for op2 in range(numops - op1):
-                combo[numops, 3].append((op1, op2, numops - op1 -op2-1))
+                combo[numops, 3].append((op1, op2, numops - op1 - op2 - 1))
     return combo
 
 
@@ -127,8 +127,8 @@ def get_paren_combos():
     """
     results = [None] * 4
     options = [('%s', '(%s)')]
-    for i in range(1,4):
-        results[i] = list(itertools.product(*(i*options)))
+    for i in range(1, 4):
+        results[i] = list(itertools.product(*(i * options)))
     return results
 
 
@@ -149,6 +149,7 @@ def operand_combo(expressions, operands, max_operand=13):
         for op in op_combos[expr.count('%s')]:
             yield expr % op
 
+
 def build(numops=2, all_operators=all_operators, use_operands=False,
           # Runtime optimization
           tuple=tuple):
@@ -167,22 +168,24 @@ def build(numops=2, all_operators=all_operators, use_operands=False,
         for myop, nparams in operators:
             myop = myop.replace('%%', '%%%%')
             myparens = paren_combos[nparams]
-            #print combo[numops, nparams]
+            # print combo[numops, nparams]
             for mycombo in combo[numops, nparams]:
-                #print mycombo
+                # print mycombo
                 call_again = (recurse_build(x) for x in mycombo)
                 for subexpr in product(*call_again):
                     for parens in myparens:
-                        wrapped = tuple(x % y for (x, y) in izip(parens, subexpr))
+                        wrapped = tuple(x % y for (x, y)
+                                        in izip(parens, subexpr))
                         yield myop % wrapped
     result = recurse_build(numops)
     return operand_combo(result, operands) if use_operands else result
+
 
 def makelib():
     parse = ast.parse
     dump_tree = astor.dump_tree
 
-    default_value = lambda: (1000000, '')
+    def default_value(): return 1000000, ''
     mydict = collections.defaultdict(default_value)
 
     allparams = [tuple('abcdefghijklmnop'[:x]) for x in range(13)]
@@ -191,10 +194,10 @@ def makelib():
                              build(3, select_operators))
 
     yieldrepl = list(('yield %s %s' % (operator, operand),
-                  'yield %s%s' % (operator, operand))
-                    for operator in '+-' for operand in '(ab')
+                      'yield %s%s' % (operator, operand))
+                     for operator in '+-' for operand in '(ab')
     yieldrepl.append(('yield[', 'yield ['))
-    #alltxt = itertools.chain(build(1), build(2))
+    # alltxt = itertools.chain(build(1), build(2))
     badexpr = 0
     goodexpr = 0
     silly = '3( 3.( 3[ 3.['.split()

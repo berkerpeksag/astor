@@ -36,7 +36,6 @@ class MetaFlatten(type):
 MetaFlatten = MetaFlatten('MetaFlatten', (object, ), {})
 
 
-
 class TreeWalk(MetaFlatten):
     """The TreeWalk class can be used as a superclass in order
     to walk an AST or similar tree.

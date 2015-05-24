@@ -23,12 +23,14 @@ import logging
 try:
     special_unicode = unicode
 except NameError:
-    class special_unicode(object): pass
+    class special_unicode(object):
+        pass
 
 try:
     basestring = basestring
 except NameError:
     basestring = str
+
 
 def _get_line(current_output):
     """ Back up in the output buffer to
@@ -49,6 +51,7 @@ def _get_line(current_output):
     myline = ''.join(reversed(myline))
     return myline.rsplit('\n', 1)[-1]
 
+
 def _properly_indented(s, current_line):
     line_indent = len(current_line) - len(current_line.lstrip())
     mylist = s.split('\n')[1:]
@@ -62,6 +65,7 @@ def _properly_indented(s, current_line):
 mysplit = re.compile(r'(\\|\"\"\"|\"$)').split
 replacements = {'\\': '\\\\', '"""': '""\\"', '"': '\\"'}
 
+
 def _prep_triple_quotes(s, mysplit=mysplit, replacements=replacements):
     """ Split the string up and force-feed some replacements
         to make sure it will round-trip OK
@@ -70,6 +74,7 @@ def _prep_triple_quotes(s, mysplit=mysplit, replacements=replacements):
     s = mysplit(s)
     s[1::2] = (replacements[x] for x in s[1::2])
     return ''.join(s)
+
 
 def pretty_string(s, current_output, min_trip_str=20, max_line=100):
     """There are a lot of reasons why we might not want to or

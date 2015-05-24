@@ -9,8 +9,6 @@ Copyright 2013 (c) Berker Peksag
 
 """
 
-__version__ = '0.6'
-
 from .code_gen import to_source  # NOQA
 from .node_util import iter_node, strip_tree, dump_tree
 from .node_util import ExplicitNodeVisitor
@@ -19,8 +17,10 @@ from .op_util import get_op_symbol, get_op_precedence  # NOQA
 from .op_util import symbol_data
 from .tree_walk import TreeWalk  # NOQA
 
+__version__ = '0.6'
 
-#DEPRECATED!!!
+
+# DEPRECATED!!!
 
 # These aliases support old programs.  Please do not use in future.
 
@@ -30,7 +30,7 @@ from .tree_walk import TreeWalk  # NOQA
 #      things could be accessed from their submodule.
 
 
-get_boolop = get_binop = get_cmpop = get_unaryop =  get_op_symbol # NOQA
+get_boolop = get_binop = get_cmpop = get_unaryop = get_op_symbol  # NOQA
 get_anyop = get_op_symbol
 parsefile = code_to_ast.parse_file
 codetoast = code_to_ast
