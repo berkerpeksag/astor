@@ -8,14 +8,41 @@ Copyright (c) 2015 Patrick Maupin
 
 Pretty-print strings for the decompiler
 
+We either return the repr() of the string,
+or try to format it as a triple-quoted string.
+
+This is a lot harder than you would think.
+
+This has lots of Python 2 / Python 3 ugliness.
+
 """
 
+import re
+import logging
+
+try:
+    special_unicode = unicode
+except NameError:
+    class special_unicode(object): pass
+
+try:
+    basestring = basestring
+except NameError:
+    basestring = str
+
 def _get_line(current_output):
+    """ Back up in the output buffer to
+        find the start of the current line,
+        and return the entire line.
+    """
     myline = []
     index = len(current_output)
     while index:
         index -= 1
-        s = str(current_output[index])
+        try:
+            s = str(current_output[index])
+        except:
+            raise
         myline.append(s)
         if '\n' in s:
             break
@@ -32,55 +59,57 @@ def _properly_indented(s, current_line):
     counts = [(len(x) - len(x.lstrip())) for x in mylist]
     return counts and min(counts) >= line_indent
 
-# Our attempt at rationalizing differences between Python 2 and Python 3.
+mysplit = re.compile(r'(\\|\"\"\"|\"$)').split
+replacements = {'\\': '\\\\', '"""': '""\\"', '"': '\\"'}
 
-try:
-    basestring
-except NameError:
-    basestring = str
-    class unicode: pass
-
-def _prep_triple_quotes(s):
-    """ You'd think there would be a utility for this somewhere,
-        but I didn't find it.
+def _prep_triple_quotes(s, mysplit=mysplit, replacements=replacements):
+    """ Split the string up and force-feed some replacements
+        to make sure it will round-trip OK
     """
-    for line in s.split('\n'):
-        if not line:
-            yield line
-            continue
-        line = repr(line)
-        line = line[line[0].isalpha()+1:-1].split('\\\\')
-        if line[0].startswith('"'):
-            line[0] = '\\' + line[0]
-        if line[-1].endswith('"'):
-            line[-1] = line[-1][:-1] + '\\"'
-        line = '\\\\'.join(line).split('"""')
-        yield r'""\"'.join(line)
+
+    s = mysplit(s)
+    s[1::2] = (replacements[x] for x in s[1::2])
+    return ''.join(s)
 
 def pretty_string(s, current_output, min_trip_str=20, max_line=100):
+    """There are a lot of reasons why we might not want to or
+       be able to return a triple-quoted string.  We can always
+       punt back to the default normal string.
+    """
 
     default = repr(s)
+
+    # Punt on abnormal strings
+    if (isinstance(s, special_unicode) or not isinstance(s, basestring)):
+        return default
+
     len_s = len(default)
-    if len_s < min_trip_str:
-        return default
-
     current_line = _get_line(current_output)
-    total_len = len(current_line) + len_s
-    if total_len < max_line and not _properly_indented(s, current_line):
-        return default
+    if current_line.strip():
+        if len_s < min_trip_str:
+            return default
 
-    # Use "regular" strings, whatever that means for the given Python
-    fmt = '"""%s"""'
-    if isinstance(s, unicode):
-        #s = s.encode('utf-8', 'replace')
-        fmt = 'u"""%s"""'
-    elif not isinstance(s, basestring):
-        #s = s.decode('utf-8', 'replace')
+        total_len = len(current_line) + len_s
+        if total_len < max_line and not _properly_indented(s, current_line):
+            return default
+
+    fancy = '"""%s"""' % _prep_triple_quotes(s)
+
+    # Sometimes this doesn't work.  One reason is that
+    # the AST has no understanding of whether \r\n was
+    # entered that way in the string or was a cr/lf in the
+    # file.  So we punt just so we can round-trip properly.
+
+    try:
+        if eval(fancy) == s and '\r' not in fancy:
+            return fancy
+    except:
         pass
-
-    fancy = fmt % '\n'.join(_prep_triple_quotes(s))
-
-    # I don't know why this doesn't always work, and don't have
-    # time to debug it right now:
-    #return fancy
-    return fancy if eval(fancy) == s else default
+    """
+    logging.warning("***String conversion did not work\n")
+    #print (eval(fancy), s)
+    print
+    print (fancy, repr(s))
+    print
+    """
+    return default
