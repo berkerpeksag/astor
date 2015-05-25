@@ -198,6 +198,12 @@ class CodegenTestCase(unittest.TestCase):
         self.assertAstEqual(source)
         source = "[(yield)]"
         self.assertAstEqual(source)
+        source = "if (yield): pass"
+        self.assertAstEqual(source)
+        source = "if (yield from foo): pass"
+        self.assertAstEqualIfAtLeastVersion(source, (3, 3))
+        source = "(yield from (a, b))"
+        self.assertAstEqualIfAtLeastVersion(source, (3, 3))
 
     def test_with(self):
         source = """

@@ -19,10 +19,10 @@ op_data = """
           Assign                1
        AugAssign                0
             Expr                0
-              If                0
+           Yield                1
+              If                1
              For                0
            While                0
-           Yield                1
           Return                1
 
            Slice                1
