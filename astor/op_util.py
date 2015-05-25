@@ -20,6 +20,7 @@ op_data = """
        AugAssign                0
             Expr                0
            Yield                1
+       YieldFrom                0
               If                1
              For                0
            While                0

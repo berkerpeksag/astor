@@ -614,7 +614,7 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     # new for Python 3.3
     def visit_YieldFrom(self, node):
-        with self.delimit():
+        with self.delimit(node):
             self.write('yield from')
             self.conditional_write(' ', node.value)
 
