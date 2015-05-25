@@ -83,6 +83,22 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.indentation = 0
         self.new_lines = 0
 
+    def __getattr__(self, name, defaults=dict(keywords=()).get):
+        """ Get an attribute of the node.
+            like dict.get (returns None if doesn't exist)
+        """
+        if not name.startswith('get_'):
+            raise AttributeError
+        geta = getattr
+        shortname = name[4:]
+        default = defaults(shortname)
+
+        def getter(node):
+            return geta(node, shortname, default)
+
+        setattr(self, name, getter)
+        return getter
+
     def delimit(self, *args):
         return Delimit(self, *args)
 
@@ -145,7 +161,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         loop_args(node.args, node.defaults)
         self.conditional_write(write_comma, '*', node.vararg)
 
-        kwonlyargs = getattr(node, 'kwonlyargs', None)
+        kwonlyargs = self.get_kwonlyargs(node)
         if kwonlyargs:
             if node.vararg is None:
                 self.write(write_comma, '*')
@@ -197,7 +213,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.statement(node, '%sdef %s(' % (prefix, node.name))
         self.visit_arguments(node.args)
         self.write(')')
-        self.conditional_write(' ->', getattr(node, 'returns', None))
+        self.conditional_write(' ->', self.get_returns(node))
         self.write(':')
         self.body(node.body)
 
@@ -220,13 +236,11 @@ class SourceGenerator(ExplicitNodeVisitor):
         for base in node.bases:
             self.write(paren_or_comma, base)
         # keywords not available in early version
-        for keyword in getattr(node, 'keywords', ()):
+        for keyword in self.get_keywords(node):
             self.write(paren_or_comma, keyword.arg or '',
                        '=' if keyword.arg else '**', keyword.value)
-        self.conditional_write(paren_or_comma, '*',
-                               getattr(node, 'starargs', None))
-        self.conditional_write(paren_or_comma, '**',
-                               getattr(node, 'kwargs', None))
+        self.conditional_write(paren_or_comma, '*', self.get_starargs(node))
+        self.conditional_write(paren_or_comma, '**', self.get_kwargs(node))
         self.write(have_args and '):' or ':')
         self.body(node.body)
 
@@ -354,9 +368,9 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_Raise(self, node):
         # XXX: Python 2.6 / 3.0 compatibility
         self.statement(node, 'raise')
-        if self.conditional_write(' ', getattr(node, 'exc', None)):
+        if self.conditional_write(' ', self.get_exc(node)):
             self.conditional_write(' from ', node.cause)
-        elif self.conditional_write(' ', getattr(node, 'type', None)):
+        elif self.conditional_write(' ', self.get_type(node)):
             self.conditional_write(', ', node.inst)
             self.conditional_write(', ', node.tback)
 
@@ -387,10 +401,8 @@ class SourceGenerator(ExplicitNodeVisitor):
             arg = keyword.arg or ''
             self.write(write_comma, arg, '=' if arg else '**', keyword.value)
         # 3.5 no longer has these
-        self.conditional_write(write_comma, '*',
-                               getattr(node, 'starargs', None))
-        self.conditional_write(write_comma, '**',
-                               getattr(node, 'kwargs', None))
+        self.conditional_write(write_comma, '*', self.get_starargs(node))
+        self.conditional_write(write_comma, '**', self.get_kwargs(node))
         self.write(')')
 
     def visit_Name(self, node):
