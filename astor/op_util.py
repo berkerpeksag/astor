@@ -99,6 +99,6 @@ def get_op_precedence(obj, precedence_data=precedence_data, type=type):
     return precedence_data[type(obj)]
 
 
-class OpLookup(object):
-    vars().update((x, (y, z)) for x, y, z in op_data)
-    high_precedence = max(x[2] for x in op_data) + 2
+class Precedence(object):
+    vars().update((x, z) for x, y, z in op_data)
+    highest = max(z for x, y, z in op_data) + 2
