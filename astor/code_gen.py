@@ -168,7 +168,7 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def visit_ImportFrom(self, node):
         self.statement(node, 'from ', node.level * '.',
-                           node.module or '', ' import ')
+                       node.module or '', ' import ')
         self.comma_list(node.names)
 
     def visit_Import(self, node):
@@ -207,14 +207,14 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.statement(node, 'class %s' % node.name)
         for base in node.bases:
             self.write(paren_or_comma, base)
-        #keywords not available in early version
+        # keywords not available in early version
         for keyword in getattr(node, 'keywords', ()):
             self.write(paren_or_comma, keyword.arg or '',
                        '=' if keyword.arg else '**', keyword.value)
         self.conditional_write(paren_or_comma, '*',
-                                   getattr(node, 'starargs', None))
+                               getattr(node, 'starargs', None))
         self.conditional_write(paren_or_comma, '**',
-                                   getattr(node, 'kwargs', None))
+                               getattr(node, 'kwargs', None))
         self.write(have_args and '):' or ':')
         self.body(node.body)
 
@@ -373,12 +373,12 @@ class SourceGenerator(ExplicitNodeVisitor):
             # a keyword.arg of None indicates dictionary unpacking
             # (Python >= 3.5)
             arg = keyword.arg or ''
-            self.write(write_comma, arg, '=' if arg else '**',keyword.value)
+            self.write(write_comma, arg, '=' if arg else '**', keyword.value)
         # 3.5 no longer has these
         self.conditional_write(write_comma, '*',
-                                   getattr(node, 'starargs', None))
+                               getattr(node, 'starargs', None))
         self.conditional_write(write_comma, '**',
-                                   getattr(node, 'kwargs', None))
+                               getattr(node, 'kwargs', None))
         self.write(')')
 
     def visit_Name(self, node):
