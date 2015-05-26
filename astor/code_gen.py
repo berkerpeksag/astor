@@ -48,14 +48,23 @@ def to_source(node, indent_with=' ' * 4, add_line_information=False):
     return ''.join(str(s) for s in generator.result)
 
 
-def enclose(enclosure):
-    def decorator(func):
-        def newfunc(self, node):
-            self.write(enclosure[0])
-            func(self, node)
-            self.write(enclosure[-1])
-        return newfunc
-    return decorator
+class Delimit(object):
+    """A context manager that can add enclosing
+       delimiters around the output of a
+       SourceGenerator method.
+    """
+
+    def __init__(self, tree, delimiters='()'):
+        opening, closing = delimiters
+        tree.write(opening)
+        self.closing = delimiters[1]
+        self.result = tree.result
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc_info):
+        self.result.append(self.closing)
 
 
 class SourceGenerator(ExplicitNodeVisitor):
@@ -73,6 +82,25 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.add_line_information = add_line_information
         self.indentation = 0
         self.new_lines = 0
+
+    def __getattr__(self, name, defaults=dict(keywords=()).get):
+        """ Get an attribute of the node.
+            like dict.get (returns None if doesn't exist)
+        """
+        if not name.startswith('get_'):
+            raise AttributeError
+        geta = getattr
+        shortname = name[4:]
+        default = defaults(shortname)
+
+        def getter(node):
+            return geta(node, shortname, default)
+
+        setattr(self, name, getter)
+        return getter
+
+    def delimit(self, *args):
+        return Delimit(self, *args)
 
     def write(self, *params):
         for item in params:
@@ -133,7 +161,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         loop_args(node.args, node.defaults)
         self.conditional_write(write_comma, '*', node.vararg)
 
-        kwonlyargs = getattr(node, 'kwonlyargs', None)
+        kwonlyargs = self.get_kwonlyargs(node)
         if kwonlyargs:
             if node.vararg is None:
                 self.write(write_comma, '*')
@@ -168,7 +196,7 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def visit_ImportFrom(self, node):
         self.statement(node, 'from ', node.level * '.',
-                           node.module or '', ' import ')
+                       node.module or '', ' import ')
         self.comma_list(node.names)
 
     def visit_Import(self, node):
@@ -185,7 +213,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.statement(node, '%sdef %s(' % (prefix, node.name))
         self.visit_arguments(node.args)
         self.write(')')
-        self.conditional_write(' ->', getattr(node, 'returns', None))
+        self.conditional_write(' ->', self.get_returns(node))
         self.write(':')
         self.body(node.body)
 
@@ -207,14 +235,12 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.statement(node, 'class %s' % node.name)
         for base in node.bases:
             self.write(paren_or_comma, base)
-        #keywords not available in early version
-        for keyword in getattr(node, 'keywords', ()):
+        # keywords not available in early version
+        for keyword in self.get_keywords(node):
             self.write(paren_or_comma, keyword.arg or '',
                        '=' if keyword.arg else '**', keyword.value)
-        self.conditional_write(paren_or_comma, '*',
-                                   getattr(node, 'starargs', None))
-        self.conditional_write(paren_or_comma, '**',
-                                   getattr(node, 'kwargs', None))
+        self.conditional_write(paren_or_comma, '*', self.get_starargs(node))
+        self.conditional_write(paren_or_comma, '**', self.get_kwargs(node))
         self.write(have_args and '):' or ':')
         self.body(node.body)
 
@@ -342,9 +368,9 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_Raise(self, node):
         # XXX: Python 2.6 / 3.0 compatibility
         self.statement(node, 'raise')
-        if self.conditional_write(' ', getattr(node, 'exc', None)):
+        if self.conditional_write(' ', self.get_exc(node)):
             self.conditional_write(' from ', node.cause)
-        elif self.conditional_write(' ', getattr(node, 'type', None)):
+        elif self.conditional_write(' ', self.get_type(node)):
             self.conditional_write(', ', node.inst)
             self.conditional_write(', ', node.tback)
 
@@ -373,12 +399,10 @@ class SourceGenerator(ExplicitNodeVisitor):
             # a keyword.arg of None indicates dictionary unpacking
             # (Python >= 3.5)
             arg = keyword.arg or ''
-            self.write(write_comma, arg, '=' if arg else '**',keyword.value)
+            self.write(write_comma, arg, '=' if arg else '**', keyword.value)
         # 3.5 no longer has these
-        self.conditional_write(write_comma, '*',
-                                   getattr(node, 'starargs', None))
-        self.conditional_write(write_comma, '**',
-                                   getattr(node, 'kwargs', None))
+        self.conditional_write(write_comma, '*', self.get_starargs(node))
+        self.conditional_write(write_comma, '**', self.get_kwargs(node))
         self.write(')')
 
     def visit_Name(self, node):
@@ -402,44 +426,44 @@ class SourceGenerator(ExplicitNodeVisitor):
             s = '(%s)' % s
         self.write(s)
 
-    @enclose('()')
     def visit_Tuple(self, node):
-        self.comma_list(node.elts, len(node.elts) == 1)
+        with self.delimit():
+            self.comma_list(node.elts, len(node.elts) == 1)
 
-    @enclose('[]')
     def visit_List(self, node):
-        self.comma_list(node.elts)
+        with self.delimit('[]'):
+            self.comma_list(node.elts)
 
-    @enclose('{}')
     def visit_Set(self, node):
-        self.comma_list(node.elts)
+        with self.delimit('{}'):
+            self.comma_list(node.elts)
 
-    @enclose('{}')
     def visit_Dict(self, node):
-        for idx, (key, value) in enumerate(zip(node.keys, node.values)):
-            self.write(', ' if idx else '',
-                       key if key else '',
-                       ': ' if key else '**', value)
+        with self.delimit('{}'):
+            for idx, (key, value) in enumerate(zip(node.keys, node.values)):
+                self.write(', ' if idx else '',
+                           key if key else '',
+                           ': ' if key else '**', value)
 
-    @enclose('()')
     def visit_BinOp(self, node):
-        self.write(node.left, get_op_symbol(node.op, ' %s '), node.right)
+        with self.delimit():
+            self.write(node.left, get_op_symbol(node.op, ' %s '), node.right)
 
-    @enclose('()')
     def visit_BoolOp(self, node):
-        op = get_op_symbol(node.op, ' %s ')
-        for idx, value in enumerate(node.values):
-            self.write(idx and op or '', value)
+        with self.delimit():
+            op = get_op_symbol(node.op, ' %s ')
+            for idx, value in enumerate(node.values):
+                self.write(idx and op or '', value)
 
-    @enclose('()')
     def visit_Compare(self, node):
-        self.visit(node.left)
-        for op, right in zip(node.ops, node.comparators):
-            self.write(get_op_symbol(op, ' %s '), right)
+        with self.delimit():
+            self.visit(node.left)
+            for op, right in zip(node.ops, node.comparators):
+                self.write(get_op_symbol(op, ' %s '), right)
 
-    @enclose('()')
     def visit_UnaryOp(self, node):
-        self.write(get_op_symbol(node.op), '(', node.operand, ')')
+        with self.delimit():
+            self.write(get_op_symbol(node.op), '(', node.operand, ')')
 
     def visit_Subscript(self, node):
         self.write(node.value, '[', node.slice, ']')
@@ -460,57 +484,55 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_ExtSlice(self, node):
         self.comma_list(node.dims, len(node.dims) == 1)
 
-    @enclose('()')
-    def visit_Yield(self, node):
-        self.write('yield')
-        self.conditional_write(' ', node.value)
+    def visit_Yield(self, node, suffix=''):
+        with self.delimit():
+            self.write('yield%s' % suffix)
+            self.conditional_write(' ', node.value)
 
     # new for Python 3.3
-    @enclose('()')
     def visit_YieldFrom(self, node):
-        self.write('yield from')
-        self.conditional_write(' ', node.value)
+        self.visit_Yield(node, ' from')
 
     # new for Python 3.5
     def visit_Await(self, node):
         self.write('await ', node.value)
 
-    @enclose('()')
     def visit_Lambda(self, node):
-        self.write('lambda ')
-        self.visit_arguments(node.args)
-        self.write(': ', node.body)
+        with self.delimit():
+            self.write('lambda ')
+            self.visit_arguments(node.args)
+            self.write(': ', node.body)
 
     def visit_Ellipsis(self, node):
         self.write('...')
 
-    @enclose('[]')
     def visit_ListComp(self, node):
-        self.write(node.elt, *node.generators)
+        with self.delimit('[]'):
+            self.write(node.elt, *node.generators)
 
-    @enclose('()')
     def visit_GeneratorExp(self, node):
-        self.write(node.elt, *node.generators)
+        with self.delimit():
+            self.write(node.elt, *node.generators)
 
-    @enclose('{}')
     def visit_SetComp(self, node):
-        self.write(node.elt, *node.generators)
+        with self.delimit('{}'):
+            self.write(node.elt, *node.generators)
 
-    @enclose('{}')
     def visit_DictComp(self, node):
-        self.write(node.key, ': ', node.value, *node.generators)
+        with self.delimit('{}'):
+            self.write(node.key, ': ', node.value, *node.generators)
 
-    @enclose('()')
     def visit_IfExp(self, node):
-        self.write(node.body, ' if ', node.test, ' else ', node.orelse)
+        with self.delimit('()'):
+            self.write(node.body, ' if ', node.test, ' else ', node.orelse)
 
     def visit_Starred(self, node):
         self.write('*', node.value)
 
-    @enclose('``')
     def visit_Repr(self, node):
         # XXX: python 2.6 only
-        self.visit(node.value)
+        with self.delimit('``'):
+            self.visit(node.value)
 
     def visit_Module(self, node):
         self.write(*node.body)
