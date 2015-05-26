@@ -479,10 +479,12 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def visit_Str(self, node):
         result = self.result
+        embedded = self.get__pp(node) > Precedence.Expr
+
         # Cheesy way to force a flush
         self.write('foo')
         result.pop()
-        result.append(self.pretty_string(node.s, result))
+        result.append(self.pretty_string(node.s, embedded, result))
 
     def visit_Bytes(self, node):
         self.write(repr(node.s))
