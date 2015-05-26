@@ -323,6 +323,17 @@ class CodegenTestCase(unittest.TestCase):
         """
         self.assertAstEqualIfAtLeastVersion(source, (2, 7))
 
+    def test_output_formatting(self):
+        source = """
+            __all__ = ['ArgumentParser', 'ArgumentError', 'ArgumentTypeError',
+                'FileType', 'HelpFormatter', 'ArgumentDefaultsHelpFormatter',
+                'RawDescriptionHelpFormatter', 'RawTextHelpFormatter', 'Namespace',
+                'Action', 'ONE_OR_MORE', 'OPTIONAL', 'PARSER', 'REMAINDER', 'SUPPRESS',
+                'ZERO_OR_MORE']
+        """
+        self.maxDiff=2000
+        self.assertAstSourceEqual(source)
+
 
 if __name__ == '__main__':
     unittest.main()
