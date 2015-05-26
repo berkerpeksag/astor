@@ -15,10 +15,13 @@ astor is designed to allow easy manipulation of Python source via the AST.
 
 There are some other similar libraries, but astor focuses on the following areas:
 
-- Round-trip back to Python via Armin Ronacher's codegen.py module:
+- Round-trip an AST back to Python:
 
-  - Modified AST doesn't need linenumbers, ctx, etc. or otherwise be directly compileable
+  - Modified AST doesn't need linenumbers, ctx, etc. or otherwise
+    be directly compileable for the round-trip to work.
   - Easy to read generated code as, well, code
+  - Can round-trip two different source trees to compare for functional
+    differences, using the astor.rtrip tool (for example, after PEP8 edits).
 
 - Dump pretty-printing of AST
 
