@@ -22,6 +22,7 @@ import astor
 def canonical(srctxt):
     return textwrap.dedent(srctxt).strip()
 
+
 class CodegenTestCase(unittest.TestCase):
 
     def assertAstEqual(self, srctxt):
@@ -38,7 +39,7 @@ class CodegenTestCase(unittest.TestCase):
         self.assertEqual(dstdmp, srcdmp)
 
     def assertAstEqualIfAtLeastVersion(self, source, min_should_work,
-                                                max_should_error=None):
+                                       max_should_error=None):
         if max_should_error is None:
             max_should_error = min_should_work[0], min_should_work[1] - 1
         if sys.version_info >= min_should_work:
@@ -53,10 +54,10 @@ class CodegenTestCase(unittest.TestCase):
            which may not always be appropriate.
         """
         srctxt = canonical(srctxt)
-        self.assertEqual(astor.to_source(ast.parse(srctxt)), srctxt)
+        self.assertEqual(astor.to_source(ast.parse(srctxt)).rstrip(), srctxt)
 
     def assertAstSourceEqualIfAtLeastVersion(self, source, min_should_work,
-                                                max_should_error=None):
+                                             max_should_error=None):
         if max_should_error is None:
             max_should_error = min_should_work[0], min_should_work[1] - 1
         if sys.version_info >= min_should_work:
@@ -140,7 +141,7 @@ class CodegenTestCase(unittest.TestCase):
         root_node = ast.parse(source)
         arguments_node = [n for n in ast.walk(root_node)
                           if isinstance(n, ast.arguments)][0]
-        self.assertEqual(astor.to_source(arguments_node),
+        self.assertEqual(astor.to_source(arguments_node).rstrip(),
                          "a1, a2, b1=j, b2='123', b3={}, b4=[]")
         source = """
             def call(*popenargs, timeout=None, **kwargs):
@@ -197,6 +198,14 @@ class CodegenTestCase(unittest.TestCase):
         self.assertAstEqual(source)
         source = "[(yield)]"
         self.assertAstEqual(source)
+        source = "if (yield): pass"
+        self.assertAstEqual(source)
+        source = "if (yield from foo): pass"
+        self.assertAstEqualIfAtLeastVersion(source, (3, 3))
+        source = "(yield from (a, b))"
+        self.assertAstEqualIfAtLeastVersion(source, (3, 3))
+        source = "yield from sam()"
+        self.assertAstSourceEqualIfAtLeastVersion(source, (3, 3))
 
     def test_with(self):
         source = """
@@ -254,7 +263,6 @@ class CodegenTestCase(unittest.TestCase):
         """
         self.assertAstEqual(source)
 
-
     def test_comprehension(self):
         source = """
             ((x,y) for x,y in zip(a,b))
@@ -265,7 +273,8 @@ class CodegenTestCase(unittest.TestCase):
         """
         self.assertAstEqual(source)
         source = """
-            ra = np.fromiter(((i * 3, i * 2) for i in range(10)), n, dtype='i8,f8')
+            ra = np.fromiter(((i * 3, i * 2) for i in range(10)),
+                                n, dtype='i8,f8')
         """
         self.assertAstEqual(source)
 
