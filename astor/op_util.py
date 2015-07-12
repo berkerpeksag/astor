@@ -23,6 +23,7 @@ op_data = """
        YieldFrom                0
               If                1
              For                0
+        AsyncFor                0
            While                0
           Return                1
 
@@ -74,6 +75,7 @@ op_data = """
             UAdd   +            0
             USub   -            0
              Pow   **           1
+           Await                1
              Num                1
 """
 

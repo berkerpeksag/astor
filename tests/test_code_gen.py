@@ -173,6 +173,12 @@ class CodegenTestCase(unittest.TestCase):
                         return datum"""
         self.assertAstSourceEqualIfAtLeastVersion(source, (3, 5))
 
+    def test_double_await(self):
+        source = """
+            async def foo():
+                return await (await bar())"""
+        self.assertAstSourceEqualIfAtLeastVersion(source, (3, 5))
+
     def test_class_definition_with_starbases_and_kwargs(self):
         source = """
             class TreeFactory(*[FactoryMixin, TreeBase], **{'metaclass': Foo}):

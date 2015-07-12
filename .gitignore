@@ -2,6 +2,9 @@ bad.txt
 test_codegen_dump_1.txt
 test_codegen_dump_2.txt
 
+# scratch directory for astor.rtrip
+tmp_rtrip/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
