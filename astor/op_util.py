@@ -75,6 +75,7 @@ op_data = """
             UAdd   +            0
             USub   -            0
              Pow   **           1
+           Await                1
              Num                1
 """
 

@@ -612,7 +612,8 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     # new for Python 3.5
     def visit_Await(self, node):
-        self.write('await ', node.value)
+        with self.delimit(node):
+            self.write('await ', node.value)
 
     def visit_Lambda(self, node):
         with self.delimit(node) as delimiters:
