@@ -340,6 +340,18 @@ class CodegenTestCase(unittest.TestCase):
         self.maxDiff=2000
         self.assertAstSourceEqual(source)
 
+    def test_elif(self):
+        source = """
+            if a:
+                b
+            elif c:
+                d
+            elif e:
+                f
+            else:
+                g
+        """
+        self.assertAstSourceEqual(source)
 
 if __name__ == '__main__':
     unittest.main()
