@@ -351,7 +351,7 @@ class CodegenTestCase(unittest.TestCase):
             else:
                 g
         """
-        self.assertAstEqual(source)
+        self.assertAstSourceEqual(source)
 
 if __name__ == '__main__':
     unittest.main()
