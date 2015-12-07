@@ -17,11 +17,11 @@ The goals of the initial cut of this engine are:
 """
 
 
-def pretty_source(source):
+def pretty_source(source, maxline=79):
     """ Prettify the source.
     """
 
-    return ''.join(flatten(split_lines(source)))
+    return ''.join(flatten(split_lines(source, maxline)))
 
 
 def flatten(source, list=list, isinstance=isinstance):

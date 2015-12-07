@@ -10,6 +10,9 @@ Copyright 2013-2015 (c) Berker Peksag
 Utilities for node (and, by extension, tree) manipulation.
 For a whole-tree approach, see the treewalk submodule.
 
+This module alsoadds some extra nodes which are useful in
+code generation, but do not normally appear in ASTs.
+
 """
 
 import ast
@@ -163,3 +166,7 @@ def allow_ast_comparison():
                 item.__bases__ = tuple(list(item.__bases__) + [CompareHelper])
             except TypeError:
                 pass
+
+
+class Comment(ast.Expr):
+    pass
