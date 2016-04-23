@@ -19,6 +19,7 @@ this code came from here (in 2012):
 
 import ast
 import sys
+import contextlib
 
 from .op_util import get_op_symbol, get_op_precedence, Precedence
 from .node_util import ExplicitNodeVisitor
@@ -235,6 +236,46 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     # Statements
 
+    @contextlib.contextmanager
+    def capture_result(self, new_result):
+        current_indentation = self.indentation
+        current_result = self.result
+        self.result = new_result
+        self.indentation = 0
+        yield
+        self.indentation = current_indentation
+        self.result = current_result
+
+    def visit_Comment(self, node):
+        # flush newlines
+        self.write('foo')
+        self.result.pop()
+
+        prefix = '# '
+        end_result = len(self.result)
+        # Allowable line length for wrapping.  Allow extra for the indentation
+        # we will strip, but reduce based on the prefix we will add.
+        current_indentation = len(self.indent_with) * self.indentation
+        max_line = 79 + current_indentation - len(prefix)
+
+        self.write(node.value)
+
+        captured = self.result[end_result:]
+        # we want this not to start with a newline, and to end with a newline
+        if captured[0] == '\n':
+            captured[0:1] = []
+        if captured[-1] != '\n':
+            captured.append('\n')
+
+        comment = pretty_source((str(s) for s in captured), max_line)
+        self.result[end_result:] = ''
+
+        for comment_line in comment.splitlines():
+            self.newline()
+            if comment_line.startswith(self.indent_with * self.indentation):
+                comment_line = comment_line[current_indentation:]
+            self.write(prefix + comment_line)
+
     def visit_Assign(self, node):
         set_precedence(node, node.value, *node.targets)
         self.newline(node)
@@ -349,7 +390,8 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.conditional_write(' as ', node.optional_vars)
 
     def visit_NameConstant(self, node):
-        self.write(node.value)
+        # Let's write the source repr of the value, rather than the python object
+        self.write(repr(node.value))
 
     def visit_Pass(self, node):
         self.statement(node, 'pass')

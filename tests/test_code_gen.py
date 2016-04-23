@@ -353,5 +353,49 @@ class CodegenTestCase(unittest.TestCase):
         """
         self.assertAstSourceEqual(source)
 
+    def assertSourceEqualWithModifications(self, srctxt, modifier):
+        srctxt = canonical(srctxt)
+        srcast = ast.parse(srctxt)
+        srcast = modifier(srcast)
+        dsttxt = astor.to_source(srcast)
+        self.assertEqual(dsttxt.rstrip(), srctxt)
+
+    def test_comments(self):
+        # This one is a little complicated because comments aren't included in the normal AST
+        comment_text = "greet the nation"
+        source = """
+            def say_hello():
+                # {0}
+                return 'Hello, Pythonistas.'
+        """.format(comment_text)
+        node = astor.node_util.Comment(comment_text)
+
+        def modifier(tree):
+            tree.body[0].body.insert(0, node)
+            return tree
+
+        self.assertSourceEqualWithModifications(source, modifier)
+
+    def test_commented_source(self):
+        # Now we get even more complex; we want to put in some commented-out source
+        # This is constructed to be long enough to be on a single line at at module
+        # level, but too long to be in a comment inside a function.
+        expr_source = "my_long_variable = foo.longer_foo_prop if foo is not None else bar.shorter_prop"
+        code_node = ast.parse(expr_source).body[0]
+        source = """
+            def a_and_b(a, b):
+                # my_long_variable = (foo.longer_foo_prop if foo is not None else bar.
+                #     shorter_prop)
+                return a, b
+        """
+        comment_node = astor.node_util.Comment(code_node)
+
+        def modifier(tree):
+            tree.body[0].body.insert(0, comment_node)
+            return tree
+
+        self.assertSourceEqualWithModifications(source, modifier)
+
+
 if __name__ == '__main__':
     unittest.main()
