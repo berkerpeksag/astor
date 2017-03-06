@@ -716,6 +716,8 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_comprehension(self, node):
         set_precedence(node, node.iter, *node.ifs)
         set_precedence(Precedence.comprehension_target, node.target)
+        if getattr(node, 'is_async', False):
+            self.write(' async')
         self.write(' for ', node.target, ' in ', node.iter)
         for if_ in node.ifs:
             self.write(' if ', if_)

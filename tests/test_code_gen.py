@@ -271,11 +271,11 @@ class CodegenTestCase(unittest.TestCase):
 
     def test_comprehension(self):
         source = """
-            ((x,y) for x,y in zip(a,b))
+            ((x,y) for x,y in zip(a,b) if a)
         """
         self.assertAstEqual(source)
         source = """
-            fields = [(a, _format(b)) for (a, b) in iter_fields(node)]
+            fields = [(a, _format(b)) for (a, b) in iter_fields(node) if a]
         """
         self.assertAstEqual(source)
         source = """
@@ -283,6 +283,16 @@ class CodegenTestCase(unittest.TestCase):
                                 n, dtype='i8,f8')
         """
         self.assertAstEqual(source)
+
+    def test_async_comprehension(self):
+        source = """
+            async def f():
+                [(await x) async for x in y]
+                [(await i) for i in b if await c]
+                (await x async for x in y)
+                {i for i in b async for i in a if await i for b in i}
+        """
+        self.assertAstSourceEqualIfAtLeastVersion(source, (3, 6))
 
     def test_tuple_corner_cases(self):
         source = """
