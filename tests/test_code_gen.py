@@ -353,5 +353,15 @@ class CodegenTestCase(unittest.TestCase):
         """
         self.assertAstSourceEqual(source)
 
+    def test_fstrings(self):
+        source = """
+        f'{x}'
+        f'{x.y}'
+        f'{int(x)}'
+        f'a{b:c}d'
+        f'a{b!s:c{d}e}f'
+        """
+        self.assertAstSourceEqualIfAtLeastVersion(source, (3, 6))
+
 if __name__ == '__main__':
     unittest.main()
