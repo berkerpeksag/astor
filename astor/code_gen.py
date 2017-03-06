@@ -486,6 +486,48 @@ class SourceGenerator(ExplicitNodeVisitor):
         result.pop()
         result.append(self.pretty_string(node.s, embedded, result))
 
+    def visit_JoinedStr(self, node, nested=False):
+        if not nested:
+            self.write("f'")
+
+        def write_string(s):
+            if sys.version_info >= (3, 0):
+                escaped = s.encode('unicode-escape').decode()
+            else:
+                escaped = s.encode('string-escape')
+            self.write(escaped.replace("'", "\\'"))
+
+        for value in node.values:
+            if isinstance(value, ast.Str):
+                write_string(value.s)
+            elif isinstance(value, ast.FormattedValue):
+                self.write('{')
+                self.visit(value.value)
+
+                if value.conversion != -1:
+                    self.write('!%s' % chr(value.conversion))
+                if value.format_spec is not None:
+                    self.write(':')
+                    # Either a nested Str or JoinedStr can be here.
+                    if isinstance(value.format_spec, ast.Str):
+                        write_string(value.format_spec.s)
+                    elif isinstance(value.format_spec, ast.JoinedStr):
+                        self.visit_JoinedStr(value.format_spec, nested=True)
+                    else:
+                        kind = type(value).__name__
+                        assert False, 'Invalid node %s inside JoinedStr' % kind
+
+                self.write('}')
+            else:
+                kind = type(value).__name__
+                assert False, 'Invalid node %s inside JoinedStr' % kind
+
+        if not nested:
+            self.write("'")
+
+    def visit_FormattedValue(self, node):
+        self.visit_JoinedStr(ast.JoinedStr(values=[node]))
+
     def visit_Bytes(self, node):
         self.write(repr(node.s))
 
