@@ -373,5 +373,13 @@ class CodegenTestCase(unittest.TestCase):
         """
         self.assertAstSourceEqualIfAtLeastVersion(source, (3, 6))
 
+    def test_annassign(self):
+        source = """
+            a: int
+            (b): Tuple[int, str, ...]
+            c.d[e].f: Any
+        """
+        self.assertAstEqualIfAtLeastVersion(source, (3, 6))
+
 if __name__ == '__main__':
     unittest.main()
