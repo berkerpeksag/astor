@@ -1,19 +1,20 @@
 sudo: false  # run travis jobs in containers
 language: python
+python:
+  - "2.6"
+  - "2.7"
+  - "3.3"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+  - pypy
+  - pypy3
 cache:
   directories:
     - $PWD/wheelhouse  # cache wheels so that we don't hit network everytime
 env:
   global:
     - PIP_FIND_LINKS=$PWD/wheelhouse
-  matrix:
-    - TOXENV=py26
-    - TOXENV=py27
-    - TOXENV=py33
-    - TOXENV=py34
-    - TOXENV=pypy
-    - TOXENV=pypy3
 install:
-  - pip wheel tox  # no wheel distribution for tox on pypi yet   
-  - pip install tox 
+  - pip install tox tox-travis
 script: tox
