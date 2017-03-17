@@ -8,13 +8,8 @@ python:
   - "3.5"
   - "3.6"
   - pypy
-  - "pypy3.3-5.2-alpha1"
-cache:
-  directories:
-    - $PWD/wheelhouse  # cache wheels so that we don't hit network everytime
-env:
-  global:
-    - PIP_FIND_LINKS=$PWD/wheelhouse
+  - pypy3.3-5.2-alpha1
+cache: pip
 install:
   - pip install tox-travis
 script: tox
