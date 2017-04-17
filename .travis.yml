@@ -1,12 +1,12 @@
 sudo: false  # run travis jobs in containers
 language: python
 python:
-  - "2.6"
-  - "2.7"
-  - "3.3"
-  - "3.4"
-  - "3.5"
-  - "3.6"
+  - 2.6
+  - 2.7
+  - 3.3
+  - 3.4
+  - 3.5
+  - 3.6
   - pypy
   - pypy3.3-5.2-alpha1
 cache: pip
