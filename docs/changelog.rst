@@ -13,5 +13,19 @@ Version Changes
         | Added initial test suite and documentation.
 0.4.1   Added missing ``SourceGenerator.visit_arguments()``
 0.5     Added support for Python 3.5 infix matrix multiplication
-0.6     Added support for Python 3.6 f-strings and async comprehensions.
+0.6     | Added support for Python 3.6 f-strings and async comprehensions.
+        | Deprecation warnings:
+        |   Old         -> New
+        |   get_boolop  -> get_op_symbol
+        |   get_binop   -> get_op_symbol
+        |   get_cmpop   -> get_op_symbol
+        |   get_unaryop -> get_op_symbol
+        |   get_anyop   -> get_op_symbol
+        |   parsefile   -> code_to_ast.parse_file
+        |   codetoast   -> code_to_ast
+        |   dump        -> dump_tree
+        |   all_symbols -> symbol_data
+        |   treewalk    -> tree_walk
+        |   codegen     -> code_gen
+        | Old functions will be removed in 0.7
 ======= ======================================================================================
