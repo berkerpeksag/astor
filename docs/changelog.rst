@@ -3,9 +3,9 @@
 Release Notes
 -------------
 
-======= ================================================================
+======= ======================================================================================
 Version Changes
-======= ================================================================
+======= ======================================================================================
 0.1     Initial release
 0.2     Added Python 3 support
 0.2.1   Modified TreeWalk to add ``_name`` suffix for functions that work on attribute names
@@ -16,4 +16,4 @@ Version Changes
 0.4.1   Added missing ``SourceGenerator.visit_arguments()``
 0.5     Added support for Python 3.5 infix matrix multiplication
 0.6     Added support for Python 3.6 f-strings and async comprehensions.
-======= ================================================================
+======= ======================================================================================
