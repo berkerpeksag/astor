@@ -1,5 +1,3 @@
-.. currentmodule:: astor
-
 Release Notes
 -------------
 
