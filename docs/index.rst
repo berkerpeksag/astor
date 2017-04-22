@@ -1,5 +1,14 @@
 .. currentmodule:: astor
 
+.. github display
+
+  ************************************************************************************
+  NOTE: This file was designed to be viewed at http://astor.readthedocs.io/en/latest/
+  ************************************************************************************
+
+  Some content will not display properly when viewing using the github browser.
+
+
 ============================
 astor -- AST observe/rewrite
 ============================
@@ -14,13 +23,6 @@ astor -- AST observe/rewrite
         :target: https://travis-ci.org/berkerpeksag/astor/
 
 astor is designed to allow easy manipulation of Python source via the AST.
-
-.. github display
-
-  This file was designed to be viewed at http://astor.readthedocs.io/en/latest/
-
-  Some content will not display properly when viewing using the github browser.
-
 
 Getting Started
 ---------------
