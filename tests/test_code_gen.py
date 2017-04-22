@@ -376,7 +376,7 @@ class CodegenTestCase(unittest.TestCase):
     def test_annassign(self):
         source = """
             a: int
-            (b): Tuple[int, str, ...]
+            b: Tuple[int, str, ...]
             c.d[e].f: Any
         """
         self.assertAstEqualIfAtLeastVersion(source, (3, 6))

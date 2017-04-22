@@ -249,14 +249,8 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def visit_AnnAssign(self, node):
         set_precedence(node, node.value, node.target)
-        self.newline(node)
-        if not node.simple and isinstance(node.target, ast.Name):
-            self.write('(', node.target, ')')
-        else:
-            self.write(node.target)
-        self.write(': ', node.annotation)
-        if node.value is not None:
-            self.write(' = ', node.value)
+        self.statement(node, node.target, ': ', node.annotation)
+        self.conditional_write(' = ', node.value)
 
     def visit_ImportFrom(self, node):
         self.statement(node, 'from ', node.level * '.',
@@ -497,47 +491,32 @@ class SourceGenerator(ExplicitNodeVisitor):
         result.pop()
         result.append(self.pretty_string(node.s, embedded, result))
 
-    def visit_JoinedStr(self, node, nested=False):
-        if not nested:
-            self.write("f'")
+    def visit_JoinedStr(self, node,
+                  # constants
+                  new=sys.version_info >= (3, 0)):
 
-        def write_string(s):
-            if sys.version_info >= (3, 0):
-                escaped = s.encode('unicode-escape').decode()
-            else:
-                escaped = s.encode('string-escape')
-            self.write(escaped.replace("'", "\\'"))
-
-        for value in node.values:
-            if isinstance(value, ast.Str):
-                write_string(value.s)
-            elif isinstance(value, ast.FormattedValue):
-                self.write('{')
-                self.visit(value.value)
-
-                if value.conversion != -1:
-                    self.write('!%s' % chr(value.conversion))
-                if value.format_spec is not None:
-                    self.write(':')
-                    # Either a nested Str or JoinedStr can be here.
-                    if isinstance(value.format_spec, ast.Str):
-                        write_string(value.format_spec.s)
-                    elif isinstance(value.format_spec, ast.JoinedStr):
-                        self.visit_JoinedStr(value.format_spec, nested=True)
+        def recurse(node):
+            for value in node.values:
+                if isinstance(value, ast.Str):
+                    if new:
+                        encoded = value.s.encode('unicode-escape').decode()
                     else:
-                        kind = type(value).__name__
-                        assert False, 'Invalid node %s inside JoinedStr' % kind
+                        encoded = value.s.encode('string-escape')
+                    self.write(encoded.replace("'", "\\'"))
+                elif isinstance(value, ast.FormattedValue):
+                    with self.delimit('{}'):
+                        self.visit(value.value)
+                        if value.conversion != -1:
+                            self.write('!%s' % chr(value.conversion))
+                        if value.format_spec is not None:
+                            self.write(':')
+                            recurse(value.format_spec)
+                else:
+                    kind = type(value).__name__
+                    assert False, 'Invalid node %s inside JoinedStr' % kind
 
-                self.write('}')
-            else:
-                kind = type(value).__name__
-                assert False, 'Invalid node %s inside JoinedStr' % kind
-
-        if not nested:
-            self.write("'")
-
-    def visit_FormattedValue(self, node):
-        self.visit_JoinedStr(ast.JoinedStr(values=[node]))
+        with self.delimit(("f'", "'")):
+                recurse(node)
 
     def visit_Bytes(self, node):
         self.write(repr(node.s))
@@ -727,8 +706,7 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_comprehension(self, node):
         set_precedence(node, node.iter, *node.ifs)
         set_precedence(Precedence.comprehension_target, node.target)
-        if getattr(node, 'is_async', False):
-            self.write(' async')
-        self.write(' for ', node.target, ' in ', node.iter)
+        self.write(' async for ' if self.get_is_async(node) else ' for ',
+                   node.target, ' in ', node.iter)
         for if_ in node.ifs:
             self.write(' if ', if_)
