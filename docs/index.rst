@@ -17,11 +17,9 @@ astor is designed to allow easy manipulation of Python source via the AST.
 
 .. github display
 
-  This file was designed to be viewed at readthedocs_.  Some
-  content will not display properly when viewing using the
-  github browser.
+  This file was designed to be viewed at http://astor.readthedocs.io/en/latest/
 
-.. _readthedocs: http://astor.readthedocs.io/en/latest/
+  Some content will not display properly when viewing using the github browser.
 
 
 Getting Started
@@ -75,7 +73,7 @@ Classes
 
 .. github display
 
-  **class CodeToAst**
+  .. class:: CodeToAst
 
 .. class:: CodeToAst
 
@@ -85,7 +83,7 @@ Classes
 
 .. github display
 
-  **class TreeWalk**
+  .. class:: TreeWalk(node=None)
 
 .. class:: TreeWalk(node=None)
 
@@ -97,7 +95,7 @@ Classes
 
 .. github display
 
-  **class ExplicitNodeVisitor**
+  .. class:: ExplicitNodeVisitor
 
 .. class:: ExplicitNodeVisitor
 
