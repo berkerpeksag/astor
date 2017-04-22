@@ -409,6 +409,14 @@ class CodegenTestCase(unittest.TestCase):
         for mode in 'exec eval single'.split():
             srcast = compile(code, 'dummy', mode, ast.PyCF_ONLY_AST)
             dsttxt = astor.to_source(srcast)
+            if code.strip() != dsttxt.strip():
+                self.assertEqual('(%s)' % code.strip(), dsttxt.strip())
+
+    def test_deprecation(self):
+        ast1 = astor.code_to_ast.parse_file(__file__)
+        ast2 = astor.parsefile(__file__)
+        self.assertEqual(astor.to_source(ast1), astor.codegen.to_source(ast2))
+
 
 if __name__ == '__main__':
     unittest.main()
