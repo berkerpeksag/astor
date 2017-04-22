@@ -425,6 +425,35 @@ class CodegenTestCase(unittest.TestCase):
         """
         self.assertAstEqual(source)
 
+    def test_slicing(self):
+        source = """
+            x[1,2]
+            x[...,...]
+            x[1,...]
+            x[...,3]
+            x[:,:]
+            x[:,]
+            x[1,:]
+            x[:,2]
+            x[1:2,]
+            x[3:4,...]
+            x[5:6,7:8]
+            x[1:2,3:4]
+            x[5:6:7,]
+            x[1:2:-3,]
+            x[4:5:6,...]
+            x[7:8:-9,...]
+            x[1:2:3,4:5]
+            x[6:7:-8,9:0]
+            x[...,1:2]
+            x[1:2,3:4]
+            x[...,1:2:3]
+            x[...,4:5:-6]
+            x[1:2,3:4:5]
+            x[1:2,3:4:-5]
+        """
+        self.assertAstEqual(source)
+
 
 if __name__ == '__main__':
     unittest.main()
