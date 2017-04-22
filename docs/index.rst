@@ -1,5 +1,14 @@
 .. currentmodule:: astor
 
+.. github display
+
+  ************************************************************************************
+  NOTE: This file was designed to be viewed at http://astor.readthedocs.io/en/latest/
+  ************************************************************************************
+
+  Some content will not display properly when viewing using the github browser.
+
+
 ============================
 astor -- AST observe/rewrite
 ============================
@@ -14,7 +23,6 @@ astor -- AST observe/rewrite
         :target: https://travis-ci.org/berkerpeksag/astor/
 
 astor is designed to allow easy manipulation of Python source via the AST.
-
 
 Getting Started
 ---------------
@@ -65,11 +73,19 @@ areas:
 Classes
 ---------
 
+.. github display
+
+  .. class:: CodeToAst
+
 .. class:: CodeToAst
 
     This is the base class for the helper function code_to_ast.
     It may be subclassed, but probably will not need to be.
 
+
+.. github display
+
+  .. class:: TreeWalk(node=None)
 
 .. class:: TreeWalk(node=None)
 
@@ -78,6 +94,10 @@ Classes
     its own treatise, but there is no time to write it
     at present :(
 
+
+.. github display
+
+  .. class:: ExplicitNodeVisitor
 
 .. class:: ExplicitNodeVisitor
 
@@ -212,7 +232,7 @@ Command line utilities
 --------------------------
 
 rtrip
-''''''
+~~~~~
 
 There is currently one command-line utility::
 
