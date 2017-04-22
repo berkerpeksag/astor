@@ -372,6 +372,11 @@ class CodegenTestCase(unittest.TestCase):
         f'a{b!s:c{d}e}f'
         """
         self.assertAstSourceEqualIfAtLeastVersion(source, (3, 6))
+        source = """
+        a_really_long_line_will_probably_break_things = (
+            f'a{b!s:c{d}e}fghijka{b!s:c{d}e}a{b!s:c{d}e}a{b!s:c{d}e}')
+        """
+        self.assertAstSourceEqualIfAtLeastVersion(source, (3, 6))
 
     def test_annassign(self):
         source = """

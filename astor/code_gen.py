@@ -76,6 +76,7 @@ class Delimit(object):
     """
 
     discard = False
+    coalesce = False
 
     def __init__(self, tree, *args):
         """ use write instead of using result directly
@@ -106,11 +107,14 @@ class Delimit(object):
         return self
 
     def __exit__(self, *exc_info):
+        result = self.result
+        start = self.index - 1
         if self.discard:
-            self.result[self.index - 1] = ''
+            result[start] = ''
         else:
-            self.result.append(self.closing)
-
+            result.append(self.closing)
+            if self.coalesce:
+                result[start:] = [''.join(result[start:])]
 
 class SourceGenerator(ExplicitNodeVisitor):
     """This visitor is able to transform a well formed syntax tree into Python
@@ -515,8 +519,9 @@ class SourceGenerator(ExplicitNodeVisitor):
                     kind = type(value).__name__
                     assert False, 'Invalid node %s inside JoinedStr' % kind
 
-        with self.delimit(("f'", "'")):
-                recurse(node)
+        with self.delimit(("f'", "'")) as delimiters:
+            recurse(node)
+            delimiters.coalesce = True
 
     def visit_Bytes(self, node):
         self.write(repr(node.s))
