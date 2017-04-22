@@ -370,14 +370,36 @@ class CodegenTestCase(unittest.TestCase):
         f'{int(x)}'
         f'a{b:c}d'
         f'a{b!s:c{d}e}f'
+        f'""'
+        f'"\\''
         """
         self.assertAstSourceEqualIfAtLeastVersion(source, (3, 6))
+        source = """
+        a_really_long_line_will_probably_break_things = (
+            f'a{b!s:c{d}e}fghijka{b!s:c{d}e}a{b!s:c{d}e}a{b!s:c{d}e}')
+        """
+        self.assertAstSourceEqualIfAtLeastVersion(source, (3, 6))
+        source = """
+        return f"functools.{qualname}({', '.join(args)})"
+        """
+        self.assertAstSourceEqualIfAtLeastVersion(source, (3, 6))
+
 
     def test_annassign(self):
         source = """
             a: int
-            (b): Tuple[int, str, ...]
+            (a): int
+            a.b: int
+            (a.b): int
+            b: Tuple[int, str, ...]
             c.d[e].f: Any
+            q: 3 = (1, 2, 3)
+            t: Tuple[int, ...] = (1, 2, 3)
+            some_list: List[int] = []
+            (a): int = 0
+            a:int = 0
+            (a.b): int = 0
+            a.b: int = 0
         """
         self.assertAstEqualIfAtLeastVersion(source, (3, 6))
 
