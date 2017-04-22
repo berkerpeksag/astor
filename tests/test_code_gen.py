@@ -370,6 +370,8 @@ class CodegenTestCase(unittest.TestCase):
         f'{int(x)}'
         f'a{b:c}d'
         f'a{b!s:c{d}e}f'
+        f'""'
+        f'"\\''
         """
         self.assertAstSourceEqualIfAtLeastVersion(source, (3, 6))
         source = """
@@ -377,6 +379,11 @@ class CodegenTestCase(unittest.TestCase):
             f'a{b!s:c{d}e}fghijka{b!s:c{d}e}a{b!s:c{d}e}a{b!s:c{d}e}')
         """
         self.assertAstSourceEqualIfAtLeastVersion(source, (3, 6))
+        source = """
+        return f"functools.{qualname}({', '.join(args)})"
+        """
+        self.assertAstSourceEqualIfAtLeastVersion(source, (3, 6))
+
 
     def test_annassign(self):
         source = """

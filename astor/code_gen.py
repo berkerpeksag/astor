@@ -506,7 +506,7 @@ class SourceGenerator(ExplicitNodeVisitor):
                         encoded = value.s.encode('unicode-escape').decode()
                     else:
                         encoded = value.s.encode('string-escape')
-                    self.write(encoded.replace("'", "\\'"))
+                    self.write(encoded)
                 elif isinstance(value, ast.FormattedValue):
                     with self.delimit('{}'):
                         self.visit(value.value)
@@ -522,6 +522,17 @@ class SourceGenerator(ExplicitNodeVisitor):
         with self.delimit(("f'", "'")) as delimiters:
             recurse(node)
             delimiters.coalesce = True
+
+        s = self.result.pop()
+        squotes = s.count("'") - 2
+        if squotes:
+            dquotes = s.count('"')
+            s = s[2:-1]
+            if dquotes < squotes:
+                s = 'f"%s"' % s.replace('"', r'\"')
+            else:
+                s = "f'%s'" % s.replace("'", r"\'")
+        self.write(s)
 
     def visit_Bytes(self, node):
         self.write(repr(node.s))
