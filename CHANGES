@@ -11,4 +11,5 @@
 0.4.1   -- Added missing SourceGenerator.visit_arguments()
 0.5     -- Added support for Python 3.5 infix matrix
            multiplication
-0.6     -- Added support for Python 3.6 f-strings and async comprehensions.
+0.6     -- Added support for Python 3.6 f-strings, async comprehensions, and
+           variable annotations.

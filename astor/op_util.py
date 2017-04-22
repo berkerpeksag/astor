@@ -17,6 +17,7 @@ op_data = """
     GeneratorExp                1
 
           Assign                1
+       AnnAssign                1
        AugAssign                0
             Expr                0
            Yield                1

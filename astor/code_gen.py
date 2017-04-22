@@ -247,6 +247,17 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.statement(node, node.target, get_op_symbol(node.op, ' %s= '),
                        node.value)
 
+    def visit_AnnAssign(self, node):
+        set_precedence(node, node.value, node.target)
+        self.newline(node)
+        if not node.simple and isinstance(node.target, ast.Name):
+            self.write('(', node.target, ')')
+        else:
+            self.write(node.target)
+        self.write(': ', node.annotation)
+        if node.value is not None:
+            self.write(' = ', node.value)
+
     def visit_ImportFrom(self, node):
         self.statement(node, 'from ', node.level * '.',
                        node.module or '', ' import ')
