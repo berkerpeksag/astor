@@ -15,6 +15,14 @@ astor -- AST observe/rewrite
 
 astor is designed to allow easy manipulation of Python source via the AST.
 
+.. github display
+
+  This file was designed to be viewed at readthedocs_.  Some
+  content will not display properly when viewing using the
+  github browser.
+
+.. _readthedocs: http://astor.readthedocs.io/en/latest/
+
 
 Getting Started
 ---------------
@@ -65,11 +73,19 @@ areas:
 Classes
 ---------
 
+.. github display
+
+  **class CodeToAst**
+
 .. class:: CodeToAst
 
     This is the base class for the helper function code_to_ast.
     It may be subclassed, but probably will not need to be.
 
+
+.. github display
+
+  **class TreeWalk**
 
 .. class:: TreeWalk(node=None)
 
@@ -78,6 +94,10 @@ Classes
     its own treatise, but there is no time to write it
     at present :(
 
+
+.. github display
+
+  **class ExplicitNodeVisitor**
 
 .. class:: ExplicitNodeVisitor
 
@@ -212,7 +232,7 @@ Command line utilities
 --------------------------
 
 rtrip
-''''''
+~~~~~
 
 There is currently one command-line utility::
 
