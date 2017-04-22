@@ -417,6 +417,14 @@ class CodegenTestCase(unittest.TestCase):
         ast2 = astor.parsefile(__file__)
         self.assertEqual(astor.to_source(ast1), astor.codegen.to_source(ast2))
 
+    def test_unicode_literals(self):
+        source = """
+        from __future__ import (print_function, unicode_literals)
+        x = b'abc'
+        y = u'abc'
+        """
+        self.assertAstEqual(source)
+
 
 if __name__ == '__main__':
     unittest.main()

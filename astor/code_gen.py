@@ -125,6 +125,8 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     """
 
+    using_unicode_literals = False
+
     def __init__(self, indent_with, add_line_information=False,
                  pretty_string=pretty_string):
         self.result = []
@@ -264,6 +266,10 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.statement(node, 'from ', node.level * '.',
                        node.module or '', ' import ')
         self.comma_list(node.names)
+        # Goofy stuff for Python 2.7 _pyio module
+        if node.module == '__future__' and 'unicode_literals' in (
+            x.name for x in node.names):
+            self.using_unicode_literals = True
 
     def visit_Import(self, node):
         self.statement(node, 'import ')
@@ -497,7 +503,8 @@ class SourceGenerator(ExplicitNodeVisitor):
         # Cheesy way to force a flush
         self.write('foo')
         result.pop()
-        result.append(self.pretty_string(node.s, embedded, result))
+        result.append(self.pretty_string(node.s, embedded, result,
+                                         uni_lit=self.using_unicode_literals))
 
     def visit_JoinedStr(self, node,
                   # constants
