@@ -403,5 +403,12 @@ class CodegenTestCase(unittest.TestCase):
         """
         self.assertAstEqualIfAtLeastVersion(source, (3, 6))
 
+
+    def test_compile_types(self):
+        code = '(a + b + c) * (d + e + f)\n'
+        for mode in 'exec eval single'.split():
+            srcast = compile(code, 'dummy', mode, ast.PyCF_ONLY_AST)
+            dsttxt = astor.to_source(srcast)
+
 if __name__ == '__main__':
     unittest.main()

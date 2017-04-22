@@ -713,6 +713,11 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_Module(self, node):
         self.write(*node.body)
 
+    visit_Interactive = visit_Module
+
+    def visit_Expression(self, node):
+        self.visit(node.body)
+
     # Helper Nodes
 
     def visit_arg(self, node):
