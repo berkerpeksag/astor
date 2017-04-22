@@ -272,5 +272,6 @@ Note 2:
         This tool WILL TRASH the tmp_rtrip directory (unless readonly
         is specified) -- as far as it is concerned, it OWNS that directory.
 
+.. include:: changelog.rst
 
 .. _GitHub: https://github.com/berkerpeksag/astor/
