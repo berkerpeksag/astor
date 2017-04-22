@@ -252,8 +252,12 @@ class SourceGenerator(ExplicitNodeVisitor):
                        node.value)
 
     def visit_AnnAssign(self, node):
-        set_precedence(node, node.value, node.target)
-        self.statement(node, node.target, ': ', node.annotation)
+        set_precedence(node, node.target, node.annotation)
+        set_precedence(Precedence.Comma, node.value)
+        need_parens = isinstance(node.target, ast.Name) and not node.simple
+        begin = '(' if need_parens else ''
+        end = ')' if need_parens else ''
+        self.statement(node, begin, node.target, end, ': ', node.annotation)
         self.conditional_write(' = ', node.value)
 
     def visit_ImportFrom(self, node):

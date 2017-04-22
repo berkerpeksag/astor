@@ -388,8 +388,18 @@ class CodegenTestCase(unittest.TestCase):
     def test_annassign(self):
         source = """
             a: int
+            (a): int
+            a.b: int
+            (a.b): int
             b: Tuple[int, str, ...]
             c.d[e].f: Any
+            q: 3 = (1, 2, 3)
+            t: Tuple[int, ...] = (1, 2, 3)
+            some_list: List[int] = []
+            (a): int = 0
+            a:int = 0
+            (a.b): int = 0
+            a.b: int = 0
         """
         self.assertAstEqualIfAtLeastVersion(source, (3, 6))
 
