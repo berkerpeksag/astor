@@ -76,7 +76,8 @@ def _prep_triple_quotes(s, mysplit=mysplit, replacements=replacements):
     return ''.join(s)
 
 
-def pretty_string(s, embedded, current_output, min_trip_str=20, max_line=100):
+def pretty_string(s, embedded, current_output, min_trip_str=20,
+                  max_line=100, uni_lit=False):
     """There are a lot of reasons why we might not want to or
        be able to return a triple-quoted string.  We can always
        punt back to the default normal string.
@@ -87,6 +88,8 @@ def pretty_string(s, embedded, current_output, min_trip_str=20, max_line=100):
     # Punt on abnormal strings
     if (isinstance(s, special_unicode) or not isinstance(s, basestring)):
         return default
+    if uni_lit and isinstance(s, bytes):
+        return 'b' + default
 
     len_s = len(default)
     current_line = _get_line(current_output)
