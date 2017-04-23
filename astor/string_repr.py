@@ -19,6 +19,7 @@ This has lots of Python 2 / Python 3 ugliness.
 
 import re
 import logging
+import sys
 
 try:
     special_unicode = unicode
@@ -37,19 +38,13 @@ def _get_line(current_output):
         find the start of the current line,
         and return the entire line.
     """
-    myline = []
-    index = len(current_output)
-    while index:
-        index -= 1
-        try:
-            s = str(current_output[index])
-        except:
-            raise
-        myline.append(s)
-        if '\n' in s:
+    for index in range(len(current_output) - 1, -1, -1):
+        if '\n' in current_output[index]:
             break
-    myline = ''.join(reversed(myline))
-    return myline.rsplit('\n', 1)[-1]
+
+    myline = current_output[index:]
+    myline[0] = myline[0].rsplit('\n', 1)[-1]
+    return ''.join(myline)
 
 
 def _properly_indented(s, current_line):

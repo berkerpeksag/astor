@@ -50,22 +50,30 @@ def to_source(node, indent_with=' ' * 4, add_line_information=False,
                                 pretty_string)
     generator.visit(node)
     generator.result.append('\n')
-    return pretty_source(str(s) for s in generator.result)
+    if set(generator.result[0]) == '\n':
+        generator.result[0] = ''
+    return pretty_source(generator.result)
 
 
-def set_precedence(value, *nodes):
-    """Set the precedence (of the parent) into the children.
-    """
-    if isinstance(value, ast.AST):
-        value = get_op_precedence(value)
-    for node in nodes:
-        if isinstance(node, ast.AST):
-            node._pp = value
-        elif isinstance(node, list):
-            set_precedence(value, *node)
-        else:
-            assert node is None, node
+def precedence_setter(AST=ast.AST, get_op_precedence=get_op_precedence,
+                      isinstance=isinstance, list=list):
 
+    def set_precedence(value, *nodes):
+        """Set the precedence (of the parent) into the children.
+        """
+        if isinstance(value, AST):
+            value = get_op_precedence(value)
+        for node in nodes:
+            if isinstance(node, AST):
+                node._pp = value
+            elif isinstance(node, list):
+                set_precedence(value, *node)
+            else:
+                assert node is None, node
+
+    return set_precedence
+
+set_precedence = precedence_setter()
 
 class Delimit(object):
     """A context manager that can add enclosing
@@ -128,13 +136,42 @@ class SourceGenerator(ExplicitNodeVisitor):
     using_unicode_literals = False
 
     def __init__(self, indent_with, add_line_information=False,
-                 pretty_string=pretty_string):
+                 pretty_string=pretty_string,
+                 isinstance=isinstance, callable=callable):
         self.result = []
         self.indent_with = indent_with
         self.add_line_information = add_line_information
         self.indentation = 0
         self.new_lines = 0
         self.pretty_string = pretty_string
+        AST=ast.AST
+
+        visit = self.visit
+        newline = self.newline
+        result = self.result
+        append = result.append
+
+        def write(*params):
+            """ self.write is a closure for performance (to reduce the number
+                of attribute lookups).
+            """
+            for item in params:
+                if isinstance(item, AST):
+                    visit(item)
+                elif callable(item):
+                    item()
+                elif item == '\n':
+                    newline()
+                elif item:
+                    if self.new_lines:
+                        append('\n' * self.new_lines)
+                        append(self.indent_with * self.indentation)
+                        self.new_lines = 0
+                    append(item)
+
+        self.write = write
+
+
 
     def __getattr__(self, name, defaults=dict(keywords=(),
                     _pp=Precedence.highest).get):
@@ -155,22 +192,6 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def delimit(self, *args):
         return Delimit(self, *args)
-
-    def write(self, *params):
-        for item in params:
-            if isinstance(item, ast.AST):
-                self.visit(item)
-            elif hasattr(item, '__call__'):
-                item()
-            elif item == '\n':
-                self.newline()
-            elif item != '':
-                if self.new_lines:
-                    if self.result:
-                        self.result.append('\n' * self.new_lines)
-                    self.result.append(self.indent_with * self.indentation)
-                    self.new_lines = 0
-                self.result.append(item)
 
     def conditional_write(self, *stuff):
         if stuff[-1] is not None:
@@ -368,7 +389,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.conditional_write(' as ', node.optional_vars)
 
     def visit_NameConstant(self, node):
-        self.write(node.value)
+        self.write(str(node.value))
 
     def visit_Pass(self, node):
         self.statement(node, 'pass')
@@ -459,12 +480,13 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_Attribute(self, node):
         self.write(node.value, '.', node.attr)
 
-    def visit_Call(self, node):
+    def visit_Call(self, node, len=len):
+        write = self.write
         want_comma = []
 
         def write_comma():
             if want_comma:
-                self.write(', ')
+                write(', ')
             else:
                 want_comma.append(True)
 
@@ -478,20 +500,20 @@ class SourceGenerator(ExplicitNodeVisitor):
         p = Precedence.Comma if numargs > 1 else Precedence.call_one_arg
         set_precedence(p, *args)
         self.visit(node.func)
-        self.write('(')
+        write('(')
         for arg in args:
-            self.write(write_comma, arg)
+            write(write_comma, arg)
 
         set_precedence(Precedence.Comma, *(x.value for x in keywords))
         for keyword in keywords:
             # a keyword.arg of None indicates dictionary unpacking
             # (Python >= 3.5)
             arg = keyword.arg or ''
-            self.write(write_comma, arg, '=' if arg else '**', keyword.value)
+            write(write_comma, arg, '=' if arg else '**', keyword.value)
         # 3.5 no longer has these
         self.conditional_write(write_comma, '*', starargs)
         self.conditional_write(write_comma, '**', kwargs)
-        self.write(')')
+        write(')')
 
     def visit_Name(self, node):
         self.write(node.id)

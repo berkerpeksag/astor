@@ -454,6 +454,11 @@ class CodegenTestCase(unittest.TestCase):
         """
         self.assertAstEqual(source)
 
+    def test_non_string_leakage(self):
+        source = '''
+        tar_compression = {'gzip': 'gz', None: ''}
+        '''
+        self.assertAstEqual(source)
 
 if __name__ == '__main__':
     unittest.main()
