@@ -50,7 +50,7 @@ def to_source(node, indent_with=' ' * 4, add_line_information=False,
                                 pretty_string)
     generator.visit(node)
     generator.result.append('\n')
-    if set(generator.result[0]) == '\n':
+    if set(generator.result[0]) == set('\n'):
         generator.result[0] = ''
     return pretty_source(generator.result)
 
