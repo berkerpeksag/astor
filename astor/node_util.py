@@ -182,7 +182,8 @@ def fast_compare(tree1, tree2):
     work = [(tree1, tree2)]
     pop = work.pop
     extend = work.extend
-    exception = TypeError
+    # TypeError in cPython, AttributeError in PyPy
+    exception = TypeError, AttributeError
     listlen = list.__len__
     zipl = zip_longest
     type_ = type
