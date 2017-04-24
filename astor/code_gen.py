@@ -310,13 +310,15 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def visit_FunctionDef(self, node, async=False):
         prefix = 'async ' if async else ''
-        self.decorators(node, 1)
+        self.decorators(node, 1 if self.indentation else 2)
         self.statement(node, '%sdef %s' % (prefix, node.name), '(')
         self.visit_arguments(node.args)
         self.write(')')
         self.conditional_write(' ->', self.get_returns(node))
         self.write(':')
         self.body(node.body)
+        if not self.indentation:
+            self.newline(extra=2)
 
     # introduced in Python 3.5
     def visit_AsyncFunctionDef(self, node):
@@ -344,6 +346,8 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.conditional_write(paren_or_comma, '**', self.get_kwargs(node))
         self.write(have_args and '):' or ':')
         self.body(node.body)
+        if not self.indentation:
+            self.newline(extra=2)
 
     def visit_If(self, node):
         set_precedence(node, node.test)

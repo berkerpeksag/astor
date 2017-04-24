@@ -129,6 +129,7 @@ class CodegenTestCase(unittest.TestCase):
         source = """
             j = [1, 2, 3]
 
+
             def test(a1, a2, b1=j, b2='123', b3={}, b4=[]):
                 pass"""
         self.assertAstSourceEqual(source)
@@ -136,6 +137,7 @@ class CodegenTestCase(unittest.TestCase):
     def test_pass_arguments_node(self):
         source = canonical("""
             j = [1, 2, 3]
+
 
             def test(a1, a2, b1=j, b2='123', b3={}, b4=[]):
                 pass""")
