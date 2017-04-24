@@ -343,10 +343,10 @@ class CodegenTestCase(unittest.TestCase):
         source = """
             __all__ = ['ArgumentParser', 'ArgumentError', 'ArgumentTypeError',
                 'FileType', 'HelpFormatter', 'ArgumentDefaultsHelpFormatter',
-                'RawDescriptionHelpFormatter', 'RawTextHelpFormatter', 'Namespace',  # NOQA
-                'Action', 'ONE_OR_MORE', 'OPTIONAL', 'PARSER', 'REMAINDER', 'SUPPRESS',  # NOQA
+                'RawDescriptionHelpFormatter', 'RawTextHelpFormatter', 'Namespace',
+                'Action', 'ONE_OR_MORE', 'OPTIONAL', 'PARSER', 'REMAINDER', 'SUPPRESS',
                 'ZERO_OR_MORE']
-        """
+        """  # NOQA
         self.maxDiff = 2000
         self.assertAstSourceEqual(source)
 
