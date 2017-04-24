@@ -21,7 +21,6 @@ except AttributeError:
     zip_longest = itertools.izip_longest
 
 
-
 class NonExistent(object):
     """This is not the class you are looking for.
     """
@@ -171,6 +170,7 @@ def allow_ast_comparison():
             except TypeError:
                 pass
 
+
 def fast_compare(tree1, tree2):
     """ This is optimized to compare two AST trees for equality.
         It makes several assumptions that are currently true for
@@ -184,12 +184,11 @@ def fast_compare(tree1, tree2):
     extend = work.extend
     # TypeError in cPython, AttributeError in PyPy
     exception = TypeError, AttributeError
-    listlen = list.__len__
     zipl = zip_longest
     type_ = type
     list_ = list
     while work:
-        n1, n2 = work.pop()
+        n1, n2 = pop()
         try:
             f1 = geta(n1, '_fields')
             f2 = geta(n2, '_fields')

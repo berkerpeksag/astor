@@ -137,7 +137,6 @@ def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False,
             badfiles.add(srcfname)
             continue
 
-
         try:
             dsttxt = to_source(srcast)
         except:
@@ -241,6 +240,7 @@ def usage(msg):
         If the source is not specified, the entire Python library will be used.
 
         """) % msg)
+
 
 if __name__ == '__main__':
     import textwrap

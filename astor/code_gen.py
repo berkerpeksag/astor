@@ -5,8 +5,8 @@ Part of the astor library for Python AST manipulation.
 License: 3-clause BSD
 
 Copyright (c) 2008      Armin Ronacher
-Copyright (c) 2012-2015 Patrick Maupin
-Copyright (c) 2013-2015 Berker Peksag
+Copyright (c) 2012-2017 Patrick Maupin
+Copyright (c) 2013-2017 Berker Peksag
 
 This module converts an AST into Python source code.
 
@@ -57,6 +57,10 @@ def to_source(node, indent_with=' ' * 4, add_line_information=False,
 
 def precedence_setter(AST=ast.AST, get_op_precedence=get_op_precedence,
                       isinstance=isinstance, list=list):
+    """ This only uses a closure for performance reasons,
+        to reduce the number of attribute lookups.  (set_precedence
+        is called a lot of times.)
+    """
 
     def set_precedence(value, *nodes):
         """Set the precedence (of the parent) into the children.
@@ -73,7 +77,9 @@ def precedence_setter(AST=ast.AST, get_op_precedence=get_op_precedence,
 
     return set_precedence
 
+
 set_precedence = precedence_setter()
+
 
 class Delimit(object):
     """A context manager that can add enclosing
@@ -121,6 +127,7 @@ class Delimit(object):
         else:
             result.append(self.closing)
 
+
 class SourceGenerator(ExplicitNodeVisitor):
     """This visitor is able to transform a well formed syntax tree into Python
     sourcecode.
@@ -133,16 +140,18 @@ class SourceGenerator(ExplicitNodeVisitor):
     using_unicode_literals = False
 
     def __init__(self, indent_with, add_line_information=False,
-                 pretty_string=pretty_string, len=len,
-                 isinstance=isinstance, callable=callable):
+                 pretty_string=pretty_string,
+                 # constants
+                 len=len, isinstance=isinstance, callable=callable):
         self.result = []
         self.indent_with = indent_with
         self.add_line_information = add_line_information
-        self.indentation = 0
-        self.new_lines = 0
-        self.colinfo = 0, 0
+        self.indentation = 0  # Current indentation level
+        self.new_lines = 0  # Number of lines to insert before next code
+        self.colinfo = 0, 0  # index in result of string containing linefeed, and
+                             # position of last linefeed in that string
         self.pretty_string = pretty_string
-        AST=ast.AST
+        AST = ast.AST
 
         visit = self.visit
         newline = self.newline
@@ -170,8 +179,6 @@ class SourceGenerator(ExplicitNodeVisitor):
                         append(item)
 
         self.write = write
-
-
 
     def __getattr__(self, name, defaults=dict(keywords=(),
                     _pp=Precedence.highest).get):
@@ -289,7 +296,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.comma_list(node.names)
         # Goofy stuff for Python 2.7 _pyio module
         if node.module == '__future__' and 'unicode_literals' in (
-            x.name for x in node.names):
+                x.name for x in node.names):
             self.using_unicode_literals = True
 
     def visit_Import(self, node):
@@ -522,13 +529,22 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.visit_Str(node, True)
 
     def visit_Str(self, node, is_joined=False):
-        result = self.result
-        precedence = self.get__pp(node)
-        embedded =  ((precedence > Precedence.Expr) +
-                     (precedence >= Precedence.Assign))
 
-        # Flush any pending newlines
+        # embedded is used to control when we might want
+        # to use a triple-quoted string.  We determine
+        # if we are in an assignment and/or in an expression
+        precedence = self.get__pp(node)
+        embedded = ((precedence > Precedence.Expr) +
+                    (precedence >= Precedence.Assign))
+
+        # Flush any pending newlines, because we're about
+        # to severely abuse the result list.
         self.write('')
+        result = self.result
+
+        # Calculate the string representing the line
+        # we are working on, up to but not including
+        # the string we are adding.
 
         res_index, str_index = self.colinfo
         current_line = self.result[res_index:]
@@ -537,6 +553,10 @@ class SourceGenerator(ExplicitNodeVisitor):
         current_line = ''.join(current_line)
 
         if is_joined:
+
+            # Handle new f-strings.  This is a bit complicated, because
+            # the tree can contain subnodes that recurse back to JoinedStr
+            # subnodes...
 
             def recurse(node):
                 for value in node.values:
@@ -558,12 +578,12 @@ class SourceGenerator(ExplicitNodeVisitor):
             recurse(node)
             mystr = ''.join(result[index:])
             del result[index:]
-            self.colinfo = res_index, str_index # Put it back like we found it
-            uni_lit = False
+            self.colinfo = res_index, str_index  # Put it back like we found it
+            uni_lit = False  # No formatted byte strings
 
         else:
             mystr = node.s
-            uni_lit=self.using_unicode_literals
+            uni_lit = self.using_unicode_literals
 
         mystr = self.pretty_string(mystr, embedded, current_line, uni_lit)
 
@@ -575,7 +595,6 @@ class SourceGenerator(ExplicitNodeVisitor):
         lf = mystr.rfind('\n') + 1
         if lf:
             self.colinfo = len(result) - 1, lf
-
 
     def visit_Bytes(self, node):
         self.write(repr(node.s))

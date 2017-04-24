@@ -6,7 +6,7 @@ License: 3-clause BSD
 
 Copyright (c) 2015 Patrick Maupin
 
-Pretty-sys.stderr.write strings for the decompiler
+Pretty-print strings for the decompiler
 
 We either return the repr() of the string,
 or try to format it as a triple-quoted string.
@@ -18,8 +18,6 @@ This has lots of Python 2 / Python 3 ugliness.
 """
 
 import re
-import logging
-import sys
 
 try:
     special_unicode = unicode
@@ -41,6 +39,7 @@ def _properly_indented(s, line_indent):
         return False
     counts = [(len(x) - len(x.lstrip())) for x in mylist]
     return counts and min(counts) >= line_indent
+
 
 mysplit = re.compile(r'(\\|\"\"\"|\"$)').split
 replacements = {'\\': '\\\\', '"""': '""\\"', '"': '\\"'}
@@ -104,11 +103,4 @@ def pretty_string(s, embedded, current_line, uni_lit=False,
             return fancy
     except:
         pass
-    """
-    logging.warning("***String conversion did not work\n")
-    #print (eval(fancy), s)
-    print
-    print (fancy, repr(s))
-    print
-    """
     return default

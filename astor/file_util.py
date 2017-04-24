@@ -101,4 +101,5 @@ class CodeToAst(object):
             cache[(fname, obj.lineno)] = obj
         return cache[key]
 
+
 code_to_ast = CodeToAst()

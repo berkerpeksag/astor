@@ -23,6 +23,7 @@ def pretty_source(source):
 
     return ''.join(split_lines(source))
 
+
 def split_lines(source, maxline=79):
     """Split inputs according to lines.
        If a line is short enough, just yield it.
@@ -141,6 +142,7 @@ def wrap_line(line, maxline=79, result=[], count=count):
         extend(nsg)
         pos += cnsg
 
+
 def split_group(source, pos, maxline):
     """ Split a group into two subgroups.  The
         first will be appended to the current
@@ -207,6 +209,7 @@ def delimiter_groups(line, begin_delim=begin_delim,
             assert not text, text
             break
 
+
 statements = set(['del ', 'return', 'yield ', 'if ', 'while '])
 
 
@@ -250,6 +253,7 @@ def add_parens(line, maxline, indent, statements=statements, count=count):
         groups[-1].append(')')
 
     return [item for group in groups for item in group]
+
 
 # Assignment operators
 ops = list('|^&+-*/%@~') + '<< >> // **'.split() + ['']
