@@ -343,11 +343,11 @@ class CodegenTestCase(unittest.TestCase):
         source = """
             __all__ = ['ArgumentParser', 'ArgumentError', 'ArgumentTypeError',
                 'FileType', 'HelpFormatter', 'ArgumentDefaultsHelpFormatter',
-                'RawDescriptionHelpFormatter', 'RawTextHelpFormatter', 'Namespace',
-                'Action', 'ONE_OR_MORE', 'OPTIONAL', 'PARSER', 'REMAINDER', 'SUPPRESS',
+                'RawDescriptionHelpFormatter', 'RawTextHelpFormatter', 'Namespace',  # NOQA
+                'Action', 'ONE_OR_MORE', 'OPTIONAL', 'PARSER', 'REMAINDER', 'SUPPRESS',  # NOQA
                 'ZERO_OR_MORE']
         """
-        self.maxDiff=2000
+        self.maxDiff = 2000
         self.assertAstSourceEqual(source)
 
     def test_elif(self):
@@ -384,7 +384,6 @@ class CodegenTestCase(unittest.TestCase):
         """
         self.assertAstSourceEqualIfAtLeastVersion(source, (3, 6))
 
-
     def test_annassign(self):
         source = """
             a: int
@@ -402,7 +401,6 @@ class CodegenTestCase(unittest.TestCase):
             a.b: int = 0
         """
         self.assertAstEqualIfAtLeastVersion(source, (3, 6))
-
 
     def test_compile_types(self):
         code = '(a + b + c) * (d + e + f)\n'
@@ -462,6 +460,7 @@ class CodegenTestCase(unittest.TestCase):
 
     def test_fast_compare(self):
         fast_compare = astor.node_util.fast_compare
+
         def check(a, b):
             ast_a = ast.parse(a)
             ast_b = ast.parse(b)

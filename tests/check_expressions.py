@@ -23,10 +23,6 @@ should not be part of the automated regressions.
 """
 
 import sys
-import collections
-import itertools
-import textwrap
-import hashlib
 import ast
 import astor
 
@@ -85,6 +81,7 @@ def checklib():
                         print()
                 f.write(('%s      %s\n' % (repr(srctxt),
                                            repr(dsttxt))).encode('utf-8'))
+
 
 if __name__ == '__main__':
     checklib()

@@ -236,5 +236,6 @@ def makelib():
             f.write(lineend)
         f.write('"""\n'.encode('utf-8'))
 
+
 if __name__ == '__main__':
     makelib()
