@@ -365,13 +365,13 @@ class CodegenTestCase(unittest.TestCase):
 
     def test_fstrings(self):
         source = """
-        f'{x}'
-        f'{x.y}'
-        f'{int(x)}'
-        f'a{b:c}d'
-        f'a{b!s:c{d}e}f'
-        f'""'
-        f'"\\''
+        x = f'{x}'
+        x = f'{x.y}'
+        x = f'{int(x)}'
+        x = f'a{b:c}d'
+        x = f'a{b!s:c{d}e}f'
+        x = f'""'
+        x = f'"\\''
         """
         self.assertAstSourceEqualIfAtLeastVersion(source, (3, 6))
         source = """
@@ -459,6 +459,20 @@ class CodegenTestCase(unittest.TestCase):
         tar_compression = {'gzip': 'gz', None: ''}
         '''
         self.assertAstEqual(source)
+
+    def test_fast_compare(self):
+        fast_compare = astor.node_util.fast_compare
+        def check(a, b):
+            ast_a = ast.parse(a)
+            ast_b = ast.parse(b)
+            dump_a = astor.dump_tree(ast_a)
+            dump_b = astor.dump_tree(ast_b)
+            self.assertEqual(dump_a == dump_b, fast_compare(ast_a, ast_b))
+        check('a = 3', 'a = 3')
+        check('a = 3', 'a = 5')
+        check('a = 3 - (3, 4, 5)', 'a = 3 - (3, 4, 5)')
+        check('a = 3 - (3, 4, 5)', 'a = 3 - (3, 4, 6)')
+
 
 if __name__ == '__main__':
     unittest.main()

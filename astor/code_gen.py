@@ -84,7 +84,6 @@ class Delimit(object):
     """
 
     discard = False
-    coalesce = False
 
     def __init__(self, tree, *args):
         """ use write instead of using result directly
@@ -121,8 +120,6 @@ class Delimit(object):
             result[start] = ''
         else:
             result.append(self.closing)
-            if self.coalesce:
-                result[start:] = [''.join(result[start:])]
 
 class SourceGenerator(ExplicitNodeVisitor):
     """This visitor is able to transform a well formed syntax tree into Python
@@ -136,13 +133,14 @@ class SourceGenerator(ExplicitNodeVisitor):
     using_unicode_literals = False
 
     def __init__(self, indent_with, add_line_information=False,
-                 pretty_string=pretty_string,
+                 pretty_string=pretty_string, len=len,
                  isinstance=isinstance, callable=callable):
         self.result = []
         self.indent_with = indent_with
         self.add_line_information = add_line_information
         self.indentation = 0
         self.new_lines = 0
+        self.colinfo = 0, 0
         self.pretty_string = pretty_string
         AST=ast.AST
 
@@ -162,12 +160,14 @@ class SourceGenerator(ExplicitNodeVisitor):
                     item()
                 elif item == '\n':
                     newline()
-                elif item:
+                else:
                     if self.new_lines:
                         append('\n' * self.new_lines)
+                        self.colinfo = len(result), 0
                         append(self.indent_with * self.indentation)
                         self.new_lines = 0
-                    append(item)
+                    if item:
+                        append(item)
 
         self.write = write
 
@@ -518,54 +518,64 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_Name(self, node):
         self.write(node.id)
 
-    def visit_Str(self, node):
+    def visit_JoinedStr(self, node):
+        self.visit_Str(node, True)
+
+    def visit_Str(self, node, is_joined=False):
         result = self.result
-        embedded = self.get__pp(node) > Precedence.Expr
+        precedence = self.get__pp(node)
+        embedded =  ((precedence > Precedence.Expr) +
+                     (precedence >= Precedence.Assign))
 
-        # Cheesy way to force a flush
-        self.write('foo')
-        result.pop()
-        result.append(self.pretty_string(node.s, embedded, result,
-                                         uni_lit=self.using_unicode_literals))
+        # Flush any pending newlines
+        self.write('')
 
-    def visit_JoinedStr(self, node,
-                  # constants
-                  new=sys.version_info >= (3, 0)):
+        res_index, str_index = self.colinfo
+        current_line = self.result[res_index:]
+        if str_index:
+            current_line[0] = current_line[0][str_index:]
+        current_line = ''.join(current_line)
 
-        def recurse(node):
-            for value in node.values:
-                if isinstance(value, ast.Str):
-                    if new:
-                        encoded = value.s.encode('unicode-escape').decode()
+        if is_joined:
+
+            def recurse(node):
+                for value in node.values:
+                    if isinstance(value, ast.Str):
+                        self.write(value.s)
+                    elif isinstance(value, ast.FormattedValue):
+                        with self.delimit('{}'):
+                            self.visit(value.value)
+                            if value.conversion != -1:
+                                self.write('!%s' % chr(value.conversion))
+                            if value.format_spec is not None:
+                                self.write(':')
+                                recurse(value.format_spec)
                     else:
-                        encoded = value.s.encode('string-escape')
-                    self.write(encoded)
-                elif isinstance(value, ast.FormattedValue):
-                    with self.delimit('{}'):
-                        self.visit(value.value)
-                        if value.conversion != -1:
-                            self.write('!%s' % chr(value.conversion))
-                        if value.format_spec is not None:
-                            self.write(':')
-                            recurse(value.format_spec)
-                else:
-                    kind = type(value).__name__
-                    assert False, 'Invalid node %s inside JoinedStr' % kind
+                        kind = type(value).__name__
+                        assert False, 'Invalid node %s inside JoinedStr' % kind
 
-        with self.delimit(("f'", "'")) as delimiters:
+            index = len(result)
             recurse(node)
-            delimiters.coalesce = True
+            mystr = ''.join(result[index:])
+            del result[index:]
+            self.colinfo = res_index, str_index # Put it back like we found it
+            uni_lit = False
 
-        s = self.result.pop()
-        squotes = s.count("'") - 2
-        if squotes:
-            dquotes = s.count('"')
-            s = s[2:-1]
-            if dquotes < squotes:
-                s = 'f"%s"' % s.replace('"', r'\"')
-            else:
-                s = "f'%s'" % s.replace("'", r"\'")
-        self.write(s)
+        else:
+            mystr = node.s
+            uni_lit=self.using_unicode_literals
+
+        mystr = self.pretty_string(mystr, embedded, current_line, uni_lit)
+
+        if is_joined:
+            mystr = 'f' + mystr
+
+        self.write(mystr)
+
+        lf = mystr.rfind('\n') + 1
+        if lf:
+            self.colinfo = len(result) - 1, lf
+
 
     def visit_Bytes(self, node):
         self.write(repr(node.s))

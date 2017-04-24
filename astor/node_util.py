@@ -13,6 +13,13 @@ For a whole-tree approach, see the treewalk submodule.
 """
 
 import ast
+import itertools
+
+try:
+    zip_longest = itertools.zip_longest
+except AttributeError:
+    zip_longest = itertools.izip_longest
+
 
 
 class NonExistent(object):
@@ -163,3 +170,39 @@ def allow_ast_comparison():
                 item.__bases__ = tuple(list(item.__bases__) + [CompareHelper])
             except TypeError:
                 pass
+
+def fast_compare(tree1, tree2):
+    """ This is optimized to compare two AST trees for equality.
+        It makes several assumptions that are currently true for
+        AST trees used by rtrip, and it doesn't examine the _attributes.
+    """
+
+    geta = ast.AST.__getattribute__
+
+    work = [(tree1, tree2)]
+    pop = work.pop
+    extend = work.extend
+    exception = TypeError
+    listlen = list.__len__
+    zipl = zip_longest
+    type_ = type
+    list_ = list
+    while work:
+        n1, n2 = work.pop()
+        try:
+            f1 = geta(n1, '_fields')
+            f2 = geta(n2, '_fields')
+        except exception:
+            if type_(n1) is list_:
+                extend(zipl(n1, n2))
+                continue
+            if n1 == n2:
+                continue
+            return False
+        else:
+            f1 = [x for x in f1 if x != 'ctx']
+            if f1 != [x for x in f2 if x != 'ctx']:
+                return False
+            extend((geta(n1, fname), geta(n2, fname)) for fname in f1)
+
+    return True

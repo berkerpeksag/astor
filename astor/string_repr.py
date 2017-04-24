@@ -6,7 +6,7 @@ License: 3-clause BSD
 
 Copyright (c) 2015 Patrick Maupin
 
-Pretty-print strings for the decompiler
+Pretty-sys.stderr.write strings for the decompiler
 
 We either return the repr() of the string,
 or try to format it as a triple-quoted string.
@@ -33,22 +33,7 @@ except NameError:
     basestring = str
 
 
-def _get_line(current_output):
-    """ Back up in the output buffer to
-        find the start of the current line,
-        and return the entire line.
-    """
-    for index in range(len(current_output) - 1, -1, -1):
-        if '\n' in current_output[index]:
-            break
-
-    myline = current_output[index:]
-    myline[0] = myline[0].rsplit('\n', 1)[-1]
-    return ''.join(myline)
-
-
-def _properly_indented(s, current_line):
-    line_indent = len(current_line) - len(current_line.lstrip())
+def _properly_indented(s, line_indent):
     mylist = s.split('\n')[1:]
     mylist = [x.rstrip() for x in mylist]
     mylist = [x for x in mylist if x]
@@ -71,8 +56,8 @@ def _prep_triple_quotes(s, mysplit=mysplit, replacements=replacements):
     return ''.join(s)
 
 
-def pretty_string(s, embedded, current_output, min_trip_str=20,
-                  max_line=100, uni_lit=False):
+def pretty_string(s, embedded, current_line, uni_lit=False,
+                  min_trip_str=20, max_line=100):
     """There are a lot of reasons why we might not want to or
        be able to return a triple-quoted string.  We can always
        punt back to the default normal string.
@@ -87,16 +72,24 @@ def pretty_string(s, embedded, current_output, min_trip_str=20,
         return 'b' + default
 
     len_s = len(default)
-    current_line = _get_line(current_output)
+
     if current_line.strip():
-        if embedded and '\n' not in s:
+        len_current = len(current_line)
+        second_line_start = s.find('\n') + 1
+        if embedded > 1 and not second_line_start:
             return default
 
         if len_s < min_trip_str:
             return default
 
-        total_len = len(current_line) + len_s
-        if total_len < max_line and not _properly_indented(s, current_line):
+        line_indent = len_current - len(current_line.lstrip())
+
+        # Could be on a line by itself...
+        if embedded and not second_line_start:
+            return default
+
+        total_len = len_current + len_s
+        if total_len < max_line and not _properly_indented(s, line_indent):
             return default
 
     fancy = '"""%s"""' % _prep_triple_quotes(s)
