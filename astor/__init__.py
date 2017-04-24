@@ -12,11 +12,11 @@ Copyright 2013 (c) Berker Peksag
 import warnings
 
 from .code_gen import to_source  # NOQA
-from .node_util import iter_node, strip_tree, dump_tree
-from .node_util import ExplicitNodeVisitor
+from .node_util import iter_node, strip_tree, dump_tree  # NOQA
+from .node_util import ExplicitNodeVisitor  # NOQA
 from .file_util import CodeToAst, code_to_ast  # NOQA
 from .op_util import get_op_symbol, get_op_precedence  # NOQA
-from .op_util import symbol_data
+from .op_util import symbol_data  # NOQA
 from .tree_walk import TreeWalk  # NOQA
 
 __version__ = '0.6'
@@ -44,6 +44,7 @@ codegen = code_gen
 
 exec(deprecated)
 
+
 def deprecate():
     def wrap(deprecated_name, target_name):
         if '.' in target_name:
@@ -51,7 +52,8 @@ def deprecate():
             target_func = getattr(globals()[target_mod], target_fname)
         else:
             target_func = globals()[target_name]
-        msg = "astor.%s is deprecated.  Please use astor.%s." % (deprecated_name, target_name)
+        msg = "astor.%s is deprecated.  Please use astor.%s." % (
+            deprecated_name, target_name)
         if callable(target_func):
             def newfunc(*args, **kwarg):
                 warnings.warn(msg, DeprecationWarning, stacklevel=2)
@@ -65,12 +67,13 @@ def deprecate():
 
         globals()[deprecated_name] = newfunc
 
-    for line in deprecated.splitlines():
+    for line in deprecated.splitlines():  # NOQA
         line = line.split('#')[0].replace('=', '').split()
         if line:
             target_name = line.pop()
             for deprecated_name in line:
                 wrap(deprecated_name, target_name)
+
 
 deprecate()
 

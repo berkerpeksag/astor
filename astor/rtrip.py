@@ -78,19 +78,22 @@ import logging
 
 from astor.code_gen import to_source
 from astor.file_util import code_to_ast
-from astor.node_util import allow_ast_comparison, dump_tree, strip_tree
+from astor.node_util import (allow_ast_comparison, dump_tree,
+                             strip_tree, fast_compare)
 
 
 dsttree = 'tmp_rtrip'
 
 
-def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False):
+def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False,
+            ignore_exceptions=False, fullcomp=False):
     """Walk the srctree, and convert/copy all python files
     into the dsttree
 
     """
 
-    allow_ast_comparison()
+    if fullcomp:
+        allow_ast_comparison()
 
     parse_file = code_to_ast.parse_file
     find_py_files = code_to_ast.find_py_files
@@ -134,7 +137,12 @@ def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False):
             badfiles.add(srcfname)
             continue
 
-        dsttxt = to_source(srcast)
+        try:
+            dsttxt = to_source(srcast)
+        except:
+            if not ignore_exceptions:
+                raise
+            dsttxt = ''
 
         if not readonly:
             dstfname = os.path.join(dstpath, fname)
@@ -150,12 +158,15 @@ def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False):
             dstast = ast.parse(dsttxt) if readonly else parse_file(dstfname)
         except SyntaxError:
             dstast = []
-        unknown_src_nodes.update(strip_tree(srcast))
-        unknown_dst_nodes.update(strip_tree(dstast))
-        if dumpall or srcast != dstast:
+        if fullcomp:
+            unknown_src_nodes.update(strip_tree(srcast))
+            unknown_dst_nodes.update(strip_tree(dstast))
+            bad = srcast != dstast
+        else:
+            bad = not fast_compare(srcast, dstast)
+        if dumpall or bad:
             srcdump = dump_tree(srcast)
             dstdump = dump_tree(dstast)
-            bad = srcdump != dstdump
             logging.warning('    calculating dump -- %s' %
                             ('bad' if bad else 'OK'))
             if bad:
@@ -229,6 +240,7 @@ def usage(msg):
         If the source is not specified, the entire Python library will be used.
 
         """) % msg)
+
 
 if __name__ == '__main__':
     import textwrap

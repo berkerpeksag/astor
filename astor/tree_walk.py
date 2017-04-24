@@ -33,6 +33,7 @@ class MetaFlatten(type):
         # Delegate the real work to type
         return type.__new__(clstype, name, newbases, newdict)
 
+
 MetaFlatten = MetaFlatten('MetaFlatten', (object, ), {})
 
 

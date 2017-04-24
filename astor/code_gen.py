@@ -5,8 +5,8 @@ Part of the astor library for Python AST manipulation.
 License: 3-clause BSD
 
 Copyright (c) 2008      Armin Ronacher
-Copyright (c) 2012-2015 Patrick Maupin
-Copyright (c) 2013-2015 Berker Peksag
+Copyright (c) 2012-2017 Patrick Maupin
+Copyright (c) 2013-2017 Berker Peksag
 
 This module converts an AST into Python source code.
 
@@ -50,21 +50,35 @@ def to_source(node, indent_with=' ' * 4, add_line_information=False,
                                 pretty_string)
     generator.visit(node)
     generator.result.append('\n')
-    return pretty_source(str(s) for s in generator.result)
+    if set(generator.result[0]) == set('\n'):
+        generator.result[0] = ''
+    return pretty_source(generator.result)
 
 
-def set_precedence(value, *nodes):
-    """Set the precedence (of the parent) into the children.
+def precedence_setter(AST=ast.AST, get_op_precedence=get_op_precedence,
+                      isinstance=isinstance, list=list):
+    """ This only uses a closure for performance reasons,
+        to reduce the number of attribute lookups.  (set_precedence
+        is called a lot of times.)
     """
-    if isinstance(value, ast.AST):
-        value = get_op_precedence(value)
-    for node in nodes:
-        if isinstance(node, ast.AST):
-            node._pp = value
-        elif isinstance(node, list):
-            set_precedence(value, *node)
-        else:
-            assert node is None, node
+
+    def set_precedence(value, *nodes):
+        """Set the precedence (of the parent) into the children.
+        """
+        if isinstance(value, AST):
+            value = get_op_precedence(value)
+        for node in nodes:
+            if isinstance(node, AST):
+                node._pp = value
+            elif isinstance(node, list):
+                set_precedence(value, *node)
+            else:
+                assert node is None, node
+
+    return set_precedence
+
+
+set_precedence = precedence_setter()
 
 
 class Delimit(object):
@@ -76,7 +90,6 @@ class Delimit(object):
     """
 
     discard = False
-    coalesce = False
 
     def __init__(self, tree, *args):
         """ use write instead of using result directly
@@ -113,8 +126,7 @@ class Delimit(object):
             result[start] = ''
         else:
             result.append(self.closing)
-            if self.coalesce:
-                result[start:] = [''.join(result[start:])]
+
 
 class SourceGenerator(ExplicitNodeVisitor):
     """This visitor is able to transform a well formed syntax tree into Python
@@ -128,13 +140,45 @@ class SourceGenerator(ExplicitNodeVisitor):
     using_unicode_literals = False
 
     def __init__(self, indent_with, add_line_information=False,
-                 pretty_string=pretty_string):
+                 pretty_string=pretty_string,
+                 # constants
+                 len=len, isinstance=isinstance, callable=callable):
         self.result = []
         self.indent_with = indent_with
         self.add_line_information = add_line_information
-        self.indentation = 0
-        self.new_lines = 0
+        self.indentation = 0  # Current indentation level
+        self.new_lines = 0  # Number of lines to insert before next code
+        self.colinfo = 0, 0  # index in result of string containing linefeed, and
+                             # position of last linefeed in that string
         self.pretty_string = pretty_string
+        AST = ast.AST
+
+        visit = self.visit
+        newline = self.newline
+        result = self.result
+        append = result.append
+
+        def write(*params):
+            """ self.write is a closure for performance (to reduce the number
+                of attribute lookups).
+            """
+            for item in params:
+                if isinstance(item, AST):
+                    visit(item)
+                elif callable(item):
+                    item()
+                elif item == '\n':
+                    newline()
+                else:
+                    if self.new_lines:
+                        append('\n' * self.new_lines)
+                        self.colinfo = len(result), 0
+                        append(self.indent_with * self.indentation)
+                        self.new_lines = 0
+                    if item:
+                        append(item)
+
+        self.write = write
 
     def __getattr__(self, name, defaults=dict(keywords=(),
                     _pp=Precedence.highest).get):
@@ -155,22 +199,6 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def delimit(self, *args):
         return Delimit(self, *args)
-
-    def write(self, *params):
-        for item in params:
-            if isinstance(item, ast.AST):
-                self.visit(item)
-            elif hasattr(item, '__call__'):
-                item()
-            elif item == '\n':
-                self.newline()
-            elif item != '':
-                if self.new_lines:
-                    if self.result:
-                        self.result.append('\n' * self.new_lines)
-                    self.result.append(self.indent_with * self.indentation)
-                    self.new_lines = 0
-                self.result.append(item)
 
     def conditional_write(self, *stuff):
         if stuff[-1] is not None:
@@ -268,7 +296,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.comma_list(node.names)
         # Goofy stuff for Python 2.7 _pyio module
         if node.module == '__future__' and 'unicode_literals' in (
-            x.name for x in node.names):
+                x.name for x in node.names):
             self.using_unicode_literals = True
 
     def visit_Import(self, node):
@@ -368,7 +396,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.conditional_write(' as ', node.optional_vars)
 
     def visit_NameConstant(self, node):
-        self.write(node.value)
+        self.write(str(node.value))
 
     def visit_Pass(self, node):
         self.statement(node, 'pass')
@@ -459,12 +487,13 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_Attribute(self, node):
         self.write(node.value, '.', node.attr)
 
-    def visit_Call(self, node):
+    def visit_Call(self, node, len=len):
+        write = self.write
         want_comma = []
 
         def write_comma():
             if want_comma:
-                self.write(', ')
+                write(', ')
             else:
                 want_comma.append(True)
 
@@ -478,72 +507,94 @@ class SourceGenerator(ExplicitNodeVisitor):
         p = Precedence.Comma if numargs > 1 else Precedence.call_one_arg
         set_precedence(p, *args)
         self.visit(node.func)
-        self.write('(')
+        write('(')
         for arg in args:
-            self.write(write_comma, arg)
+            write(write_comma, arg)
 
         set_precedence(Precedence.Comma, *(x.value for x in keywords))
         for keyword in keywords:
             # a keyword.arg of None indicates dictionary unpacking
             # (Python >= 3.5)
             arg = keyword.arg or ''
-            self.write(write_comma, arg, '=' if arg else '**', keyword.value)
+            write(write_comma, arg, '=' if arg else '**', keyword.value)
         # 3.5 no longer has these
         self.conditional_write(write_comma, '*', starargs)
         self.conditional_write(write_comma, '**', kwargs)
-        self.write(')')
+        write(')')
 
     def visit_Name(self, node):
         self.write(node.id)
 
-    def visit_Str(self, node):
+    def visit_JoinedStr(self, node):
+        self.visit_Str(node, True)
+
+    def visit_Str(self, node, is_joined=False):
+
+        # embedded is used to control when we might want
+        # to use a triple-quoted string.  We determine
+        # if we are in an assignment and/or in an expression
+        precedence = self.get__pp(node)
+        embedded = ((precedence > Precedence.Expr) +
+                    (precedence >= Precedence.Assign))
+
+        # Flush any pending newlines, because we're about
+        # to severely abuse the result list.
+        self.write('')
         result = self.result
-        embedded = self.get__pp(node) > Precedence.Expr
 
-        # Cheesy way to force a flush
-        self.write('foo')
-        result.pop()
-        result.append(self.pretty_string(node.s, embedded, result,
-                                         uni_lit=self.using_unicode_literals))
+        # Calculate the string representing the line
+        # we are working on, up to but not including
+        # the string we are adding.
 
-    def visit_JoinedStr(self, node,
-                  # constants
-                  new=sys.version_info >= (3, 0)):
+        res_index, str_index = self.colinfo
+        current_line = self.result[res_index:]
+        if str_index:
+            current_line[0] = current_line[0][str_index:]
+        current_line = ''.join(current_line)
 
-        def recurse(node):
-            for value in node.values:
-                if isinstance(value, ast.Str):
-                    if new:
-                        encoded = value.s.encode('unicode-escape').decode()
+        if is_joined:
+
+            # Handle new f-strings.  This is a bit complicated, because
+            # the tree can contain subnodes that recurse back to JoinedStr
+            # subnodes...
+
+            def recurse(node):
+                for value in node.values:
+                    if isinstance(value, ast.Str):
+                        self.write(value.s)
+                    elif isinstance(value, ast.FormattedValue):
+                        with self.delimit('{}'):
+                            self.visit(value.value)
+                            if value.conversion != -1:
+                                self.write('!%s' % chr(value.conversion))
+                            if value.format_spec is not None:
+                                self.write(':')
+                                recurse(value.format_spec)
                     else:
-                        encoded = value.s.encode('string-escape')
-                    self.write(encoded)
-                elif isinstance(value, ast.FormattedValue):
-                    with self.delimit('{}'):
-                        self.visit(value.value)
-                        if value.conversion != -1:
-                            self.write('!%s' % chr(value.conversion))
-                        if value.format_spec is not None:
-                            self.write(':')
-                            recurse(value.format_spec)
-                else:
-                    kind = type(value).__name__
-                    assert False, 'Invalid node %s inside JoinedStr' % kind
+                        kind = type(value).__name__
+                        assert False, 'Invalid node %s inside JoinedStr' % kind
 
-        with self.delimit(("f'", "'")) as delimiters:
+            index = len(result)
             recurse(node)
-            delimiters.coalesce = True
+            mystr = ''.join(result[index:])
+            del result[index:]
+            self.colinfo = res_index, str_index  # Put it back like we found it
+            uni_lit = False  # No formatted byte strings
 
-        s = self.result.pop()
-        squotes = s.count("'") - 2
-        if squotes:
-            dquotes = s.count('"')
-            s = s[2:-1]
-            if dquotes < squotes:
-                s = 'f"%s"' % s.replace('"', r'\"')
-            else:
-                s = "f'%s'" % s.replace("'", r"\'")
-        self.write(s)
+        else:
+            mystr = node.s
+            uni_lit = self.using_unicode_literals
+
+        mystr = self.pretty_string(mystr, embedded, current_line, uni_lit)
+
+        if is_joined:
+            mystr = 'f' + mystr
+
+        self.write(mystr)
+
+        lf = mystr.rfind('\n') + 1
+        if lf:
+            self.colinfo = len(result) - 1, lf
 
     def visit_Bytes(self, node):
         self.write(repr(node.s))

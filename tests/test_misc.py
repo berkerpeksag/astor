@@ -16,5 +16,6 @@ class GetSymbolTestCase(unittest.TestCase):
     def test_get_mat_mult(self):
         self.assertEqual('@', astor.get_op_symbol(ast.MatMult()))
 
+
 if __name__ == '__main__':
     unittest.main()

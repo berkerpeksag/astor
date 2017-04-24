@@ -21,21 +21,7 @@ def pretty_source(source):
     """ Prettify the source.
     """
 
-    return ''.join(flatten(split_lines(source)))
-
-
-def flatten(source, list=list, isinstance=isinstance):
-    """ Deal with nested lists
-    """
-
-    def flatten_iter(source):
-        for item in source:
-            if isinstance(item, list):
-                for item in flatten_iter(item):
-                    yield item
-            else:
-                yield item
-    return flatten_iter(source)
+    return ''.join(split_lines(source))
 
 
 def split_lines(source, maxline=79):
@@ -43,37 +29,45 @@ def split_lines(source, maxline=79):
        If a line is short enough, just yield it.
        Otherwise, fix it.
     """
+    result = []
+    extend = result.extend
+    append = result.append
     line = []
     multiline = False
     count = 0
+    find = str.find
     for item in source:
-        if item.startswith('\n'):
+        index = find(item, '\n')
+        if index:
+            line.append(item)
+            multiline = index > 0
+            count += len(item)
+        else:
             if line:
                 if count <= maxline or multiline:
-                    yield line
+                    extend(line)
                 else:
-                    for item2 in wrap_line(line, maxline):
-                        yield item2
+                    wrap_line(line, maxline, result)
                 count = 0
                 multiline = False
                 line = []
-            yield item
-        else:
-            line.append(item)
-            multiline = '\n' in item
-            count += len(item)
+            append(item)
+    return result
 
 
-def count(group):
-    return sum(len(x) for x in group)
+def count(group, slen=str.__len__):
+    return sum([slen(x) for x in group])
 
 
-def wrap_line(line, maxline=79, count=count):
+def wrap_line(line, maxline=79, result=[], count=count):
     """ We have a line that is too long,
         so we're going to try to wrap it.
     """
 
     # Extract the indentation
+
+    append = result.append
+    extend = result.extend
 
     indentation = line[0]
     lenfirst = len(indentation)
@@ -100,10 +94,10 @@ def wrap_line(line, maxline=79, count=count):
     # then set up to deal with the remainder in pairs.
 
     first = unsplittable[0]
-    yield indentation
-    yield first
+    append(indentation)
+    extend(first)
     if not splittable:
-        return
+        return result
     pos = indent + count(first)
     indentation += '    '
     indent += 4
@@ -116,8 +110,8 @@ def wrap_line(line, maxline=79, count=count):
             # If we already have stuff on the line and even
             # the very first item won't fit, start a new line
             if pos > indent and pos + len(sg[0]) > maxline:
-                yield '\n'
-                yield indentation
+                append('\n')
+                append(indentation)
                 pos = indent
 
             # Dump lines out of the splittable group
@@ -127,25 +121,25 @@ def wrap_line(line, maxline=79, count=count):
                 ready, sg = split_group(sg, pos, maxline)
                 if ready[-1].endswith(' '):
                     ready[-1] = ready[-1][:-1]
-                yield ready
-                yield '\n'
-                yield indentation
+                extend(ready)
+                append('\n')
+                append(indentation)
                 pos = indent
                 csg = count(sg)
 
             # Dump the remainder of the splittable group
             if sg:
-                yield sg
+                extend(sg)
                 pos += csg
 
         # Dump the unsplittable group, optionally
         # preceded by a linefeed.
         cnsg = count(nsg)
         if pos > indent and pos + cnsg > maxline:
-            yield '\n'
-            yield indentation
+            append('\n')
+            append(indentation)
             pos = indent
-        yield nsg
+        extend(nsg)
         pos += cnsg
 
 
@@ -215,6 +209,7 @@ def delimiter_groups(line, begin_delim=begin_delim,
             assert not text, text
             break
 
+
 statements = set(['del ', 'return', 'yield ', 'if ', 'while '])
 
 
@@ -258,6 +253,7 @@ def add_parens(line, maxline, indent, statements=statements, count=count):
         groups[-1].append(')')
 
     return [item for group in groups for item in group]
+
 
 # Assignment operators
 ops = list('|^&+-*/%@~') + '<< >> // **'.split() + ['']
