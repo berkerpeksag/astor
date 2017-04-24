@@ -54,12 +54,12 @@ def deprecate():
         msg = "astor.%s is deprecated.  Please use astor.%s." % (deprecated_name, target_name)
         if callable(target_func):
             def newfunc(*args, **kwarg):
-                warnings.warn(msg, FutureWarning)
+                warnings.warn(msg, DeprecationWarning, stacklevel=2)
                 return target_func(*args, **kwarg)
         else:
             class ModProxy:
                 def __getattr__(self, name):
-                    warnings.warn(msg, FutureWarning)
+                    warnings.warn(msg, DeprecationWarning, stacklevel=2)
                     return getattr(target_func, name)
             newfunc = ModProxy()
 

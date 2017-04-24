@@ -414,8 +414,12 @@ class CodegenTestCase(unittest.TestCase):
 
     def test_deprecation(self):
         ast1 = astor.code_to_ast.parse_file(__file__)
-        ast2 = astor.parsefile(__file__)
-        self.assertEqual(astor.to_source(ast1), astor.codegen.to_source(ast2))
+        src1 = astor.to_source(ast1)
+        with self.assertWarns(DeprecationWarning):
+            ast2 = astor.parsefile(__file__)
+        with self.assertWarns(DeprecationWarning):
+            src2 = astor.codegen.to_source(ast2)
+        self.assertEqual(src1, src2)
 
     def test_unicode_literals(self):
         source = """
