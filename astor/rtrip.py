@@ -85,6 +85,12 @@ from astor.node_util import (allow_ast_comparison, dump_tree,
 dsttree = 'tmp_rtrip'
 
 
+def out_prep(s):
+    if b'' == u'':
+        return s
+    return s.encode('UTF-8')
+
+
 def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False,
             ignore_exceptions=False, fullcomp=False):
     """Walk the srctree, and convert/copy all python files
@@ -147,8 +153,8 @@ def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False,
         if not readonly:
             dstfname = os.path.join(dstpath, fname)
             try:
-                with open(dstfname, 'w') as f:
-                    f.write(dsttxt)
+                with open(dstfname, 'wb') as f:
+                    f.write(out_prep(dsttxt))
             except UnicodeEncodeError:
                 badfiles.add(dstfname)
 
@@ -174,13 +180,13 @@ def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False,
             if dumpall or bad:
                 if not readonly:
                     try:
-                        with open(dstfname[:-3] + '.srcdmp', 'w') as f:
-                            f.write(srcdump)
+                        with open(dstfname[:-3] + '.srcdmp', 'wb') as f:
+                            f.write(out_prep(srcdump))
                     except UnicodeEncodeError:
                         badfiles.add(dstfname[:-3] + '.srcdmp')
                     try:
-                        with open(dstfname[:-3] + '.dstdmp', 'w') as f:
-                            f.write(dstdump)
+                        with open(dstfname[:-3] + '.dstdmp', 'wb') as f:
+                            f.write(out_prep(dstdump))
                     except UnicodeEncodeError:
                         badfiles.add(dstfname[:-3] + '.dstdmp')
                 elif dumpall:
@@ -208,6 +214,7 @@ def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False,
     if bad_nodes:
         logging.error('\nERROR -- UNKNOWN NODES STRIPPED: %s' % bad_nodes)
     logging.info('\n')
+    return broken
 
 
 def usage(msg):
