@@ -16,9 +16,9 @@ except ImportError:
     import unittest
 
 try:
-    import .test_code_gen
+    from test_code_gen import Comparisons
 except ImportError:
-    import test_code_gen
+    from .test_code_gen import Comparisons
 
 try:
     from astunparse_common import AstunparseCommonTestCase
@@ -28,8 +28,8 @@ except ImportError:
 if AstunparseCommonTestCase is not None:
 
     class UnparseTestCase(AstunparseCommonTestCase, unittest.TestCase,
-                          test_code_gen.Comparisons):
-
+                          Comparisons):
+    
         def check_roundtrip(self, code1, mode=None):
             self.assertAstRoundtrips(code1)
 
