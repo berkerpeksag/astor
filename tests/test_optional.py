@@ -15,7 +15,10 @@ try:
 except ImportError:
     import unittest
 
-import test_code_gen
+try:
+    import .test_code_gen
+except ImportError:
+    import test_code_gen
 
 try:
     from astunparse_common import AstunparseCommonTestCase
