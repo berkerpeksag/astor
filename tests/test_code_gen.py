@@ -18,10 +18,6 @@ except ImportError:
 
 import astor
 
-try:
-    from astunparse_common import AstunparseCommonTestCase
-except ImportError:
-    AstunparseCommonTestCase = None
 
 def canonical(srctxt):
     return textwrap.dedent(srctxt).strip()
@@ -38,7 +34,7 @@ class Comparisons(object):
         dmp2 = astor.dump_tree(ast2)
         self.assertEqual(dmp1, dmp2)
 
-    def roundtrip_ast(self, srctxt):
+    def assertAstRoundtrips(self, srctxt):
         """This asserts that the reconstituted source
            code can be compiled into the exact same AST
            as the original source code.
@@ -49,31 +45,31 @@ class Comparisons(object):
         dstast = ast.parse(dsttxt)
         self.assertAstEqual(srcast, dstast)
 
-    def rtrip_ast_if_vers_gt(self, source, min_should_work,
-                             max_should_error=None):
+    def assertAstRoundtripsGtVer(self, source, min_should_work,
+                                 max_should_error=None):
         if max_should_error is None:
             max_should_error = min_should_work[0], min_should_work[1] - 1
         if sys.version_info >= min_should_work:
-            self.roundtrip_ast(source)
+            self.assertAstRoundtrips(source)
         elif sys.version_info <= max_should_error:
             self.assertRaises(SyntaxError, ast.parse, source)
 
-    def roundtrip_src(self, srctxt):
+    def assertSrcRoundtrips(self, srctxt):
         """This asserts that the reconstituted source
            code is identical to the original source code.
-           This is a much stronger statement than roundtrip_ast,
+           This is a much stronger statement than assertAstRoundtrips,
            which may not always be appropriate.
         """
         srctxt = canonical(srctxt)
         self.assertSrcEqual(self.to_source(ast.parse(srctxt)).rstrip(),
                             srctxt)
 
-    def rtrip_src_if_vers_gt(self, source, min_should_work,
-                             max_should_error=None):
+    def assertSrcRoundtripsGtVer(self, source, min_should_work,
+                                 max_should_error=None):
         if max_should_error is None:
             max_should_error = min_should_work[0], min_should_work[1] - 1
         if sys.version_info >= min_should_work:
-            self.roundtrip_src(source)
+            self.assertSrcRoundtrips(source)
         elif sys.version_info <= max_should_error:
             self.assertRaises(SyntaxError, ast.parse, source)
 
@@ -82,21 +78,21 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
 
     def test_imports(self):
         source = "import ast"
-        self.roundtrip_src(source)
+        self.assertSrcRoundtrips(source)
         source = "import operator as op"
-        self.roundtrip_src(source)
+        self.assertSrcRoundtrips(source)
         source = "from math import floor"
-        self.roundtrip_src(source)
+        self.assertSrcRoundtrips(source)
         source = "from .. import foobar"
-        self.roundtrip_src(source)
+        self.assertSrcRoundtrips(source)
         source = "from ..aaa import foo, bar as bar2"
-        self.roundtrip_src(source)
+        self.assertSrcRoundtrips(source)
 
     def test_dictionary_literals(self):
         source = "{'a': 1, 'b': 2}"
-        self.roundtrip_src(source)
+        self.assertSrcRoundtrips(source)
         another_source = "{'nested': ['structures', {'are': 'important'}]}"
-        self.roundtrip_src(another_source)
+        self.assertSrcRoundtrips(another_source)
 
     def test_try_expect(self):
         source = """
@@ -104,14 +100,14 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
                 'spam'[10]
             except IndexError:
                 pass"""
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
 
         source = """
             try:
                 'spam'[10]
             except IndexError as exc:
                 sys.stdout.write(exc)"""
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
 
         source = """
             try:
@@ -122,7 +118,7 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
                 pass
             finally:
                 pass"""
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
         source = """
             try:
                 size = len(iterable)
@@ -131,13 +127,13 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
             else:
                 if n >= size:
                     return sorted(iterable, key=key, reverse=True)[:n]"""
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
 
     def test_del_statement(self):
         source = "del l[0]"
-        self.roundtrip_src(source)
+        self.assertSrcRoundtrips(source)
         source = "del obj.x"
-        self.roundtrip_src(source)
+        self.assertSrcRoundtrips(source)
 
     def test_arguments(self):
         source = """
@@ -146,7 +142,7 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
 
             def test(a1, a2, b1=j, b2='123', b3={}, b4=[]):
                 pass"""
-        self.roundtrip_src(source)
+        self.assertSrcRoundtrips(source)
 
     def test_pass_arguments_node(self):
         source = canonical("""
@@ -164,21 +160,21 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
             def call(*popenargs, timeout=None, **kwargs):
                 pass"""
         # Probably also works on < 3.4, but doesn't work on 2.7...
-        self.rtrip_src_if_vers_gt(source, (3, 4), (2, 7))
+        self.assertSrcRoundtripsGtVer(source, (3, 4), (2, 7))
 
     def test_matrix_multiplication(self):
         for source in ("(a @ b)", "a @= b"):
-            self.rtrip_ast_if_vers_gt(source, (3, 5))
+            self.assertAstRoundtripsGtVer(source, (3, 5))
 
     def test_multiple_call_unpackings(self):
         source = """
             my_function(*[1], *[2], **{'three': 3}, **{'four': 'four'})"""
-        self.rtrip_src_if_vers_gt(source, (3, 5))
+        self.assertSrcRoundtripsGtVer(source, (3, 5))
 
     def test_right_hand_side_dictionary_unpacking(self):
         source = """
             our_dict = {'a': 1, **{'b': 2, 'c': 3}}"""
-        self.rtrip_src_if_vers_gt(source, (3, 5))
+        self.assertSrcRoundtripsGtVer(source, (3, 5))
 
     def test_async_def_with_for(self):
         source = """
@@ -188,118 +184,118 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
                 async for datum in data:
                     if quux(datum):
                         return datum"""
-        self.rtrip_src_if_vers_gt(source, (3, 5))
+        self.assertSrcRoundtripsGtVer(source, (3, 5))
 
     def test_double_await(self):
         source = """
             async def foo():
                 return await (await bar())"""
-        self.rtrip_src_if_vers_gt(source, (3, 5))
+        self.assertSrcRoundtripsGtVer(source, (3, 5))
 
     def test_class_definition_with_starbases_and_kwargs(self):
         source = """
             class TreeFactory(*[FactoryMixin, TreeBase], **{'metaclass': Foo}):
                 pass"""
-        self.rtrip_src_if_vers_gt(source, (3, 0))
+        self.assertSrcRoundtripsGtVer(source, (3, 0))
 
     def test_yield(self):
         source = "yield"
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
         source = """
         def dummy():
             yield"""
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
         source = "foo((yield bar))"
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
         source = "(yield bar)()"
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
         source = "return (yield 1)"
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
         source = "return (yield from sam())"
-        self.rtrip_ast_if_vers_gt(source, (3, 3))
+        self.assertAstRoundtripsGtVer(source, (3, 3))
         source = "((yield a) for b in c)"
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
         source = "[(yield)]"
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
         source = "if (yield): pass"
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
         source = "if (yield from foo): pass"
-        self.rtrip_ast_if_vers_gt(source, (3, 3))
+        self.assertAstRoundtripsGtVer(source, (3, 3))
         source = "(yield from (a, b))"
-        self.rtrip_ast_if_vers_gt(source, (3, 3))
+        self.assertAstRoundtripsGtVer(source, (3, 3))
         source = "yield from sam()"
-        self.rtrip_src_if_vers_gt(source, (3, 3))
+        self.assertSrcRoundtripsGtVer(source, (3, 3))
 
     def test_with(self):
         source = """
             with foo:
                 pass
         """
-        self.roundtrip_src(source)
+        self.assertSrcRoundtrips(source)
         source = """
             with foo as bar:
                 pass
         """
-        self.roundtrip_src(source)
+        self.assertSrcRoundtrips(source)
         source = """
             with foo as bar, mary, william as bill:
                 pass
         """
-        self.rtrip_ast_if_vers_gt(source, (2, 7))
+        self.assertAstRoundtripsGtVer(source, (2, 7))
 
     def test_inf(self):
         source = """
             (1e1000) + (-1e1000) + (1e1000j) + (-1e1000j)
         """
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
 
     def test_unary(self):
         source = """
             -(1) + ~(2) + +(3)
         """
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
 
     def test_pow(self):
         source = """
             (-2) ** (-3)
         """
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
         source = """
             (+2) ** (+3)
         """
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
         source = """
             2 ** 3 ** 4
         """
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
         source = """
             -2 ** -3
         """
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
         source = """
             -2 ** -3 ** -4
         """
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
         source = """
             -((-1) ** other._sign)
             (-1) ** self._sign
         """
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
 
     def test_comprehension(self):
         source = """
             ((x,y) for x,y in zip(a,b) if a)
         """
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
         source = """
             fields = [(a, _format(b)) for (a, b) in iter_fields(node) if a]
         """
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
         source = """
             ra = np.fromiter(((i * 3, i * 2) for i in range(10)),
                                 n, dtype='i8,f8')
         """
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
 
     def test_async_comprehension(self):
         source = """
@@ -309,52 +305,52 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
                 (await x async for x in y)
                 {i for i in b async for i in a if await i for b in i}
         """
-        self.rtrip_src_if_vers_gt(source, (3, 6))
+        self.assertSrcRoundtripsGtVer(source, (3, 6))
 
     def test_tuple_corner_cases(self):
         source = """
             a = ()
         """
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
         source = """
             assert (a, b), (c, d)
         """
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
         source = """
             return UUID(fields=(time_low, time_mid, time_hi_version,
                   clock_seq_hi_variant, clock_seq_low, node), version=1)
         """
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
         source = """
             raise(os.error, ('multiple errors:', errors))
         """
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
         source = """
             exec(expr, global_dict, local_dict)
         """
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
         source = """
             with (a, b) as (c, d):
                 pass
         """
-        self.roundtrip_ast(source)
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
+        self.assertAstRoundtrips(source)
         source = """
             with (a, b) as (c, d), (e,f) as (h,g):
                 pass
         """
-        self.rtrip_ast_if_vers_gt(source, (2, 7))
+        self.assertAstRoundtripsGtVer(source, (2, 7))
         source = """
             Pxx[..., (0,-1)] = xft[..., (0,-1)]**2
         """
-        self.rtrip_ast_if_vers_gt(source, (2, 7))
+        self.assertAstRoundtripsGtVer(source, (2, 7))
         source = """
             responses = {
                 v: (v.phrase, v.description)
                 for v in HTTPStatus.__members__.values()
             }
         """
-        self.rtrip_ast_if_vers_gt(source, (2, 7))
+        self.assertAstRoundtripsGtVer(source, (2, 7))
 
     def test_output_formatting(self):
         source = """
@@ -365,7 +361,7 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
                 'ZERO_OR_MORE']
         """  # NOQA
         self.maxDiff = 2000
-        self.roundtrip_src(source)
+        self.assertSrcRoundtrips(source)
 
     def test_elif(self):
         source = """
@@ -378,7 +374,7 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
             else:
                 g
         """
-        self.roundtrip_src(source)
+        self.assertSrcRoundtrips(source)
 
     def test_fstrings(self):
         source = """
@@ -390,16 +386,16 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         x = f'""'
         x = f'"\\''
         """
-        self.rtrip_src_if_vers_gt(source, (3, 6))
+        self.assertSrcRoundtripsGtVer(source, (3, 6))
         source = """
         a_really_long_line_will_probably_break_things = (
             f'a{b!s:c{d}e}fghijka{b!s:c{d}e}a{b!s:c{d}e}a{b!s:c{d}e}')
         """
-        self.rtrip_src_if_vers_gt(source, (3, 6))
+        self.assertSrcRoundtripsGtVer(source, (3, 6))
         source = """
         return f"functools.{qualname}({', '.join(args)})"
         """
-        self.rtrip_src_if_vers_gt(source, (3, 6))
+        self.assertSrcRoundtripsGtVer(source, (3, 6))
 
     def test_annassign(self):
         source = """
@@ -417,7 +413,7 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
             (a.b): int = 0
             a.b: int = 0
         """
-        self.rtrip_ast_if_vers_gt(source, (3, 6))
+        self.assertAstRoundtripsGtVer(source, (3, 6))
 
     def test_compile_types(self):
         code = '(a + b + c) * (d + e + f)\n'
@@ -433,7 +429,7 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         x = b'abc'
         y = u'abc'
         """
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
 
     def test_slicing(self):
         source = """
@@ -462,24 +458,14 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
             x[1:2,3:4:5]
             x[1:2,3:4:-5]
         """
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
 
     def test_non_string_leakage(self):
         source = '''
         tar_compression = {'gzip': 'gz', None: ''}
         '''
-        self.roundtrip_ast(source)
+        self.assertAstRoundtrips(source)
 
-
-if AstunparseCommonTestCase is not None:
-
-    class UnparseTestCase(AstunparseCommonTestCase, unittest.TestCase, Comparisons):
-
-        def check_roundtrip(self, code1, mode=None):
-            self.roundtrip_ast(code1)
-
-        def test_files(self):
-            """ Don't bother -- we do this manually and more thoroughly """
 
 if __name__ == '__main__':
     unittest.main()
