@@ -244,12 +244,22 @@ def usage(msg):
 
 if __name__ == '__main__':
     import textwrap
+    import time
+
+    def go():
+        convert(fname, readonly=readonly or dumpall, dumpall=dumpall,
+            ignore_exceptions=ignoreexc, fullcomp=fullcomp and not dumpall)
 
     args = sys.argv[1:]
 
-    readonly = 'readonly' in args
-    if readonly:
-        args.remove('readonly')
+    flags = []
+
+    for special in 'readonly astunparse ignoreexc cprofile fullcomp'.split():
+        x = special in args
+        if x:
+            args.remove(special)
+            flags.append(special)
+        globals()[special] = x
 
     if not args:
         args = [os.path.dirname(textwrap.__file__)]
@@ -257,10 +267,21 @@ if __name__ == '__main__':
     if len(args) > 1:
         usage("Too many arguments")
 
+    if astunparse:
+        from astunparse import unparse as to_source
+
+    if cprofile:
+        import cProfile
+        cprofile = cProfile.run
+
     fname, = args
     dumpall = False
     if not os.path.exists(fname):
         dumpall = fname == 'stdin' or usage("Cannot find directory %s" % fname)
 
     logging.basicConfig(format='%(msg)s', level=logging.INFO)
-    convert(fname, readonly=readonly or dumpall, dumpall=dumpall)
+
+    start = time.time()
+    cprofile("go()") if cprofile else go()
+    print('Finished in %0.2f seconds' % (time.time() - start))
+    print("Used flags %s" %(', '.join(flags) or None))
