@@ -86,9 +86,9 @@ dsttree = 'tmp_rtrip'
 
 
 def out_prep(s):
-    if b'' == u'':
+    if type(b'') == type(''):
         return s
-    return s.encode('UTF-8')
+    return s.encode('utf-8')
 
 
 def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False,

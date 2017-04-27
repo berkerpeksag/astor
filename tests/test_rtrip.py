@@ -18,10 +18,10 @@ import astor.rtrip
 
 class RtripTestCase(unittest.TestCase):
 
-        def test_convert_stdlib(self):
-            srcdir = os.path.dirname(os.__file__)
-            result = astor.rtrip.convert(srcdir)
-            self.assertEqual(result, [])
+    def test_convert_stdlib(self):
+        srcdir = os.path.dirname(os.__file__)
+        result = astor.rtrip.convert(srcdir)
+        self.assertEqual(result, [])
 
 
 if __name__ == '__main__':
