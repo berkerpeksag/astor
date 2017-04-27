@@ -85,10 +85,8 @@ from astor.node_util import (allow_ast_comparison, dump_tree,
 dsttree = 'tmp_rtrip'
 
 
-def out_prep(s):
-    if type(b'') == type(''):
-        return s
-    return s.encode('utf-8')
+def out_prep(s, pre_encoded=(type(b'') is type(''))):
+    return s if pre_encoded else s.encode('utf-8')
 
 
 def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False,
