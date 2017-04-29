@@ -15,6 +15,11 @@ import ast
 import sys
 import os
 
+try:
+    from tokenize import open as fopen
+except ImportError:
+    fopen = open
+
 
 class CodeToAst(object):
     """Given a module, or a function that was compiled as part
@@ -52,10 +57,11 @@ class CodeToAst(object):
 
         This is a very thin wrapper around ast.parse
 
-            TODO: Handle encodings other than the default (issue #26)
+            TODO: Handle encodings other than the default for Python 2
+                        (issue #26)
         """
         try:
-            with open(fname, 'r') as f:
+            with fopen(fname) as f:
                 fstr = f.read()
         except IOError:
             if fname != 'stdin':
