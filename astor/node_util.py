@@ -133,7 +133,7 @@ class ExplicitNodeVisitor(ast.NodeVisitor):
     """
 
     @staticmethod
-    def abort_visit(node):  # XXX: self?
+    def abort_visit(node):
         msg = 'No defined handler for node of type %s'
         raise AttributeError(msg % node.__class__.__name__)
 
