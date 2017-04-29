@@ -387,10 +387,17 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         x = f'"\\''
         """
         self.assertSrcRoundtripsGtVer(source, (3, 6))
-        source = """
+        source = '''
         a_really_long_line_will_probably_break_things = (
             f'a{b!s:c{d}e}fghijka{b!s:c{d}e}a{b!s:c{d}e}a{b!s:c{d}e}')
-        """
+        how_about_triple_quotes = f"""
+                                  Try this
+                                  or this
+                                  or even this
+                                  {HereIsAVariable}
+                                  {HereIsOneToo}
+                                  """
+        '''
         self.assertSrcRoundtripsGtVer(source, (3, 6))
         source = """
         return f"functools.{qualname}({', '.join(args)})"
@@ -464,6 +471,13 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         source = '''
         tar_compression = {'gzip': 'gz', None: ''}
         '''
+        self.assertAstRoundtrips(source)
+
+    def test_del(self):
+        source = """
+            del this_var, that_var, the_other_var, miscellaneous_stuff, are_we_there_yet_mommy_question_mark
+            del (this_var, that_var, the_other_var, miscellaneous_stuff, are_we_there_yet_mommy_question_mark)
+        """
         self.assertAstRoundtrips(source)
 
 
