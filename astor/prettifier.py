@@ -216,7 +216,7 @@ class Formatter(object):
     end_delim.add('):')
     begin_end_delim = begin_delim | end_delim
 
-    all_statements = set(('@|assert |async for |async def |async with |'
+    all_statements = set(('# |@|assert |async for |async def |async with |'
                           'break|continue|class |del |except|exec |'
                           'elif |else:|for |def |global |if |import |'
                           'from |nonlocal |pass|print |raise|return|'
