@@ -38,4 +38,7 @@ setup(
         'Topic :: Software Development :: Compilers',
     ],
     keywords='ast, codegen, PEP8',
+    entry_points = {
+        'console_scripts': ['astor=astor.command_line:main'],
+    },
 )
