@@ -1,12 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-Part of the astor library for Python AST manipulation.
+astor is a library and command line tool that is designed
+to manipulate, dump, pretty-print, and compare Python
+abstract syntax trees (ASTs).
+
+astor homepage: https://github.com/berkerpeksag/astor
+
+----
 
 License: 3-clause BSD
 
-Copyright 2012 (c) Patrick Maupin
-Copyright 2013 (c) Berker Peksag
-
+Copyright 2008      (c) Armin Ronacher
+Copyright 2012-2017 (c) Patrick Maupin
+Copyright 2013-2017 (c) Berker Peksag
 """
 
 import warnings
@@ -20,7 +26,6 @@ from .op_util import symbol_data  # NOQA
 from .tree_walk import TreeWalk  # NOQA
 
 __version__ = '0.6'
-
 
 # DEPRECATED!!!
 

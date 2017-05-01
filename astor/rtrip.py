@@ -9,7 +9,7 @@ Copyright (c) 2015 Patrick Maupin
 
 Usage:
 
-    python -m astor.rtrip [readonly] [<source>]
+    python -m astor.rtrip [-r] [<source>]
 
 
 This utility tests round-tripping of Python source to AST
@@ -17,7 +17,7 @@ and back to source.
 
     .. versionadded:: 0.6
 
-If readonly is specified, then the source will be tested,
+If -r is specified, then the source will be tested,
 but no files will be written.
 
 if the source is specified to be "stdin" (without quotes)
@@ -63,11 +63,8 @@ Note 1:
         canonical form.
 
 Note 2:
-        This tool WILL TRASH the tmp_rtrip directory (unless readonly
+        This tool WILL TRASH the tmp_rtrip directory (unless -r
         is specified) -- as far as it is concerned, it OWNS that directory.
-
-Note 3: Why is it "readonly" and not "-r"?  Because python -m slurps
-        all the thingies starting with the dash.
 """
 
 import sys
@@ -75,14 +72,22 @@ import os
 import ast
 import shutil
 import logging
+import optparse
 
-from astor.code_gen import to_source
-from astor.file_util import code_to_ast
-from astor.node_util import (allow_ast_comparison, dump_tree,
-                             strip_tree, fast_compare)
+from .code_gen import to_source
+from .file_util import code_to_ast
+from .node_util import (allow_ast_comparison, dump_tree,
+                        strip_tree, fast_compare)
+from .command_line import add_command
 
 
 dsttree = 'tmp_rtrip'
+
+# TODO:  Remove this workaround once we remove version 2 support
+
+
+def out_prep(s, pre_encoded=(sys.version_info[0] == 2)):
+    return s if pre_encoded else s.encode('utf-8')
 
 
 def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False,
@@ -147,8 +152,8 @@ def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False,
         if not readonly:
             dstfname = os.path.join(dstpath, fname)
             try:
-                with open(dstfname, 'w') as f:
-                    f.write(dsttxt)
+                with open(dstfname, 'wb') as f:
+                    f.write(out_prep(dsttxt))
             except UnicodeEncodeError:
                 badfiles.add(dstfname)
 
@@ -174,13 +179,13 @@ def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False,
             if dumpall or bad:
                 if not readonly:
                     try:
-                        with open(dstfname[:-3] + '.srcdmp', 'w') as f:
-                            f.write(srcdump)
+                        with open(dstfname[:-3] + '.srcdmp', 'wb') as f:
+                            f.write(out_prep(srcdump))
                     except UnicodeEncodeError:
                         badfiles.add(dstfname[:-3] + '.srcdmp')
                     try:
-                        with open(dstfname[:-3] + '.dstdmp', 'w') as f:
-                            f.write(dstdump)
+                        with open(dstfname[:-3] + '.dstdmp', 'wb') as f:
+                            f.write(out_prep(dstdump))
                     except UnicodeEncodeError:
                         badfiles.add(dstfname[:-3] + '.dstdmp')
                 elif dumpall:
@@ -208,80 +213,59 @@ def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False,
     if bad_nodes:
         logging.error('\nERROR -- UNKNOWN NODES STRIPPED: %s' % bad_nodes)
     logging.info('\n')
+    return broken
 
 
-def usage(msg):
-    raise SystemExit(textwrap.dedent("""
+def main(args=None):
+    """ args are ignored"""
+    import textwrap
+    import time
 
-        Error: %s
-
-        Usage:
-
-            python -m astor.rtrip [readonly] [<source>]
-
+    # Configure the option parser
+    usage = """usage: %prog [options] [<source>]
 
         This utility tests round-tripping of Python source to AST
         and back to source.
 
-        If readonly is specified, then the source will be tested,
+        If -r is specified, then the source will be tested,
         but no files will be written.
 
-        if the source is specified to be "stdin" (without quotes)
-        then any source entered at the command line will be compiled
-        into an AST, converted back to text, and then compiled to
-        an AST again, and the results will be displayed to stdout.
+        If -r is not specified, then this will create a mirror directory
+        named tmp_rtrip and will recursively round-trip all the Python
+        source from the source into the tmp_rtrip dir, after compiling
+        it and then reconstituting it through code_gen.to_source.
 
-        If neither readonly nor stdin is specified, then rtrip
-        will create a mirror directory named tmp_rtrip and will
-        recursively round-trip all the Python source from the source
-        into the tmp_rtrip dir, after compiling it and then reconstituting
-        it through code_gen.to_source.
+        If the source is not specified, the entire Python library will
+        be used.
+        """
 
-        If the source is not specified, the entire Python library will be used.
+    parser = optparse.OptionParser(usage)
+    parser.add_option("-r", action="store_true", default=False,
+                      help='Read-only -- do not create temp dir')
+    (options, args) = parser.parse_args()
 
-        """) % msg)
-
-
-if __name__ == '__main__':
-    import textwrap
-    import time
-
-    def go():
-        convert(fname, readonly=readonly or dumpall, dumpall=dumpall,
-            ignore_exceptions=ignoreexc, fullcomp=fullcomp and not dumpall)
-
-    args = sys.argv[1:]
-
-    flags = []
-
-    for special in 'readonly astunparse ignoreexc cprofile fullcomp'.split():
-        x = special in args
-        if x:
-            args.remove(special)
-            flags.append(special)
-        globals()[special] = x
-
+    if len(args) > 1:
+        parser.error("only one source file or module allowed")
     if not args:
         args = [os.path.dirname(textwrap.__file__)]
 
-    if len(args) > 1:
-        usage("Too many arguments")
-
-    if astunparse:
-        from astunparse import unparse as to_source
-
-    if cprofile:
-        import cProfile
-        cprofile = cProfile.run
-
     fname, = args
-    dumpall = False
     if not os.path.exists(fname):
-        dumpall = fname == 'stdin' or usage("Cannot find directory %s" % fname)
+        parser.error("Cannot find directory %s" % fname)
 
     logging.basicConfig(format='%(msg)s', level=logging.INFO)
 
     start = time.time()
-    cprofile("go()") if cprofile else go()
+    convert(fname, readonly=options.r, dumpall=False,
+            ignore_exceptions=False, fullcomp=False)
     print('Finished in %0.2f seconds' % (time.time() - start))
-    print("Used flags %s" %(', '.join(flags) or None))
+
+
+add_command('rtrip', main, """
+        rtrip tests round-tripping of Python source to AST
+        and back to source.
+""")
+
+
+if __name__ == '__main__':
+    main()
