@@ -86,6 +86,7 @@ dsttree = 'tmp_rtrip'
 
 # TODO:  Remove this workaround once we remove version 2 support
 
+
 def out_prep(s, pre_encoded=(sys.version_info[0] == 2)):
     return s if pre_encoded else s.encode('utf-8')
 
