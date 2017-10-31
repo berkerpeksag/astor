@@ -3,7 +3,7 @@ Release Notes
 
 
 0.6 - Work in Progress
--------------------------
+----------------------
 
 New features
 ~~~~~~~~~~~~
@@ -36,7 +36,7 @@ Bug fixes
 * TODO:  Check issues...
 
 0.5 - 2015-04-18
--------------------------
+----------------
 
 New features
 ~~~~~~~~~~~~
@@ -44,15 +44,15 @@ New features
 * Added support for Python 3.5 infix matrix multiplication
 
 0.4.1 - 2015-03-15
--------------------------
+------------------
 
 Bug fixes
-~~~~~~~~~~
+~~~~~~~~~
 
 * Added missing ``SourceGenerator.visit_arguments()``
 
 0.4 - 2014-06-29
--------------------------
+----------------
 
 New features
 ~~~~~~~~~~~~
@@ -60,12 +60,12 @@ New features
 * Added initial test suite and documentation
 
 Bug fixes
-~~~~~~~~~~
+~~~~~~~~~
 
 * Added a visitor for ``NameConstant``
 
 0.3 - 2013-12-10
--------------------------
+----------------
 
 New features
 ~~~~~~~~~~~~
@@ -76,30 +76,30 @@ New features
   - Updated ``Try`` and ``With``.
 
 Bug fixes
-~~~~~~~~~~
+~~~~~~~~~
 
 * Fixed a packaging bug on Python 3 -- see pull requests #1 and #2 for more information.
 
 0.2.1 -- 2012-09-20
-------------------------
+-------------------
 
 Enhancements
-~~~~~~~~~~~~~
+~~~~~~~~~~~~
 
 * Modified TreeWalk to add ``_name`` suffix for functions that work on attribute names
 
 
 0.2 -- 2012-09-19
-------------------------
+-----------------
 
 Enhancements
-~~~~~~~~~~~~~
+~~~~~~~~~~~~
 
 * Initial Python 3 support
 * Test of treewalk
 
 0.1 -- 2012-09-19
-------------------------
+-----------------
 
 * Initial release
 * Based on Armin Ronacher's codegen
