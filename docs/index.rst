@@ -1,8 +1,15 @@
+..
+  **************************************************************
+  Note that his file was designed to be viewed at Read the Docs.
+  Some content will not display properly when viewing using the
+  GitHub browser.
+  **************************************************************
+
 .. currentmodule:: astor
 
-============================
+############################
 astor -- AST observe/rewrite
-============================
+############################
 
 :PyPI: https://pypi.python.org/pypi/astor
 :Source: https://github.com/berkerpeksag/astor
@@ -13,10 +20,19 @@ astor -- AST observe/rewrite
         :alt: Travis CI
         :target: https://travis-ci.org/berkerpeksag/astor/
 
+
+.. toctree::
+   :hidden:
+
+   self
+   changelog
+
+
 astor is designed to allow easy manipulation of Python source via the AST.
 
+***************
 Getting Started
----------------
+***************
 
 Install with **pip**:
 
@@ -27,8 +43,9 @@ Install with **pip**:
 or clone the latest version from GitHub_.
 
 
+********
 Features
---------
+********
 
 There are some other similar libraries, but astor focuses on the following
 areas:
@@ -61,39 +78,55 @@ areas:
     names
   - Enjoy easy access to parent node(s) for tree rewriting
 
-Classes
--------
+.. _deprecations:
 
-.. class:: CodeToAst
+************
+Deprecations
+************
 
-    This is the base class for the helper function code_to_ast.
-    It may be subclassed, but probably will not need to be.
+.. versionadded:: 0.6
 
+Modules
+~~~~~~~
 
-.. class:: TreeWalk(node=None)
-
-    The TreeWalk class is designed to be subclassed in order
-    to walk a tree in arbitrary fashion.  TreeWalk deserves
-    its own treatise, but there is no time to write it
-    at present :(
-
-
-.. class:: ExplicitNodeVisitor
-
-    The ExplicitNodeVisitor class subclasses the ast.NodeVisitor
-    class, and removes the ability to perform implicit visits.
-    This allows for rapid failure when your code encounters a
-    tree with a node type it was not expecting.
-
+===================  ====================
+astor 0.5            astor 0.6+
+===================  ====================
+``astor.codegen``    ``astor.code_gen``
+``astor.misc``       ``astor.file_util``
+``astor.treewalk``   ``astor.tree_walk``
+===================  ====================
 
 Functions
----------
+~~~~~~~~~
 
-.. note::
+========================  ====================
+astor 0.5                 astor 0.6+
+========================  ====================
+``astor.codetoast()``     ``astor.code_to_ast()``
+``astor.parsefile()``     ``astor.code_to_ast.parse_file()``
+``astor.dump()``          ``astor.dump_tree()``
+``astor.get_anyop()``     ``astor.get_op_symbol()``
+``astor.get_boolop()``    ``astor.get_op_symbol()``
+``astor.get_binop()``     ``astor.get_op_symbol()``
+``astor.get_cmpop()``     ``astor.get_op_symbol()``
+``astor.get_unaryop()``   ``astor.get_op_symbol()``
+========================  ====================
 
-   This section is not done. Please look at the source code for all public
-   members.
+Attributes
+~~~~~~~~~~
 
+========================  ====================
+astor 0.5                 astor 0.6+
+========================  ====================
+``astor.codetoast``       ``astor.code_to_ast``
+``astor.all_symbols``     ``astor.symbol_data``
+========================  ====================
+
+
+*********
+Functions
+*********
 
 .. function:: to_source(source, indent_with=' ' * 4, \
                         add_line_information=False)
@@ -107,6 +140,7 @@ Functions
     of the nodes are added to the output. This can be used to spot wrong line
     number information of statement nodes.
 
+.. function:: codetoast
 .. function:: code_to_ast(codeobj)
 
     Given a module, or a function that was compiled as part
@@ -114,32 +148,27 @@ Functions
     the sub-AST for the function.  Allow caching to reduce
     number of compiles.
 
-    .. versionadded:: 0.6
+    .. deprecated:: 0.6
+       ``codetoast()`` is deprecated.
 
-        Was previously named codetoast
 
-
+.. function:: astor.parsefile
 .. function:: astor.code_to_ast.parse_file(fname)
 
-    Parse a python file into an AST.
+    Parse a Python file into an AST.
 
-    This is a very thin wrapper around ast.parse
+    This is a very thin wrapper around :func:`ast.parse`.
 
-    It does not yet handle all possible Python source
-    encodings (issue #26).
-
-    .. versionadded:: 0.6
-
-        Was previously named parsefile.
+    .. deprecated:: 0.6
+       ``astor.parsefile()`` is deprecated.
 
 
 .. function:: astor.code_to_ast.get_file_info(codeobj)
 
-    Returns the file and line number of a code object.
+    Returns the file and line number of *codeobj*.
 
-    If the code object has a __file__ attribute (e.g. if
+    If *codeobj* has a ``__file__`` attribute (e.g. if
     it is a module), then the returned line number will be 0.
-
 
     .. versionadded:: 0.6
 
@@ -147,9 +176,9 @@ Functions
 .. function:: astor.code_to_ast.find_py_files(srctree, ignore=None)
 
     Recursively returns the path and filename for all
-    .py files under the srctree directory.
+    Python files under the *srctree* directory.
 
-    If ignore is not None, it will ignore any path
+    If *ignore* is not ``None``, it will ignore any path
     that contains the ignore string.
 
     .. versionadded:: 0.6
@@ -159,28 +188,28 @@ Functions
 
     This function iterates over an AST node object:
 
-       - If the object has a _fields attribute,
-         it gets attributes in the order of this
-         and returns name, value pairs.
+    - If the object has a _fields attribute,
+      it gets attributes in the order of this
+      and returns name, value pairs.
 
-       - Otherwise, if the object is a list instance,
-         it returns name, value pairs for each item
-         in the list, where the name is passed into
-         this function (defaults to blank).
+    - Otherwise, if the object is a list instance,
+      it returns name, value pairs for each item
+      in the list, where the name is passed into
+      this function (defaults to blank).
 
-       - Can update an unknown set with information about
-         attributes that do not exist in fields.
+    - Can update an unknown set with information about
+      attributes that do not exist in fields.
 
 
+.. function:: dump
 .. function:: dump_tree(node, name=None, initial_indent='', \
                         indentation='    ', maxline=120, maxmerged=80)
 
     This function pretty prints an AST or similar structure
     with indentation.
 
-    .. versionadded:: 0.6
-
-        Was previously named dump
+    .. deprecated:: 0.6
+       ``astor.dump()`` is deprecated.
 
 
 .. function:: strip_tree(node)
@@ -196,31 +225,66 @@ Functions
     .. versionadded:: 0.6
 
 
+.. function:: get_boolop
+.. function:: get_binop
+.. function:: get_cmpop
+.. function:: get_unaryop
+.. function:: get_anyop
 .. function:: get_op_symbol(node, fmt='%s')
 
     Given an ast node, returns the string representing the
     corresponding symbol.
 
-    .. versionadded:: 0.6
+    .. deprecated:: 0.6
+       ``get_boolop()``, ``get_binop()``, ``get_cmpop()``, ``get_unaryop()``
+       and ``get_anyop()`` functions are deprecated.
 
-        Replaces and deprecates get_boolop, get_binop, get_cmpop,
-        get_unaryop, and get_anyop.
+
+*******
+Classes
+*******
+
+.. class:: file_util.CodeToAst
+
+    This is the base class for the helper function :func:`code_to_ast`.
+    It may be subclassed, but probably will not need to be.
 
 
-Command line utilities
-----------------------
+.. class:: tree_walk.TreeWalk(node=None)
+
+    The ``TreeWalk`` class is designed to be subclassed in order
+    to walk a tree in arbitrary fashion.
+
+
+.. class:: node_util.ExplicitNodeVisitor
+
+    The ``ExplicitNodeVisitor`` class subclasses the :class:`ast.NodeVisitor`
+    class, and removes the ability to perform implicit visits.
+    This allows for rapid failure when your code encounters a
+    tree with a node type it was not expecting.
+
+
+**********************
+Command-line utilities
+**********************
+
+There is currently one command-line utility:
 
 rtrip
 ~~~~~
 
-There is currently one command-line utility::
+.. versionadded:: 0.6
+
+::
 
     python -m astor.rtrip [readonly] [<source>]
 
 This utility tests round-tripping of Python source to AST
 and back to source.
 
-    .. versionadded:: 0.6
+.. warning::
+   This tool **will trash** the *tmp_rtrip* directory unless
+   the *readonly* option is specified.
 
 If readonly is specified, then the source will be tested,
 but no files will be written.
@@ -260,17 +324,11 @@ tmp_rtrip directory will also contain fname.srcdmp and fname.dstdmp,
 which are textual representations of the ASTs.
 
 
-Note 1:
-        The canonical form is only canonical for a given version of
-        this module and the astor toolbox.  It is not guaranteed to
-        be stable.  The only desired guarantee is that two source modules
-        that parse to the same AST will be converted back into the same
-        canonical form.
-
-Note 2:
-        This tool WILL TRASH the tmp_rtrip directory (unless readonly
-        is specified) -- as far as it is concerned, it OWNS that directory.
-
-.. include:: changelog.rst
+.. note::
+   The canonical form is only canonical for a given version of
+   this module and the astor toolbox.  It is not guaranteed to
+   be stable.  The only desired guarantee is that two source modules
+   that parse to the same AST will be converted back into the same
+   canonical form.
 
 .. _GitHub: https://github.com/berkerpeksag/astor/

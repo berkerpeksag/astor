@@ -1,6 +1,6 @@
+=============
 Release Notes
--------------
-
+=============
 
 0.6 - Work in Progress
 ----------------------
@@ -8,32 +8,66 @@ Release Notes
 New features
 ~~~~~~~~~~~~
 
-* New ``astor.rtrip`` submodule and doc
+* New ``astor.rtrip`` command-line tool to test round-tripping
+  of Python source to AST and back to source.
+  (Contributed by Patrick Maupin.)
 
-* New pretty printer outputs much better looking code
+* New pretty printer outputs much better looking code:
 
-* Significant codebase refactoring
-  - Much easier to add new node types
-  - Much easier to handle precedence issues
-  - Main flow easier to follow in tree
+  - Remove parentheses where not necessary
+
+  - Use triple-quoted strings where it makes sense
+
+  - Add placeholder for function to do nice line wrapping on output
+
+  (Contributed by Patrick Maupin.)
 
 * Additional Python 3.5 support:
-  - New starargs and kwargs support
-  - Async and await
+  - Additional unpacking generalizations (:pep:`448`)
+    (Contributed by Zack M. Davis.)
+
+  - Async and await (:pep:`492`)
+    (Contributed by Zack M. Davis.)
 
 * Added Python 3.6 feature support:
 
-  - f-strings
-  - async comprehensions
-  - variable annotations
+  - f-strings (:pep:`498`)
+  - async comprehensions (:pep:`530`)
+  - variable annotations (:pep:`526`
 
-* Updated test infrastructure and documentation
-* Code cleanup, including renaming for PEP8 and deprecation of old names
+  (Contributed by Ryan Gonzalez.)
+
+* Code cleanup, including renaming for PEP8 and deprecation of old names.
+  See :ref:`deprecations` for more information.
+  (Contributed by Leonard Truong in issue #36.)
 
 Bug fixes
 ~~~~~~~~~
 
-* TODO:  Check issues...
+* Don't put trailing comma-spaces in dictionaries. astor will now create
+  ``{'three': 3}`` instead of ``{'three': 3, }``.
+  (Contributed by Zack M. Davis.)
+
+* Fixed several bugs in code generation:
+
+  #. Keyword-only arguments should come before ``**``
+  #. ``from .. import <member>`` with no trailing module name did not work
+  #. Support ``from .. import foo as bar`` syntax
+  #. Support ``with foo: ...``, ``with foo as bar: ...`` and
+     ``with foo, bar as baz: ...`` syntax
+  #. Support ``1eNNNN`` syntax
+  #. Support ``return (yield foo)`` syntax
+  #. Support unary operations such as ``-(1) + ~(2) + +(3)``
+  #. Support ``if (yield): pass``
+  #. Support ``if (yield from foo): pass``
+  #. ``try...finally`` block needs to come after the ``try...else`` clause
+  #. Wrap integers with parentheses where applicable (e.g. ``(0).real``
+     should generated)
+  #. When the ``yield`` keyword is an expression rather than a statement,
+     it can be a syntax error if it is not enclosed in parentheses
+  #. Remove extraneous parentheses around ``yield from``
+
+  (Contributed by Patrick Maupin in issue 27.)
 
 0.5 - 2015-04-18
 ----------------
@@ -41,7 +75,8 @@ Bug fixes
 New features
 ~~~~~~~~~~~~
 
-* Added support for Python 3.5 infix matrix multiplication
+* Added support for Python 3.5 infix matrix multiplication (:pep:`465`)
+  (Contributed by Zack M. Davis.)
 
 0.4.1 - 2015-03-15
 ------------------
