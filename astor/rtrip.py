@@ -6,68 +6,6 @@ Part of the astor library for Python AST manipulation.
 License: 3-clause BSD
 
 Copyright (c) 2015 Patrick Maupin
-
-Usage:
-
-    python -m astor.rtrip [readonly] [<source>]
-
-
-This utility tests round-tripping of Python source to AST
-and back to source.
-
-    .. versionadded:: 0.6
-
-If readonly is specified, then the source will be tested,
-but no files will be written.
-
-if the source is specified to be "stdin" (without quotes)
-then any source entered at the command line will be compiled
-into an AST, converted back to text, and then compiled to
-an AST again, and the results will be displayed to stdout.
-
-If neither readonly nor stdin is specified, then rtrip
-will create a mirror directory named tmp_rtrip and will
-recursively round-trip all the Python source from the source
-into the tmp_rtrip dir, after compiling it and then reconstituting
-it through code_gen.to_source.
-
-If the source is not specified, the entire Python library will be used.
-
-The purpose of rtrip is to place Python code into a canonical form.
-
-This is useful both for functional testing of astor, and for
-validating code edits.
-
-For example, if you make manual edits for PEP8 compliance,
-you can diff the rtrip output of the original code against
-the rtrip output of the edited code, to insure that you
-didn't make any functional changes.
-
-For testing astor itself, it is useful to point to a big codebase,
-e.g::
-
-    python -m astor.rtrip
-
-to roundtrip the standard library.
-
-If any round-tripped files fail to be built or to match, the
-tmp_rtrip directory will also contain fname.srcdmp and fname.dstdmp,
-which are textual representations of the ASTs.
-
-
-Note 1:
-        The canonical form is only canonical for a given version of
-        this module and the astor toolbox.  It is not guaranteed to
-        be stable.  The only desired guarantee is that two source modules
-        that parse to the same AST will be converted back into the same
-        canonical form.
-
-Note 2:
-        This tool WILL TRASH the tmp_rtrip directory (unless readonly
-        is specified) -- as far as it is concerned, it OWNS that directory.
-
-Note 3: Why is it "readonly" and not "-r"?  Because python -m slurps
-        all the thingies starting with the dash.
 """
 
 import sys
@@ -115,8 +53,6 @@ def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False,
     unknown_dst_nodes = set()
     badfiles = set()
     broken = []
-    # TODO: When issue #26 resolved, remove UnicodeDecodeError
-    handled_exceptions = SyntaxError, UnicodeDecodeError
 
     oldpath = None
 
@@ -139,7 +75,7 @@ def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False,
         logging.info('Converting %s' % srcfname)
         try:
             srcast = parse_file(srcfname)
-        except handled_exceptions:
+        except SyntaxError:
             badfiles.add(srcfname)
             continue
 
