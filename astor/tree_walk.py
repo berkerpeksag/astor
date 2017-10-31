@@ -34,7 +34,7 @@ class MetaFlatten(type):
         return type.__new__(clstype, name, newbases, newdict)
 
 
-MetaFlatten = MetaFlatten('MetaFlatten', (object, ), {})
+MetaFlatten = MetaFlatten('MetaFlatten', (object,), {})
 
 
 class TreeWalk(MetaFlatten):

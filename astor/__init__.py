@@ -23,16 +23,10 @@ __version__ = '0.6'
 
 
 # DEPRECATED!!!
-
 # These aliases support old programs.  Please do not use in future.
 
-# NOTE: We should think hard about what we want to export,
-#      and not just dump everything here.  Some things
-#      will never be used by other packages, and other
-#      things could be accessed from their submodule.
-
 deprecated = """
-get_boolop = get_binop = get_cmpop = get_unaryop = get_op_symbol  # NOQA
+get_boolop = get_binop = get_cmpop = get_unaryop = get_op_symbol
 get_anyop = get_op_symbol
 parsefile = code_to_ast.parse_file
 codetoast = code_to_ast
