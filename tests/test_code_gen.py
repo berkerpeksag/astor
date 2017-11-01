@@ -60,6 +60,10 @@ class Comparisons(object):
         """
         srctxt = canonical(srctxt)
         self.assertEqual(self.to_source(ast.parse(srctxt)).rstrip(), srctxt)
+
+    def assertSrcDoesNotRoundtrip(self, srctxt):
+        srctxt = canonical(srctxt)
+        self.assertNotEqual(self.to_source(ast.parse(srctxt)).rstrip(),
                             srctxt)
 
     def assertSrcRoundtripsGtVer(self, source, min_should_work,
@@ -246,6 +250,14 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
             (1e1000) + (-1e1000) + (1e1000j) + (-1e1000j)
         """
         self.assertAstRoundtrips(source)
+        # We special case infinities in code_gen. So we will
+        # return the same AST construction but it won't
+        # roundtrip to 'source'. See the SourceGenerator.visit_Num
+        # method for details. (#82)
+        source = 'a = 1e400'
+        self.assertAstRoundtrips(source)
+        # Returns 'a = 1e1000'.
+        self.assertSrcDoesNotRoundtrip(source)
 
     def test_unary(self):
         source = """
