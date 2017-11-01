@@ -27,8 +27,6 @@ class Comparisons(object):
 
     to_source = staticmethod(astor.to_source)
 
-    assertSrcEqual = unittest.TestCase.assertEqual
-
     def assertAstEqual(self, ast1, ast2):
         dmp1 = astor.dump_tree(ast1)
         dmp2 = astor.dump_tree(ast2)
@@ -61,7 +59,7 @@ class Comparisons(object):
            which may not always be appropriate.
         """
         srctxt = canonical(srctxt)
-        self.assertSrcEqual(self.to_source(ast.parse(srctxt)).rstrip(),
+        self.assertEqual(self.to_source(ast.parse(srctxt)).rstrip(), srctxt)
                             srctxt)
 
     def assertSrcRoundtripsGtVer(self, source, min_should_work,
@@ -421,7 +419,7 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
             srcast = compile(code, 'dummy', mode, ast.PyCF_ONLY_AST)
             dsttxt = self.to_source(srcast)
             if code.strip() != dsttxt.strip():
-                self.assertSrcEqual('(%s)' % code.strip(), dsttxt.strip())
+                self.assertEqual('(%s)' % code.strip(), dsttxt.strip())
 
     def test_unicode_literals(self):
         source = """
