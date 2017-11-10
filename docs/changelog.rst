@@ -5,6 +5,13 @@ Release Notes
 0.6.1 - 2017-11-11
 ------------------
 
+New features
+~~~~~~~~~~~~
+
+* Added ``astor.parse_file()`` as an alias to
+  ``astor.code_to_ast.parsefile()``.
+  (Contributed by Berker Peksag.)
+
 Bug fixes
 ---------
 

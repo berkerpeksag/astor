@@ -21,6 +21,7 @@ from .tree_walk import TreeWalk  # NOQA
 
 __version__ = '0.6'
 
+parse_file = code_to_ast.parse_file
 
 # DEPRECATED!!!
 # These aliases support old programs.  Please do not use in future.

@@ -17,6 +17,12 @@ class GetSymbolTestCase(unittest.TestCase):
         self.assertEqual('@', astor.get_op_symbol(ast.MatMult()))
 
 
+class PublicAPITestCase(unittest.TestCase):
+
+    def test_aliases(self):
+        self.assertIs(astor.parse_file, astor.code_to_ast.parse_file)
+
+
 class DeprecationTestCase(unittest.TestCase):
 
     def test_deprecate_parsefile(self):

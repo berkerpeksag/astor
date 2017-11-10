@@ -104,7 +104,7 @@ Functions
 astor 0.5                 astor 0.6+
 ========================  ====================
 ``astor.codetoast()``     ``astor.code_to_ast()``
-``astor.parsefile()``     ``astor.code_to_ast.parse_file()``
+``astor.parsefile()``     ``astor.parse_file()``
 ``astor.dump()``          ``astor.dump_tree()``
 ``astor.get_anyop()``     ``astor.get_op_symbol()``
 ``astor.get_boolop()``    ``astor.get_op_symbol()``
@@ -153,6 +153,7 @@ Functions
 
 
 .. function:: astor.parsefile
+.. function:: astor.parse_file
 .. function:: astor.code_to_ast.parse_file(fname)
 
     Parse a Python file into an AST.
@@ -162,6 +163,8 @@ Functions
     .. deprecated:: 0.6
        ``astor.parsefile()`` is deprecated.
 
+    .. versionadded:: 0.6.1
+       Added the ``astor.parse_file()`` function as an alias.
 
 .. function:: astor.code_to_ast.get_file_info(codeobj)
 
