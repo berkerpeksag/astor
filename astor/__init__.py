@@ -33,7 +33,6 @@ codetoast = code_to_ast
 dump = dump_tree
 all_symbols = symbol_data
 treewalk = tree_walk
-codegen = code_gen
 """
 
 exec(deprecated)

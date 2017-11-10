@@ -19,26 +19,13 @@ class GetSymbolTestCase(unittest.TestCase):
 
 class DeprecationTestCase(unittest.TestCase):
 
-    def test_deprecation(self):
-        with warnings.catch_warnings(record=True) as w:
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("always")
-            ast1 = astor.code_to_ast.parse_file(__file__)
-            src1 = astor.to_source(ast1)
-            ast2 = astor.parsefile(__file__)
-            src2 = astor.codegen.to_source(ast2)
-            self.assertEqual(len(w), 2)
-            w = [warnings.formatwarning(x.message, x.category,
-                                        x.filename, x.lineno) for x in w]
-            w = [x.rsplit(':', 1)[-1].strip() for x in w]
-            self.assertEqual(w[0], 'astor.parsefile is deprecated.  '
-                             'Please use astor.code_to_ast.parse_file.\n'
-                             '  ast2 = astor.parsefile(__file__)')
-            self.assertEqual(w[1], 'astor.codegen is deprecated.  '
-                             'Please use astor.code_gen.\n'
-                             '  src2 = astor.codegen.to_source(ast2)')
+    def test_deprecate_parsefile(self):
+        with self.assertWarns(DeprecationWarning):
+            astor.parsefile(__file__)
 
-        self.assertEqual(src1, src2)
+    def test_deprecate_astor_codegen(self):
+        with self.assertWarns(DeprecationWarning):
+            import astor.codegen
 
 
 class FastCompareTestCase(unittest.TestCase):

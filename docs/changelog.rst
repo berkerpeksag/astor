@@ -2,6 +2,18 @@
 Release Notes
 =============
 
+0.6.1 - 2017-11-11
+------------------
+
+Bug fixes
+---------
+
+* Fix compatibility layer for the ``astor.codegen`` submodule. Importing
+  ``astor.codegen`` now succeeds and raises a :exc:`DeprecationWarning`
+  instead of :exc:`ImportError`.
+  (Contributed by Berker Peksag.)
+
+
 0.6 - 2017-10-31
 ----------------
 
