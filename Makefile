@@ -2,7 +2,8 @@ testenv:
 	pip install -e .
 
 release:
-	python setup.py sdist bdist_wheel upload -r pypi
+	python setup.py sdist bdist_wheel
+	twine upload dist/*
 
 register:
 	python setup.py sdist register -r pypi
