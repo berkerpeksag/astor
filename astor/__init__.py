@@ -19,7 +19,7 @@ from .op_util import get_op_symbol, get_op_precedence  # NOQA
 from .op_util import symbol_data  # NOQA
 from .tree_walk import TreeWalk  # NOQA
 
-__version__ = '0.6.1'
+__version__ = '0.6.2'
 
 parse_file = code_to_ast.parse_file
 
@@ -34,6 +34,7 @@ codetoast = code_to_ast
 dump = dump_tree
 all_symbols = symbol_data
 treewalk = tree_walk
+codegen = code_gen
 """
 
 exec(deprecated)

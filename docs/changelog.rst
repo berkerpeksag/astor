@@ -2,6 +2,25 @@
 Release Notes
 =============
 
+0.6.2 - 2017-11-11
+------------------
+
+Bug fixes
+---------
+
+* Restore backwards compatibility that was broken after 0.6.1.
+  You can now continue to use the following pattern::
+
+     import astor
+
+     class SpamCodeGenerator(astor.codegen.SourceGenerator):
+         ...
+
+  (Reported by Dan Moldovan and fixed by Berker Peksag in `Issue 87`_.)
+
+.. _`Issue 87`: https://github.com/berkerpeksag/astor/issues/87
+
+
 0.6.1 - 2017-11-11
 ------------------
 
