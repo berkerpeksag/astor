@@ -31,7 +31,7 @@ class PublicAPITestCase(unittest.TestCase):
         self.assertEqual(len(cm.warnings), 1)
         # This message comes from 'astor/__init__.py'.
         self.assertEqual(
-            str(cm.warnings[0].message),
+            str(cm.warning),
             'astor.codegen is deprecated.  Please use astor.code_gen.'
         )
 
@@ -41,7 +41,7 @@ class PublicAPITestCase(unittest.TestCase):
         self.assertEqual(len(cm.warnings), 1)
         # This message comes from 'astor/codegen.py'.
         self.assertEqual(
-            str(cm.warnings[0].message),
+            str(cm.warning),
             'astor.codegen module is deprecated. Please import '
             'astor.code_gen module instead.'
         )
