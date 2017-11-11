@@ -8,6 +8,8 @@ except ImportError:
 
 import astor
 
+from .support import import_fresh_module
+
 
 class GetSymbolTestCase(unittest.TestCase):
 
@@ -22,16 +24,27 @@ class PublicAPITestCase(unittest.TestCase):
     def test_aliases(self):
         self.assertIs(astor.parse_file, astor.code_to_ast.parse_file)
 
+    def test_codegen_from_root(self):
+        with self.assertWarns(DeprecationWarning) as cm:
+            astor = import_fresh_module('astor')
+            astor.codegen.SourceGenerator
+        self.assertEqual(len(cm.warnings), 1)
+        # This message comes from 'astor/__init__.py'.
+        self.assertEqual(
+            str(cm.warnings[0].message),
+            'astor.codegen is deprecated.  Please use astor.code_gen.'
+        )
 
-class DeprecationTestCase(unittest.TestCase):
-
-    def test_deprecate_parsefile(self):
-        with self.assertWarns(DeprecationWarning):
-            astor.parsefile(__file__)
-
-    def test_deprecate_astor_codegen(self):
-        with self.assertWarns(DeprecationWarning):
+    def test_codegen_as_submodule(self):
+        with self.assertWarns(DeprecationWarning) as cm:
             import astor.codegen
+        self.assertEqual(len(cm.warnings), 1)
+        # This message comes from 'astor/codegen.py'.
+        self.assertEqual(
+            str(cm.warnings[0].message),
+            'astor.codegen module is deprecated. Please import '
+            'astor.code_gen module instead.'
+        )
 
 
 class FastCompareTestCase(unittest.TestCase):
