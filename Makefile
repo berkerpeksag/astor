@@ -18,7 +18,6 @@ test-register:
 clean:
 	find . -name "*.pyc" -exec rm {} \;
 	rm -rf *.egg-info
-	rm -rf build/ dist/
-	rm MANIFEST
+	rm -rf build/ dist/ __pycache__/
 
 .PHONY: clean register release
