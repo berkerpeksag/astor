@@ -308,8 +308,8 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.statement(node)
         self.generic_visit(node)
 
-    def visit_FunctionDef(self, node):
-        prefix = 'async ' if self.get_is_async(node) else ''
+    def visit_FunctionDef(self, node, is_async=False):
+        prefix = 'async ' if is_async else ''
         self.decorators(node, 1 if self.indentation else 2)
         self.statement(node, '%sdef %s' % (prefix, node.name), '(')
         self.visit_arguments(node.args)
@@ -322,7 +322,7 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     # introduced in Python 3.5
     def visit_AsyncFunctionDef(self, node):
-        self.visit_FunctionDef(node)
+        self.visit_FunctionDef(node, is_async=True)
 
     def visit_ClassDef(self, node):
         have_args = []
@@ -364,24 +364,24 @@ class SourceGenerator(ExplicitNodeVisitor):
                 self.else_body(else_)
                 break
 
-    def visit_For(self, node):
+    def visit_For(self, node, is_async=False):
         set_precedence(node, node.target)
-        prefix = 'async ' if self.get_is_async(node) else ''
+        prefix = 'async ' if is_async else ''
         self.statement(node, '%sfor ' % prefix,
                        node.target, ' in ', node.iter, ':')
         self.body_or_else(node)
 
     # introduced in Python 3.5
     def visit_AsyncFor(self, node):
-        self.visit_For(node)
+        self.visit_For(node, is_async=True)
 
     def visit_While(self, node):
         set_precedence(node, node.test)
         self.statement(node, 'while ', node.test, ':')
         self.body_or_else(node)
 
-    def visit_With(self, node):
-        prefix = 'async ' if self.get_is_async(node) else ''
+    def visit_With(self, node, is_async=False):
+        prefix = 'async ' if is_async else ''
         self.statement(node, '%swith ' % prefix)
         if hasattr(node, "context_expr"):  # Python < 3.3
             self.visit_withitem(node)
@@ -392,7 +392,7 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     # new for Python 3.5
     def visit_AsyncWith(self, node):
-        self.visit_With(node)
+        self.visit_With(node, is_async=True)
 
     # new for Python 3.3
     def visit_withitem(self, node):
