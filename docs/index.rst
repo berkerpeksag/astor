@@ -16,7 +16,7 @@ astor -- AST observe/rewrite
 :Issues: https://github.com/berkerpeksag/astor/issues/
 :License: 3-clause BSD
 :Build status:
-    .. image:: https://secure.travis-ci.org/berkerpeksag/astor.png
+    .. image:: https://secure.travis-ci.org/berkerpeksag/astor.svg
         :alt: Travis CI
         :target: https://travis-ci.org/berkerpeksag/astor/
 
