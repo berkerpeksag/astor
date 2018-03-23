@@ -2,6 +2,30 @@
 Release Notes
 =============
 
+0.7.0 - 2018-03-24
+------------------
+
+New features
+~~~~~~~~~~~~
+
+* Added initial support for Python 3.7.0.
+
+  Note that if you have a subclass of ``astor.code_gen.SourceGenerator``, you
+  may need to rename the keyword argument ``async`` of the following methods
+  to ``is_async``:
+
+  - ``visit_FunctionDef(..., is_async=False)``
+  - ``visit_AsyncFunctionDef(..., is_async=False)``
+  - ``visit_For(..., is_async=False)``
+  - ``visit_AsyncFor(..., is_async=False)``
+  - ``visit_With(..., is_async=False)``
+  - ``visit_AsyncWith(..., is_async=False)``
+
+  (Reported and fixed by Berker Peksag in `Issue 86`_.)
+
+.. _`Issue 86`: https://github.com/berkerpeksag/astor/issues/86
+
+
 0.6.2 - 2017-11-11
 ------------------
 
