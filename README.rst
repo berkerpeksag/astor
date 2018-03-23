@@ -3,7 +3,7 @@ astor -- AST observe/rewrite
 =============================
 
 :PyPI: https://pypi.python.org/pypi/astor
-:Documentation: https://astor.rtfd.org/
+:Documentation: https://astor.readthedocs.io
 :Source: https://github.com/berkerpeksag/astor
 :License: 3-clause BSD
 :Build status:
