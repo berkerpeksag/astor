@@ -15,11 +15,8 @@ New features
   to ``is_async``:
 
   - ``visit_FunctionDef(..., is_async=False)``
-  - ``visit_AsyncFunctionDef(..., is_async=False)``
   - ``visit_For(..., is_async=False)``
-  - ``visit_AsyncFor(..., is_async=False)``
   - ``visit_With(..., is_async=False)``
-  - ``visit_AsyncWith(..., is_async=False)``
 
   (Reported and fixed by Berker Peksag in `Issue 86`_.)
 
