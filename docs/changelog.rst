@@ -82,23 +82,25 @@ New features
   (Contributed by Patrick Maupin.)
 
 * Additional Python 3.5 support:
-  - Additional unpacking generalizations (:pep:`448`)
-    (Contributed by Zack M. Davis.)
 
+  - Additional unpacking generalizations (:pep:`448`)
   - Async and await (:pep:`492`)
-    (Contributed by Zack M. Davis.)
+
+  (Contributed by Zack M. Davis.)
 
 * Added Python 3.6 feature support:
 
   - f-strings (:pep:`498`)
   - async comprehensions (:pep:`530`)
-  - variable annotations (:pep:`526`
+  - variable annotations (:pep:`526`)
 
   (Contributed by Ryan Gonzalez.)
 
 * Code cleanup, including renaming for PEP8 and deprecation of old names.
   See :ref:`deprecations` for more information.
-  (Contributed by Leonard Truong in issue #36.)
+  (Contributed by Leonard Truong in `Issue 36`_.)
+
+.. _`Issue 36`: https://github.com/berkerpeksag/astor/issues/36
 
 Bug fixes
 ~~~~~~~~~
@@ -126,7 +128,10 @@ Bug fixes
      it can be a syntax error if it is not enclosed in parentheses
   #. Remove extraneous parentheses around ``yield from``
 
-  (Contributed by Patrick Maupin in issue 27.)
+  (Contributed by Patrick Maupin in `Issue 27`_.)
+
+.. _`Issue 27`: https://github.com/berkerpeksag/astor/issues/27
+
 
 0.5 - 2015-04-18
 ----------------
