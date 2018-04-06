@@ -2,8 +2,8 @@
 Release Notes
 =============
 
-0.7.0 - 2018-03-24
-------------------
+0.7.0 - not released
+--------------------
 
 New features
 ~~~~~~~~~~~~
@@ -27,7 +27,7 @@ New features
 ------------------
 
 Bug fixes
----------
+~~~~~~~~~
 
 * Restore backwards compatibility that was broken after 0.6.1.
   You can now continue to use the following pattern::
@@ -53,7 +53,7 @@ New features
   (Contributed by Berker Peksag.)
 
 Bug fixes
----------
+~~~~~~~~~
 
 * Fix compatibility layer for the ``astor.codegen`` submodule. Importing
   ``astor.codegen`` now succeeds and raises a :exc:`DeprecationWarning`
