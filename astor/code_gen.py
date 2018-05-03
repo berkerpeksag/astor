@@ -22,7 +22,7 @@ import sys
 
 from .op_util import get_op_symbol, get_op_precedence, Precedence
 from .node_util import ExplicitNodeVisitor
-from .string_repr import pretty_string
+from .string_repr import pretty_string, _prep_triple_quotes
 from .source_repr import pretty_source
 
 
@@ -226,6 +226,32 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.body(node.body)
         self.else_body(node.orelse)
 
+    def docstring(self, node, indent=1):
+        """
+        Write the function/module/class docstring attribute
+
+        This method has an effect only for python >= 3.7 . For python earlier
+        versions the docstring was represented as the first expression in the
+        function/module/class body.
+
+        Args:
+            node (ast.AST): The node whose docstring is printed.
+            indent (int): How much to indent the docstring (usually is 0 for
+                ast.Module, and 1 for ast.FunctionDef, ast.AsyncFunctionDef and
+                ast.ClassDef).
+        """
+        if not sys.version_info >= (3, 7):
+            return
+
+        value = getattr(node, 'docstring', None)
+        if value is None:
+            return
+
+        self.newline()
+        self.indentation += indent
+        self.write('"""%s"""' % _prep_triple_quotes(value))
+        self.indentation -= indent
+
     def visit_arguments(self, node):
         want_comma = []
 
@@ -316,6 +342,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.write(')')
         self.conditional_write(' ->', self.get_returns(node))
         self.write(':')
+        self.docstring(node)
         self.body(node.body)
         if not self.indentation:
             self.newline(extra=2)
@@ -345,6 +372,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.conditional_write(paren_or_comma, '*', self.get_starargs(node))
         self.conditional_write(paren_or_comma, '**', self.get_kwargs(node))
         self.write(have_args and '):' or ':')
+        self.docstring(node)
         self.body(node.body)
         if not self.indentation:
             self.newline(extra=2)
@@ -776,6 +804,7 @@ class SourceGenerator(ExplicitNodeVisitor):
             self.visit(node.value)
 
     def visit_Module(self, node):
+        self.docstring(node, indent=0)
         self.write(*node.body)
 
     visit_Interactive = visit_Module
