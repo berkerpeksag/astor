@@ -476,6 +476,12 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         '''
         self.assertAstRoundtrips(source)
 
+    def test_fstring_trailing_newline(self):
+        source = '''
+        x = f"""{host}\n\t{port}\n"""
+        '''
+        self.assertSrcRoundtripsGtVer(source, (3, 6))
+
 
 if __name__ == '__main__':
     unittest.main()
