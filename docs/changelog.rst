@@ -27,6 +27,11 @@ Bug fixes
 
 * Fixed a bug where newlines would be inserted to a wrong place during
   printing f-strings with trailing newlines.
+  (Reported by Felix Yan and contributed by Radomír Bosák in
+  `Issue 89`_.)
+
+.. _`Issue 89`: https://github.com/berkerpeksag/astor/issues/89
+
 
 0.6.2 - 2017-11-11
 ------------------
