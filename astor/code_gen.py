@@ -580,6 +580,9 @@ class SourceGenerator(ExplicitNodeVisitor):
 
             index = len(result)
             recurse(node)
+
+            # Flush trailing newlines (so that they are part of mystr)
+            self.write('')
             mystr = ''.join(result[index:])
             del result[index:]
             self.colinfo = res_index, str_index  # Put it back like we found it
