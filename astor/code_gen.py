@@ -22,7 +22,7 @@ import sys
 
 from .op_util import get_op_symbol, get_op_precedence, Precedence
 from .node_util import ExplicitNodeVisitor
-from .string_repr import pretty_string, _prep_triple_quotes
+from .string_repr import pretty_string, string_triplequote_repr
 from .source_repr import pretty_source
 
 
@@ -249,7 +249,7 @@ class SourceGenerator(ExplicitNodeVisitor):
 
         self.newline()
         self.indentation += indent
-        self.write('"""%s"""' % _prep_triple_quotes(value))
+        self.write(string_triplequote_repr(value))
         self.indentation -= indent
 
     def visit_arguments(self, node):

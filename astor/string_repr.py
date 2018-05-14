@@ -55,6 +55,12 @@ def _prep_triple_quotes(s, mysplit=mysplit, replacements=replacements):
     return ''.join(s)
 
 
+def string_triplequote_repr(s):
+    """Return string's python representation in triple quotes.
+    """
+    return '"""%s"""' % _prep_triple_quotes(s)
+
+
 def pretty_string(s, embedded, current_line, uni_lit=False,
                   min_trip_str=20, max_line=100):
     """There are a lot of reasons why we might not want to or
@@ -91,7 +97,7 @@ def pretty_string(s, embedded, current_line, uni_lit=False,
         if total_len < max_line and not _properly_indented(s, line_indent):
             return default
 
-    fancy = '"""%s"""' % _prep_triple_quotes(s)
+    fancy = string_triplequote_repr(s)
 
     # Sometimes this doesn't work.  One reason is that
     # the AST has no understanding of whether \r\n was
