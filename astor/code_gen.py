@@ -228,9 +228,9 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def docstring(self, node, indent=1):
         """
-        Write the function/module/class docstring attribute
+        Write the function/module/class docstring attribute.
 
-        This method has an effect only for python >= 3.7 . For python earlier
+        This method has an effect only for python >= 3.7. For python earlier
         versions the docstring was represented as the first expression in the
         function/module/class body.
 
@@ -240,7 +240,7 @@ class SourceGenerator(ExplicitNodeVisitor):
                 ast.Module, and 1 for ast.FunctionDef, ast.AsyncFunctionDef and
                 ast.ClassDef).
         """
-        if not sys.version_info >= (3, 7):
+        if sys.version_info < (3, 7):
             return
 
         value = getattr(node, 'docstring', None)
