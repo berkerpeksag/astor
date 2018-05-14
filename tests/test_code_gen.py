@@ -482,6 +482,16 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         '''
         self.assertSrcRoundtripsGtVer(source, (3, 6))
 
+    def test_docstring(self):
+        source = '''
+        def f(arg):
+            """
+            docstring
+            """
+            return 3
+        '''
+        self.assertSrcRoundtrips(source)
+
 
 if __name__ == '__main__':
     unittest.main()
