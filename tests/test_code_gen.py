@@ -482,13 +482,49 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         '''
         self.assertSrcRoundtripsGtVer(source, (3, 6))
 
-    def test_docstring(self):
+    def test_docstring_function(self):
         source = '''
         def f(arg):
             """
             docstring
             """
             return 3
+        '''
+        self.assertSrcRoundtrips(source)
+
+    def test_docstring_class(self):
+        source = '''
+        class Class:
+            """
+            docstring
+            """
+            pass
+        '''
+        self.assertSrcRoundtrips(source)
+
+    def test_docstring_method(self):
+        source = '''
+        class Class:
+
+            def f(arg):
+                """
+                docstring
+                """
+                return 3
+        '''
+        self.assertSrcRoundtrips(source)
+
+    def test_docstring_module(self):
+        source = '''
+        """
+        docstring1
+        """
+
+
+        class Class:
+
+            def f(arg):
+                pass
         '''
         self.assertSrcRoundtrips(source)
 
