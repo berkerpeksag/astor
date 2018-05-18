@@ -1,18 +1,13 @@
 sudo: false  # run travis jobs in containers
 language: python
 python:
-  - 2.6
   - 2.7
-  - 3.3
   - 3.4
   - 3.5
   - 3.6
   - pypy
   - pypy3.5
   - 3.7-dev
-matrix:
-  allow_failures:
-  - python: 2.6
 cache: pip
 install:
   - pip install tox-travis

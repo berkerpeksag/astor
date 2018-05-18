@@ -22,6 +22,9 @@ New features
 
 .. _`Issue 86`: https://github.com/berkerpeksag/astor/issues/86
 
+* Dropped support for Python 2.6 and Python 3.3. Even the latest version of pip
+  dropped its support for both of these versions.
+
 Bug fixes
 ~~~~~~~~~
 
