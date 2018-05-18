@@ -18,7 +18,7 @@ this code came from here (in 2012):
 """
 
 import ast
-import cmath
+import math
 import sys
 
 from .op_util import get_op_symbol, get_op_precedence, Precedence
@@ -639,23 +639,32 @@ class SourceGenerator(ExplicitNodeVisitor):
                   # constants
                   new=sys.version_info >= (3, 0)):
         with self.delimit(node) as delimiters:
-            if cmath.isinf(node.n) or cmath.isnan(node.n):
+            x = node.n
+
+            def part(p, imaginary):
                 # Represent infinity as 1e1000 and NaN as 1e1000-1e1000.
-                x = complex(node.n)
-                real, imag = (
-                    '1e1000' + s if cmath.isinf(p) and p > 0 else
-                    '-1e1000' + s if cmath.isinf(p) and p < 0 else
-                    '(1e1000%s-1e1000%s)' % (s, s) if cmath.isnan(p) else
-                    '' if p == 0 and not (
-                        isinstance(node.n, complex) and s == "j") else
-                    repr(p) + s
-                    for p, s in ((x.real, ''), (x.imag, 'j')))
-                self.write(
-                    '(%s%s%s)' % (real, ['+', ''][imag.startswith('-')], imag)
-                    if real and imag else
-                    real or imag)
+                s = 'j' if imaginary else ''
+                if math.isinf(p):
+                    if p < 0:
+                        return '-1e1000' + s
+                    return '1e1000' + s
+                if math.isnan(p):
+                    return '(1e1000%s-1e1000%s)' % (s, s)
+                return repr(p) + s
+
+            real = part(x.real if isinstance(x, complex) else x, imaginary=False)
+            if isinstance(x, complex):
+                imag = part(x.imag, imaginary=True)
+                if x.real == 0:
+                    s = imag
+                elif x.imag == 0:
+                    s = '(%s+0j)' % real
+                else:
+                    # x has nonzero real and imaginary parts.
+                    s = '(%s%s%s)' % (real, ['+', ''][imag.startswith('-')], imag)
             else:
-                self.write(repr(node.n))
+                s = real
+            self.write(s)
 
             # The Python 2.x compiler merges a unary minus
             # with a number.  This is a premature optimization
