@@ -18,6 +18,7 @@ this code came from here (in 2012):
 """
 
 import ast
+import math
 import sys
 
 from .op_util import get_op_symbol, get_op_precedence, Precedence
@@ -638,22 +639,38 @@ class SourceGenerator(ExplicitNodeVisitor):
                   # constants
                   new=sys.version_info >= (3, 0)):
         with self.delimit(node) as delimiters:
-            s = repr(node.n)
+            x = node.n
 
-            # Deal with infinities -- if detected, we can
-            # generate them with 1e1000.
-            signed = s.startswith('-')
-            if s[signed].isalpha():
-                im = s[-1] == 'j' and 'j' or ''
-                assert s[signed:signed + 3] == 'inf', s
-                s = '%s1e1000%s' % ('-' if signed else '', im)
+            def part(p, imaginary):
+                # Represent infinity as 1e1000 and NaN as 1e1000-1e1000.
+                s = 'j' if imaginary else ''
+                if math.isinf(p):
+                    if p < 0:
+                        return '-1e1000' + s
+                    return '1e1000' + s
+                if math.isnan(p):
+                    return '(1e1000%s-1e1000%s)' % (s, s)
+                return repr(p) + s
+
+            real = part(x.real if isinstance(x, complex) else x, imaginary=False)
+            if isinstance(x, complex):
+                imag = part(x.imag, imaginary=True)
+                if x.real == 0:
+                    s = imag
+                elif x.imag == 0:
+                    s = '(%s+0j)' % real
+                else:
+                    # x has nonzero real and imaginary parts.
+                    s = '(%s%s%s)' % (real, ['+', ''][imag.startswith('-')], imag)
+            else:
+                s = real
             self.write(s)
 
             # The Python 2.x compiler merges a unary minus
             # with a number.  This is a premature optimization
             # that we deal with here...
             if not new and delimiters.discard:
-                if signed:
+                if not isinstance(node.n, complex) and node.n < 0:
                     pow_lhs = Precedence.Pow + 1
                     delimiters.discard = delimiters.pp != pow_lhs
                 else:

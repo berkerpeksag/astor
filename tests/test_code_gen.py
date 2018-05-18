@@ -8,6 +8,7 @@ Copyright (c) 2015 Patrick Maupin
 """
 
 import ast
+import math
 import sys
 import textwrap
 
@@ -22,6 +23,8 @@ import astor
 def canonical(srctxt):
     return textwrap.dedent(srctxt).strip()
 
+def astornum(x):
+    return eval(astor.to_source(ast.Expression(body=ast.Num(n=x))))
 
 class Comparisons(object):
 
@@ -245,6 +248,14 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         """
         self.assertAstRoundtripsGtVer(source, (2, 7))
 
+    def test_complex(self):
+        source = """
+            (3) + (4j) + (1+2j) + (1+0j)
+        """
+        self.assertAstRoundtrips(source)
+
+        self.assertIsInstance(astornum(1+0j), complex)
+
     def test_inf(self):
         source = """
             (1e1000) + (-1e1000) + (1e1000j) + (-1e1000j)
@@ -258,6 +269,19 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         self.assertAstRoundtrips(source)
         # Returns 'a = 1e1000'.
         self.assertSrcDoesNotRoundtrip(source)
+
+        self.assertIsInstance(astornum((1e1000+1e1000)+0j), complex)
+
+    def test_nan(self):
+        self.assertTrue(math.isnan(astornum(float('nan'))))
+
+        v = astornum(complex(-1e1000, float('nan')))
+        self.assertEqual(v.real, -1e1000)
+        self.assertTrue(math.isnan(v.imag))
+
+        v = astornum(complex(float('nan'), -1e1000))
+        self.assertTrue(math.isnan(v.real))
+        self.assertEqual(v.imag, -1e1000)
 
     def test_unary(self):
         source = """
