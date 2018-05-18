@@ -18,6 +18,7 @@ this code came from here (in 2012):
 """
 
 import ast
+import cmath
 import sys
 
 from .op_util import get_op_symbol, get_op_precedence, Precedence
@@ -638,22 +639,29 @@ class SourceGenerator(ExplicitNodeVisitor):
                   # constants
                   new=sys.version_info >= (3, 0)):
         with self.delimit(node) as delimiters:
-            s = repr(node.n)
-
-            # Deal with infinities -- if detected, we can
-            # generate them with 1e1000.
-            signed = s.startswith('-')
-            if s[signed].isalpha():
-                im = s[-1] == 'j' and 'j' or ''
-                assert s[signed:signed + 3] == 'inf', s
-                s = '%s1e1000%s' % ('-' if signed else '', im)
-            self.write(s)
+            if cmath.isinf(node.n) or cmath.isnan(node.n):
+                # Represent infinity as 1e1000 and NaN as 1e1000-1e1000.
+                x = complex(node.n)
+                real, imag = (
+                    '1e1000' + s if cmath.isinf(p) and p > 0 else
+                    '-1e1000' + s if cmath.isinf(p) and p < 0 else
+                    '(1e1000%s-1e1000%s)' % (s, s) if cmath.isnan(p) else
+                    '' if p == 0 and not (
+                        isinstance(node.n, complex) and s == "j") else
+                    repr(p) + s
+                    for p, s in ((x.real, ''), (x.imag, 'j')))
+                self.write(
+                    '(%s%s%s)' % (real, ['+', ''][imag.startswith('-')], imag)
+                    if real and imag else
+                    real or imag)
+            else:
+                self.write(repr(node.n))
 
             # The Python 2.x compiler merges a unary minus
             # with a number.  This is a premature optimization
             # that we deal with here...
             if not new and delimiters.discard:
-                if signed:
+                if not isinstance(node.n, complex) and node.n < 0:
                     pow_lhs = Precedence.Pow + 1
                     delimiters.discard = delimiters.pp != pow_lhs
                 else:

@@ -37,6 +37,12 @@ Bug fixes
 .. _`Issue 89`: https://github.com/berkerpeksag/astor/issues/89
 .. _`Issue 101`: https://github.com/berkerpeksag/astor/issues/101
 
+* Improved code generation to support ``ast.Num`` nodes containing infinities
+  or NaNs.
+  (Reported and fixed by Kodi Arfer in `Issue 85`_ and `Issue 100`_.)
+
+.. _`Issue 85`: https://github.com/berkerpeksag/astor/issues/85
+.. _`Issue 100`: https://github.com/berkerpeksag/astor/issues/100
 
 0.6.2 - 2017-11-11
 ------------------
