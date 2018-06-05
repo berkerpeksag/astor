@@ -33,12 +33,7 @@ Bug fixes
   (Reported by Felix Yan and contributed by Radomír Bosák in
   `Issue 89`_.)
 
-* Fixed docstring generation for Python 3.7+
-  (Reported by Kodi Arfer and contributed by Radomír Bosák in
-  `Issue 101`_.)
-
 .. _`Issue 89`: https://github.com/berkerpeksag/astor/issues/89
-.. _`Issue 101`: https://github.com/berkerpeksag/astor/issues/101
 
 * Improved code generation to support ``ast.Num`` nodes containing infinities
   or NaNs.
