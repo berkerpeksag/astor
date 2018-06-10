@@ -94,8 +94,9 @@ class CodeToAst(object):
         self.cache = cache or {}
         self.func_types = [
             ast.FunctionDef,
-            ast.AsyncFunctionDef,
         ]
+        if hasattr(ast, "AsyncFunctionDef"):
+            self.func_types.append(ast.AsyncFunctionDef)
         self.block_types = [
             ast.If,
             ast.For,
@@ -105,10 +106,14 @@ class CodeToAst(object):
             ast.With,
             ast.ClassDef,
             ast.FunctionDef,
-            ast.AsyncFunctionDef,
-            ast.AsyncFor,
-            ast.AsyncWith,
         ]
+        for async_node in ["AsyncFunctionDef", "AsyncFor", "AsyncWith"]:
+            try:
+                node = getattr(ast, async_node)
+            except AttributeError:
+                continue
+            else:
+                self.block_types.append(node)
 
     def _find_funcs(self, filename, parent_ast):
         cache = self.cache
