@@ -92,6 +92,32 @@ class CodeToAst(object):
 
     def __init__(self, cache=None):
         self.cache = cache or {}
+        self.func_types = [
+            ast.FunctionDef,
+            ast.AsyncFunctionDef,
+        ]
+        self.block_types = [
+            ast.If,
+            ast.For,
+            ast.While,
+            ast.Try,
+            ast.ExceptHandler,
+            ast.With,
+            ast.ClassDef,
+            ast.FunctionDef,
+            ast.AsyncFunctionDef,
+            ast.AsyncFor,
+            ast.AsyncWith,
+        ]
+
+    def _find_funcs(self, filename, parent_ast):
+        cache = self.cache
+        for item in parent_ast.body:
+            if type(item) in self.func_types:
+                cache[(filename, item.lineno)] = item
+                self._find_funcs(filename, item)
+            elif type(item) in self.block_types:
+                self._find_funcs(filename, item)
 
     def __call__(self, codeobj):
         cache = self.cache
@@ -101,10 +127,7 @@ class CodeToAst(object):
             return result
         fname = key[0]
         cache[(fname, 0)] = mod_ast = self.parse_file(fname)
-        for obj in mod_ast.body:
-            if not isinstance(obj, ast.FunctionDef):
-                continue
-            cache[(fname, obj.lineno)] = obj
+        self._find_funcs(fname, mod_ast)
         return cache[key]
 
 
