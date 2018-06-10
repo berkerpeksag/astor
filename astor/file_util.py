@@ -101,15 +101,15 @@ class CodeToAst(object):
             ast.If,
             ast.For,
             ast.While,
-            ast.Try,
             ast.ExceptHandler,
             ast.With,
             ast.ClassDef,
             ast.FunctionDef,
         ]
-        for async_node in ["AsyncFunctionDef", "AsyncFor", "AsyncWith"]:
+        version_specific_nodes = ["AsyncFunctionDef", "AsyncFor", "AsyncWith", "Try"]
+        for version_specific_node in version_specific_nodes:
             try:
-                node = getattr(ast, async_node)
+                node = getattr(ast, version_specific_node)
             except AttributeError:
                 continue
             else:
