@@ -14,7 +14,7 @@ import warnings
 from .code_gen import SourceGenerator, to_source  # NOQA
 from .node_util import iter_node, strip_tree, dump_tree  # NOQA
 from .node_util import ExplicitNodeVisitor  # NOQA
-from .file_util import CodeToAst, code_to_ast  # NOQA
+from .file_util import CodeToAst, code_to_ast, json_to_ast  # NOQA
 from .op_util import get_op_symbol, get_op_precedence  # NOQA
 from .op_util import symbol_data  # NOQA
 from .tree_walk import TreeWalk  # NOQA
