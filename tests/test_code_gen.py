@@ -102,7 +102,7 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         self.assertSrcRoundtrips('{}')
         # Python has no literal for empty sets, but code_gen should produce an
         # expression that evaluates to one.
-        self.assertEquals(astorexpr(ast.Set([])), set())
+        self.assertEqual(astorexpr(ast.Set([])), set())
 
     def test_dictionary_literals(self):
         source = "{'a': 1, 'b': 2}"
