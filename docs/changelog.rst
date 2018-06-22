@@ -42,6 +42,11 @@ Bug fixes
 .. _`Issue 85`: https://github.com/berkerpeksag/astor/issues/85
 .. _`Issue 100`: https://github.com/berkerpeksag/astor/issues/100
 
+* Improved code generation to support empty sets.
+  (Reported and fixed by Kodi Arfer in `Issue 108`_.)
+
+.. _`Issue 108`: https://github.com/berkerpeksag/astor/issues/108
+
 0.6.2 - 2017-11-11
 ------------------
 

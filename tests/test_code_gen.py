@@ -23,8 +23,11 @@ import astor
 def canonical(srctxt):
     return textwrap.dedent(srctxt).strip()
 
+def astorexpr(x):
+    return eval(astor.to_source(ast.Expression(body=x)))
+
 def astornum(x):
-    return eval(astor.to_source(ast.Expression(body=ast.Num(n=x))))
+    return astorexpr(ast.Num(n=x))
 
 class Comparisons(object):
 
@@ -92,6 +95,14 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         self.assertSrcRoundtrips(source)
         source = "from ..aaa import foo, bar as bar2"
         self.assertSrcRoundtrips(source)
+
+    def test_empty_iterable_literals(self):
+        self.assertSrcRoundtrips('()')
+        self.assertSrcRoundtrips('[]')
+        self.assertSrcRoundtrips('{}')
+        # Python has no literal for empty sets, but code_gen should produce an
+        # expression that evaluates to one.
+        self.assertEqual(astorexpr(ast.Set([])), set())
 
     def test_dictionary_literals(self):
         source = "{'a': 1, 'b': 2}"

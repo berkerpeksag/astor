@@ -663,8 +663,14 @@ class SourceGenerator(ExplicitNodeVisitor):
             self.comma_list(node.elts)
 
     def visit_Set(self, node):
-        with self.delimit('{}'):
-            self.comma_list(node.elts)
+        if node.elts:
+            with self.delimit('{}'):
+                self.comma_list(node.elts)
+        else:
+            # If we tried to use "{}" to represent an empty set, it would be
+            # interpreted as an empty dictionary. We can't use "set()" either
+            # because the name "set" might be rebound.
+            self.write('{1}.__class__()')
 
     def visit_Dict(self, node):
         set_precedence(Precedence.Comma, *node.values)
