@@ -46,6 +46,25 @@ class PublicAPITestCase(unittest.TestCase):
             'astor.code_gen module instead.'
         )
 
+    def test_to_source_invalid_customize_generator(self):
+        class InvalidGenerator:
+            pass
+
+        with self.assertRaises(TypeError) as cm:
+            astor.to_source(..., source_generator_class=InvalidGenerator)
+        self.assertEqual(
+            str(cm.exception),
+            'source_generator_class should be a subclass of SourceGenerator',
+        )
+
+        with self.assertRaises(TypeError) as cm:
+            astor.to_source(..., source_generator_class=astor.SourceGenerator)
+        self.assertEqual(
+            str(cm.exception),
+            'source_generator_class should be a subclass of SourceGenerator',
+        )
+
+
 
 class FastCompareTestCase(unittest.TestCase):
 
