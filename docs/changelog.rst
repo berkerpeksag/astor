@@ -2,8 +2,8 @@
 Release Notes
 =============
 
-0.7.0 - not released
---------------------
+0.7.0 - 2018-07-05
+------------------
 
 New features
 ~~~~~~~~~~~~
@@ -22,8 +22,7 @@ New features
 
 .. _`Issue 86`: https://github.com/berkerpeksag/astor/issues/86
 
-* Dropped support for Python 2.6 and Python 3.3. Even the latest version of pip
-  dropped its support for both of these versions.
+* Dropped support for Python 2.6 and Python 3.3.
 
 Bug fixes
 ~~~~~~~~~
