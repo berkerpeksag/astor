@@ -11,7 +11,7 @@
 astor -- AST observe/rewrite
 ############################
 
-:PyPI: https://pypi.python.org/pypi/astor
+:PyPI: https://pypi.org/project/astor/
 :Source: https://github.com/berkerpeksag/astor
 :Issues: https://github.com/berkerpeksag/astor/issues/
 :License: 3-clause BSD

@@ -8,7 +8,7 @@ release:
 register:
 	python setup.py sdist register -r pypi
 
-# Test it via `pip install -i https://testpypi.python.org/pypi <project_name>`
+# Test it via `pip install -i https://test.pypi.org/simple/ <project_name>`
 test-release:
 	python setup.py sdist bdist_wheel upload -r test
 
