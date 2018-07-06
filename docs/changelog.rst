@@ -15,6 +15,17 @@ Bug fixes
 
 *
 
+0.7.1 - 2018-07-06
+------------------
+
+Bug fixes
+~~~~~~~~~
+
+* Fixed installation error by adding the ``setuputils.py`` helper to the sdist.
+  (Reported by Adam and fixed by Berker Peksag in `Issue 116`_.)
+
+.. _`Issue 116`: https://github.com/berkerpeksag/astor/issues/116
+
 0.7.0 - 2018-07-05
 ------------------
 
