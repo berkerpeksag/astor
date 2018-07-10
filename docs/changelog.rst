@@ -111,6 +111,10 @@ New features
 
 * Dropped support for Python 2.6 and Python 3.3.
 
+* Added ability to load AST in JSON format by the  `json_to_ast()` function.
+
+.. _`Pull Request 110`: https://github.com/berkerpeksag/astor/pull/110
+
 Bug fixes
 ~~~~~~~~~
 
