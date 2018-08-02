@@ -9,8 +9,10 @@ python:
   - pypy3.5
 matrix:
   include:
+  # See https://github.com/travis-ci/travis-ci/issues/9069
+  # for more information.
   - python: 3.7
-    sudo: required  # travis-ci/travis-ci#9069
+    sudo: required
     dist: xenial
 cache: pip
 install:
