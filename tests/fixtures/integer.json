@@ -1,0 +1,25 @@
+{
+  "ast_type": "Module",
+  "body": [
+    {
+      "ast_type": "Assign",
+      "targets": [
+        {
+          "ast_type": "Name",
+          "id": "x",
+          "ctx": { "ast_type": "Store" },
+          "lineno": 1,
+          "col_offset": 0
+        }
+      ],
+      "value": {
+        "ast_type": "Num",
+        "n": { "ast_type": "int", "n": 42 },
+        "lineno": 1,
+        "col_offset": 2
+      },
+      "lineno": 1,
+      "col_offset": 0
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "ast_type": "Module",
+  "body": [
+    {
+      "ast_type": "ClassDef",
+      "bases": [],
+      "body": [
+        {
+          "args": {
+            "args": [
+              {
+                "annotation": null,
+                "arg": "self",
+                "ast_type": "arg",
+                "col_offset": 17,
+                "lineno": 3
+              },
+              {
+                "annotation": null,
+                "arg": "x",
+                "ast_type": "arg",
+                "col_offset": 23,
+                "lineno": 3
+              }
+            ],
+            "ast_type": "arguments",
+            "defaults": [],
+            "kw_defaults": [],
+            "kwarg": null,
+            "kwonlyargs": [],
+            "vararg": null
+          },
+          "ast_type": "FunctionDef",
+          "body": [
+            {
+              "ast_type": "Assign",
+              "col_offset": 8,
+              "lineno": 4,
+              "targets": [
+                {
+                  "ast_type": "Attribute",
+                  "attr": "x",
+                  "col_offset": 8,
+                  "ctx": { "ast_type": "Store" },
+                  "lineno": 4,
+                  "value": {
+                    "ast_type": "Name",
+                    "col_offset": 8,
+                    "ctx": { "ast_type": "Load" },
+                    "id": "self",
+                    "lineno": 4
+                  }
+                }
+              ],
+              "value": {
+                "ast_type": "Name",
+                "col_offset": 17,
+                "ctx": { "ast_type": "Load" },
+                "id": "x",
+                "lineno": 4
+              }
+            }
+          ],
+          "col_offset": 4,
+          "decorator_list": [],
+          "lineno": 3,
+          "name": "__init__",
+          "returns": null
+        }
+      ],
+      "col_offset": 0,
+      "decorator_list": [],
+      "keywords": [],
+      "kwargs": null,
+      "lineno": 2,
+      "name": "Test",
+      "starargs": null
+    }
+  ]
+}

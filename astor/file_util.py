@@ -143,6 +143,14 @@ class JsonToAst(object):
 
                 args[k] = arg
 
+        if sys.version_info.major == 2:
+            for k, v in args.iteritems():
+                if isinstance(v, unicode):
+                    try:
+                        args[k] = v.encode("ascii")
+                    except UnicodeEncodeError:
+                        pass
+
         ast_node = klass(**args)
 
         return ast_node

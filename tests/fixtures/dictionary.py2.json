@@ -1,0 +1,59 @@
+{
+  "ast_type": "Module",
+  "body": [
+    {
+      "ast_type": "Expr",
+      "col_offset": 0,
+      "lineno": 2,
+      "value": {
+        "ast_type": "Dict",
+        "col_offset": 0,
+        "keys": [
+          { "ast_type": "Str", "col_offset": 4, "lineno": 3, "s": "string" },
+          { "ast_type": "Str", "col_offset": 4, "lineno": 4, "s": "int" },
+          { "ast_type": "Str", "col_offset": 4, "lineno": 5, "s": "float" },
+          { "ast_type": "Str", "col_offset": 4, "lineno": 6, "s": "boolean" },
+          { "ast_type": "Str", "col_offset": 4, "lineno": 7, "s": "null" },
+          { "ast_type": "Str", "col_offset": 4, "lineno": 8, "s": "dict" }
+        ],
+        "lineno": 2,
+        "values": [
+          { "ast_type": "Str", "col_offset": 14, "lineno": 3, "s": "A string" },
+          {
+            "ast_type": "Num",
+            "col_offset": 11,
+            "lineno": 4,
+            "n": { "ast_type": "int", "n": 42 }
+          },
+          {
+            "ast_type": "Num",
+            "col_offset": 13,
+            "lineno": 5,
+            "n": { "ast_type": "float", "n": 3.14 }
+          },
+          {
+            "ast_type": "Name",
+            "col_offset": 15,
+            "ctx": { "ast_type": "Load" },
+            "id": "True",
+            "lineno": 6
+          },
+          {
+            "ast_type": "Name",
+            "col_offset": 12,
+            "ctx": { "ast_type": "Load" },
+            "id": "None",
+            "lineno": 7
+          },
+          {
+            "ast_type": "Dict",
+            "col_offset": 12,
+            "keys": [],
+            "lineno": 8,
+            "values": []
+          }
+        ]
+      }
+    }
+  ]
+}
