@@ -45,6 +45,12 @@ New features
 .. _`Issue 142`: https://github.com/berkerpeksag/astor/issues/142
 .. _`PR 143`: https://github.com/berkerpeksag/astor/pull/143
 
+* Added ability to load AST in JSON format by the :func:`astor.json_to_ast` function.
+
+  (Contributed by Daniele Esposti in `Pull Request 110`_.)
+
+.. _`PR 110`: https://github.com/berkerpeksag/astor/pull/110
+
 Bug fixes
 ~~~~~~~~~
 
@@ -74,7 +80,7 @@ Bug fixes
 * Fixed :class:`astor.tree_walk.TreeWalk` when attempting to access attributes
   created by Python's type system (such as ``__dict__`` and ``__weakref__``)
   (Reported and fixed by esupoff in `Issue 136`_ and `PR 137`_.)
-  
+
 .. _`Issue 136`: https://github.com/berkerpeksag/astor/issues/136
 .. _`PR 137`: https://github.com/berkerpeksag/astor/pull/137
 
@@ -110,10 +116,6 @@ New features
 .. _`Issue 86`: https://github.com/berkerpeksag/astor/issues/86
 
 * Dropped support for Python 2.6 and Python 3.3.
-
-* Added ability to load AST in JSON format by the  `json_to_ast()` function.
-
-.. _`Pull Request 110`: https://github.com/berkerpeksag/astor/pull/110
 
 Bug fixes
 ~~~~~~~~~
