@@ -24,6 +24,8 @@ class PublicAPITestCase(unittest.TestCase):
     def test_aliases(self):
         self.assertIs(astor.parse_file, astor.code_to_ast.parse_file)
 
+    @unittest.skipUnless(sys.version_info >= (3, 2),
+                         "TestCase.assertWarns introduced in Python 3.2")
     def test_codegen_from_root(self):
         with self.assertWarns(DeprecationWarning) as cm:
             astor = import_fresh_module('astor')
@@ -35,6 +37,8 @@ class PublicAPITestCase(unittest.TestCase):
             'astor.codegen is deprecated.  Please use astor.code_gen.'
         )
 
+    @unittest.skipUnless(sys.version_info >= (3, 2),
+                         "TestCase.assertWarns introduced in Python 3.2")
     def test_codegen_as_submodule(self):
         with self.assertWarns(DeprecationWarning) as cm:
             import astor.codegen
