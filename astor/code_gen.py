@@ -400,8 +400,12 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.write(node.context_expr)
         self.conditional_write(' as ', node.optional_vars)
 
+    def _handle_name_constant(self, value):
+        self.write(str(value))
+
+    # deprecated in Python 3.8
     def visit_NameConstant(self, node):
-        self.write(str(node.value))
+        self._handle_name_constant(node.value)
 
     def visit_Pass(self, node):
         self.statement(node, 'pass')
@@ -530,15 +534,65 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_Name(self, node):
         self.write(node.id)
 
+    # ast.Constant is new in Python 3.6 and it replaces ast.Bytes,
+    # ast.Ellipsis, ast.NameConstant, ast.Num, ast.Str in Python 3.8
+    def visit_Constant(self, node):
+        value = node.value
+        if isinstance(value, (complex, float, int)):
+            self._handle_numeric_constant(value)
+        elif isinstance(value, (bool, type(None))):
+            self._handle_name_constant(value)
+        elif isinstance(value, str):
+            precedence = self.get__pp(node)
+            self._handle_string_constant(value, precedence)
+        elif isinstance(value, bytes):
+            self._handle_bytes_constant(value)
+        elif value is Ellipsis:
+            self._handle_ellipsis_constant()
+        else:
+            kind = type(value).__name__
+            assert False, "Unexpected constant node type %s" % kind
+
     def visit_JoinedStr(self, node):
-        self.visit_Str(node, True)
+        precedence = self.get__pp(node)
 
-    def visit_Str(self, node, is_joined=False):
+        has_ast_constant = sys.version_info >= (3, 6)
 
+        def recurse(node):
+            for value in node.values:
+                if isinstance(value, ast.Str):
+                    self.write(value.s)
+                elif isinstance(value, ast.FormattedValue):
+                    with self.delimit('{}'):
+                        self.visit(value.value)
+                        if value.conversion != -1:
+                            self.write('!%s' % chr(value.conversion))
+                        if value.format_spec is not None:
+                            self.write(':')
+                            recurse(value.format_spec)
+                elif has_ast_constant and isinstance(value, ast.Constant):
+                    self.write(value.value)
+                else:
+                    kind = type(value).__name__
+                    assert False, 'Invalid node %s inside JoinedStr' % kind
+
+        self._handle_string_constant(node, precedence, join_fn=lambda: recurse(node))
+
+    def _handle_string_constant(self, value, precedence, join_fn=None):
+        """Private helper which emits string literals in all cases.
+
+        `value` is the inner string value of the current node.
+
+        `precedence` should be passed from the main visitor function by
+        calling `self.get__pp` on the node.
+
+        `join_fn` is a function of no arguments which, if provided, is called for
+        string constants which should be joined. The join_fn can close over the
+        input node, if it is needed, since this function does not have access
+        to the original AST node."""
         # embedded is used to control when we might want
         # to use a triple-quoted string.  We determine
         # if we are in an assignment and/or in an expression
-        precedence = self.get__pp(node)
         embedded = ((precedence > Precedence.Expr) +
                     (precedence >= Precedence.Assign))
 
@@ -557,30 +611,13 @@ class SourceGenerator(ExplicitNodeVisitor):
             current_line[0] = current_line[0][str_index:]
         current_line = ''.join(current_line)
 
-        if is_joined:
-
+        if join_fn:
             # Handle new f-strings.  This is a bit complicated, because
             # the tree can contain subnodes that recurse back to JoinedStr
             # subnodes...
 
-            def recurse(node):
-                for value in node.values:
-                    if isinstance(value, ast.Str):
-                        self.write(value.s)
-                    elif isinstance(value, ast.FormattedValue):
-                        with self.delimit('{}'):
-                            self.visit(value.value)
-                            if value.conversion != -1:
-                                self.write('!%s' % chr(value.conversion))
-                            if value.format_spec is not None:
-                                self.write(':')
-                                recurse(value.format_spec)
-                    else:
-                        kind = type(value).__name__
-                        assert False, 'Invalid node %s inside JoinedStr' % kind
-
             index = len(result)
-            recurse(node)
+            join_fn()
 
             # Flush trailing newlines (so that they are part of mystr)
             self.write('')
@@ -590,12 +627,12 @@ class SourceGenerator(ExplicitNodeVisitor):
             uni_lit = False  # No formatted byte strings
 
         else:
-            mystr = node.s
+            mystr = value
             uni_lit = self.using_unicode_literals
 
         mystr = self.pretty_string(mystr, embedded, current_line, uni_lit)
 
-        if is_joined:
+        if join_fn:
             mystr = 'f' + mystr
 
         self.write(mystr)
@@ -604,39 +641,55 @@ class SourceGenerator(ExplicitNodeVisitor):
         if lf:
             self.colinfo = len(result) - 1, lf
 
+    # deprecated in Python 3.8
+    def visit_Str(self, node, is_joined=False):
+        precedence = self.get__pp(node)
+        self._handle_string_constant(node.s, precedence)
+
+    def _handle_bytes_constant(self, value):
+        self.write(repr(value))
+
+    # deprecated in Python 3.8
     def visit_Bytes(self, node):
-        self.write(repr(node.s))
+        self._handle_bytes_constant(node.s)
+
+    def _handle_numeric_constant(self, value):
+        x = value
+
+        def part(p, imaginary):
+            # Represent infinity as 1e1000 and NaN as 1e1000-1e1000.
+            s = 'j' if imaginary else ''
+            if math.isinf(p):
+                if p < 0:
+                    return '-1e1000' + s
+                return '1e1000' + s
+            if math.isnan(p):
+                return '(1e1000%s-1e1000%s)' % (s, s)
+            return repr(p) + s
+
+        real = part(x.real if isinstance(x, complex) else x, imaginary=False)
+        if isinstance(x, complex):
+            imag = part(x.imag, imaginary=True)
+            if x.real == 0:
+                s = imag
+            elif x.imag == 0:
+                s = '(%s+0j)' % real
+            else:
+                # x has nonzero real and imaginary parts.
+                s = '(%s%s%s)' % (real, ['+', ''][imag.startswith('-')], imag)
+        else:
+            s = real
+        self.write(s)
 
     def visit_Num(self, node,
                   # constants
                   new=sys.version_info >= (3, 0)):
         with self.delimit(node) as delimiters:
-            x = node.n
+            self._handle_numeric_constant(node.n)
 
-            def part(p, imaginary):
-                # Represent infinity as 1e1000 and NaN as 1e1000-1e1000.
-                s = 'j' if imaginary else ''
-                if math.isinf(p):
-                    if p < 0:
-                        return '-1e1000' + s
-                    return '1e1000' + s
-                if math.isnan(p):
-                    return '(1e1000%s-1e1000%s)' % (s, s)
-                return repr(p) + s
-
-            real = part(x.real if isinstance(x, complex) else x, imaginary=False)
-            if isinstance(x, complex):
-                imag = part(x.imag, imaginary=True)
-                if x.real == 0:
-                    s = imag
-                elif x.imag == 0:
-                    s = '(%s+0j)' % real
-                else:
-                    # x has nonzero real and imaginary parts.
-                    s = '(%s%s%s)' % (real, ['+', ''][imag.startswith('-')], imag)
-            else:
-                s = real
-            self.write(s)
+            # We can leave the delimiters handling in visit_Num
+            # since this is meant to handle a Python 2.x specific
+            # issue and ast.Constant exists only in 3.6+
 
             # The Python 2.x compiler merges a unary minus
             # with a number.  This is a premature optimization
@@ -762,8 +815,11 @@ class SourceGenerator(ExplicitNodeVisitor):
             self.visit_arguments(node.args)
             self.write(': ', node.body)
 
-    def visit_Ellipsis(self, node):
+    def _handle_ellipsis_constant(self):
         self.write('...')
+
+    def visit_Ellipsis(self, node):
+        self._handle_ellipsis_constant()
 
     def visit_ListComp(self, node):
         with self.delimit('[]'):
