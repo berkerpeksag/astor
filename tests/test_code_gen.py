@@ -442,6 +442,45 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         """
         self.assertSrcRoundtripsGtVer(source, (3, 6))
 
+    @unittest.skipIf(sys.version_info >= (3, 8),
+                     "ast.Bytes, ast.Ellipsis, ast.NameConstant, ast.Num, and ast.Str deprecated in Python 3.8")
+    def test_deprecated_constant_nodes(self):
+        tree = ast.Num(3)
+        source = "3"
+        self.assertEqual(self.to_source(tree).rstrip(), source)
+
+        tree = ast.Num(-93)
+        source = "-93"
+        self.assertEqual(self.to_source(tree).rstrip(), source)
+
+        tree = ast.Num(837.3888)
+        source = "837.3888"
+        self.assertEqual(self.to_source(tree).rstrip(), source)
+
+        tree = ast.Num(-0.9877)
+        source = "-0.9877"
+        self.assertEqual(self.to_source(tree).rstrip(), source)
+
+        tree = ast.NameConstant(value=True)
+        source = "True"
+        self.assertEqual(self.to_source(tree).rstrip(), source)
+
+        tree = ast.NameConstant(value=False)
+        source = "False"
+        self.assertEqual(self.to_source(tree).rstrip(), source)
+
+        tree = ast.NameConstant(value=None)
+        source = "None"
+        self.assertEqual(self.to_source(tree).rstrip(), source)
+
+        tree = ast.Ellipsis()
+        source = "..."
+        self.assertEqual(self.to_source(tree).rstrip(), source)
+
+        tree = ast.Str("String")
+        source = '"String"'
+        self.assertEqual(self.to_source(tree).rstrip(), source)
+
     @unittest.skipUnless(sys.version_info >= (3, 6),
                          "ast.Constant introduced in Python 3.6")
     def test_constant_nodes(self):
