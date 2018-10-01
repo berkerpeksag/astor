@@ -642,7 +642,7 @@ class SourceGenerator(ExplicitNodeVisitor):
             self.colinfo = len(result) - 1, lf
 
     # deprecated in Python 3.8
-    def visit_Str(self, node, is_joined=False):
+    def visit_Str(self, node):
         precedence = self.get__pp(node)
         self._handle_string_constant(node.s, precedence)
 

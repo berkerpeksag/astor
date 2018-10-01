@@ -442,6 +442,45 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         """
         self.assertSrcRoundtripsGtVer(source, (3, 6))
 
+    @unittest.skipUnless(sys.version_info >= (3, 6),
+                         "ast.Constant introduced in Python 3.6")
+    def test_constant_nodes(self):
+        tree = ast.Constant(value=3)
+        source = "3"
+        self.assertEqual(self.to_source(tree).rstrip(), source)
+
+        tree = ast.Constant(value=-93)
+        source = "-93"
+        self.assertEqual(self.to_source(tree).rstrip(), source)
+
+        tree = ast.Constant(value=837.3888)
+        source = "837.3888"
+        self.assertEqual(self.to_source(tree).rstrip(), source)
+
+        tree = ast.Constant(value=-0.9877)
+        source = "-0.9877"
+        self.assertEqual(self.to_source(tree).rstrip(), source)
+
+        tree = ast.Constant(value=True)
+        source = "True"
+        self.assertEqual(self.to_source(tree).rstrip(), source)
+
+        tree = ast.Constant(value=False)
+        source = "False"
+        self.assertEqual(self.to_source(tree).rstrip(), source)
+
+        tree = ast.Constant(value=None)
+        source = "None"
+        self.assertEqual(self.to_source(tree).rstrip(), source)
+
+        tree = ast.Constant(value=Ellipsis)
+        source = "..."
+        self.assertEqual(self.to_source(tree).rstrip(), source)
+
+        tree = ast.Constant(value="String")
+        source = '"String"'
+        self.assertEqual(self.to_source(tree).rstrip(), source)
+
     def test_annassign(self):
         source = """
             a: int
