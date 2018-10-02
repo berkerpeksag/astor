@@ -38,6 +38,9 @@ class Comparisons(object):
         dmp2 = astor.dump_tree(ast2)
         self.assertEqual(dmp1, dmp2)
 
+    def assertAstEqualsSource(self, tree, source):
+        self.assertEqual(self.to_source(tree).rstrip(), source)
+
     def assertAstRoundtrips(self, srctxt):
         """This asserts that the reconstituted source
            code can be compiled into the exact same AST
@@ -445,107 +448,103 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
     @unittest.skipUnless(sys.version_info <= (3, 3),
                          "ast.Name used for True, False, None until Python 3.4")
     def test_deprecated_constants_as_name(self):
-        tree = ast.Assign(targets=[ast.Name(id='spam')], value=ast.Name(id='True'))
-        source = "spam = True"
-        self.assertEqual(self.to_source(tree).rstrip(), source)
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Name(id='True')),
+            "spam = True")
 
-        tree = ast.Assign(targets=[ast.Name(id='spam')], value=ast.Name(id='False'))
-        source = "spam = False"
-        self.assertEqual(self.to_source(tree).rstrip(), source)
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Name(id='False')),
+            "spam = False")
 
-        tree = ast.Assign(targets=[ast.Name(id='spam')], value=ast.Name(id='None'))
-        source = "spam = None"
-        self.assertEqual(self.to_source(tree).rstrip(), source)
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Name(id='None')),
+            "spam = None")
 
     @unittest.skipUnless((3, 4) <= sys.version_info <= (3, 8),
                          "ast.NameConstant introduced in Python 3.4, deprecated in 3.8")
     def test_deprecated_name_constants(self):
-        tree = ast.Assign(targets=[ast.Name(id='spam')], value=ast.NameConstant(value=True))
-        source = "spam = True"
-        self.assertEqual(self.to_source(tree).rstrip(), source)
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.NameConstant(value=True)),
+            "spam = True")
 
-        tree = ast.Assign(targets=[ast.Name(id='spam')], value=ast.NameConstant(value=False))
-        source = "spam = False"
-        self.assertEqual(self.to_source(tree).rstrip(), source)
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.NameConstant(value=False)),
+            "spam = False")
 
-        tree = ast.Assign(targets=[ast.Name(id='spam')], value=ast.NameConstant(value=None))
-        source = "spam = None"
-        self.assertEqual(self.to_source(tree).rstrip(), source)
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.NameConstant(value=None)),
+            "spam = None")
 
     @unittest.skipIf(sys.version_info >= (3, 8),
                      "ast.Bytes, ast.Ellipsis, ast.Num, and ast.Str deprecated in Python 3.8")
     def test_deprecated_constant_nodes(self):
-        tree = ast.Assign(targets=[ast.Name(id='spam')], value=ast.Num(3))
-        source = "spam = 3"
-        self.assertEqual(self.to_source(tree).rstrip(), source)
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Num(3)),
+            "spam = 3")
 
-        tree = ast.Assign(targets=[ast.Name(id='spam')], value=ast.Num(-93))
-        source = "spam = -93"
-        self.assertEqual(self.to_source(tree).rstrip(), source)
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Num(-93)),
+            "spam = -93")
 
-        tree = ast.Assign(targets=[ast.Name(id='spam')], value=ast.Num(837.3888))
-        source = "spam = 837.3888"
-        self.assertEqual(self.to_source(tree).rstrip(), source)
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Num(837.3888)),
+            "spam = 837.3888")
 
-        tree = ast.Assign(targets=[ast.Name(id='spam')], value=ast.Num(-0.9877))
-        source = "spam = -0.9877"
-        self.assertEqual(self.to_source(tree).rstrip(), source)
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Num(-0.9877)),
+            "spam = -0.9877")
 
-        tree = ast.Ellipsis()
-        source = "..."
-        self.assertEqual(self.to_source(tree).rstrip(), source)
+        self.assertAstEqualsSource(ast.Ellipsis(), "...")
 
         if sys.version_info >= (3, 0):
-            tree = ast.Assign(targets=[ast.Name(id='spam')], value=ast.Bytes(b"Bytes"))
-            source = "spam = b'Bytes'"
-            self.assertEqual(self.to_source(tree).rstrip(), source)
+            self.assertAstEqualsSource(
+                ast.Assign(targets=[ast.Name(id='spam')], value=ast.Bytes(b"Bytes")),
+                "spam = b'Bytes'")
 
-        tree = ast.Assign(targets=[ast.Name(id='spam')], value=ast.Str("String"))
-        source = "spam = 'String'"
-        self.assertEqual(self.to_source(tree).rstrip(), source)
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Str("String")),
+            "spam = 'String'")
 
     @unittest.skipUnless(sys.version_info >= (3, 6),
                          "ast.Constant introduced in Python 3.6")
     def test_constant_nodes(self):
-        tree = ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value=3))
-        source = "spam = 3"
-        self.assertEqual(self.to_source(tree).rstrip(), source)
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value=3)),
+            "spam = 3")
 
-        tree = ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value=-93))
-        source = "spam = -93"
-        self.assertEqual(self.to_source(tree).rstrip(), source)
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value=-93)),
+            "spam = -93")
 
-        tree = ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value=837.3888))
-        source = "spam = 837.3888"
-        self.assertEqual(self.to_source(tree).rstrip(), source)
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value=837.3888)),
+            "spam = 837.3888")
 
-        tree = ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value=-0.9877))
-        source = "spam = -0.9877"
-        self.assertEqual(self.to_source(tree).rstrip(), source)
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value=-0.9877)),
+            "spam = -0.9877")
 
-        tree = ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value=True))
-        source = "spam = True"
-        self.assertEqual(self.to_source(tree).rstrip(), source)
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value=True)),
+            "spam = True")
 
-        tree = ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value=False))
-        source = "spam = False"
-        self.assertEqual(self.to_source(tree).rstrip(), source)
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value=False)),
+            "spam = False")
 
-        tree = ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value=None))
-        source = "spam = None"
-        self.assertEqual(self.to_source(tree).rstrip(), source)
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value=None)),
+            "spam = None")
 
-        tree = ast.Constant(value=Ellipsis)
-        source = "..."
-        self.assertEqual(self.to_source(tree).rstrip(), source)
+        self.assertAstEqualsSource(ast.Constant(value=Ellipsis), "...")
 
-        tree = ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(b"Bytes"))
-        source = "spam = b'Bytes'"
-        self.assertEqual(self.to_source(tree).rstrip(), source)
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(b"Bytes")),
+            "spam = b'Bytes'")
 
-        tree = ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value="String"))
-        source = "spam = 'String'"
-        self.assertEqual(self.to_source(tree).rstrip(), source)
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value="String")),
+            "spam = 'String'")
 
     def test_annassign(self):
         source = """
