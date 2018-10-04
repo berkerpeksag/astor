@@ -400,12 +400,9 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.write(node.context_expr)
         self.conditional_write(' as ', node.optional_vars)
 
-    def _handle_name_constant(self, value):
-        self.write(str(value))
-
     # deprecated in Python 3.8
     def visit_NameConstant(self, node):
-        self._handle_name_constant(node.value)
+        self.write(repr(node.value))
 
     def visit_Pass(self, node):
         self.statement(node, 'pass')
@@ -538,20 +535,16 @@ class SourceGenerator(ExplicitNodeVisitor):
     # ast.Ellipsis, ast.NameConstant, ast.Num, ast.Str in Python 3.8
     def visit_Constant(self, node):
         value = node.value
-        if isinstance(value, (bool, type(None))):
-            self._handle_name_constant(value)
-        elif isinstance(value, (complex, float, int)):
+
+        if isinstance(value, (float, complex)):
             self._handle_numeric_constant(value)
         elif isinstance(value, str):
             precedence = self.get__pp(node)
             self._handle_string_constant(value, precedence)
-        elif isinstance(value, bytes):
-            self._handle_bytes_constant(value)
         elif value is Ellipsis:
-            self._handle_ellipsis_constant()
+            self.write('...')
         else:
-            kind = type(value).__name__
-            assert False, "Unexpected constant node type %s" % kind
+            self.write(repr(value))
 
     def visit_JoinedStr(self, node):
         precedence = self.get__pp(node)
@@ -646,12 +639,9 @@ class SourceGenerator(ExplicitNodeVisitor):
         precedence = self.get__pp(node)
         self._handle_string_constant(node.s, precedence)
 
-    def _handle_bytes_constant(self, value):
-        self.write(repr(value))
-
     # deprecated in Python 3.8
     def visit_Bytes(self, node):
-        self._handle_bytes_constant(node.s)
+        self.write(repr(node.s))
 
     def _handle_numeric_constant(self, value):
         x = value
@@ -815,11 +805,8 @@ class SourceGenerator(ExplicitNodeVisitor):
             self.visit_arguments(node.args)
             self.write(': ', node.body)
 
-    def _handle_ellipsis_constant(self):
-        self.write('...')
-
     def visit_Ellipsis(self, node):
-        self._handle_ellipsis_constant()
+        self.write('...')
 
     def visit_ListComp(self, node):
         with self.delimit('[]'):
