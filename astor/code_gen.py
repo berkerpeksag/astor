@@ -538,10 +538,10 @@ class SourceGenerator(ExplicitNodeVisitor):
     # ast.Ellipsis, ast.NameConstant, ast.Num, ast.Str in Python 3.8
     def visit_Constant(self, node):
         value = node.value
-        if isinstance(value, (complex, float, int)):
-            self._handle_numeric_constant(value)
-        elif isinstance(value, (bool, type(None))):
+        if isinstance(value, (bool, type(None))):
             self._handle_name_constant(value)
+        elif isinstance(value, (complex, float, int)):
+            self._handle_numeric_constant(value)
         elif isinstance(value, str):
             precedence = self.get__pp(node)
             self._handle_string_constant(value, precedence)
