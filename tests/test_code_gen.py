@@ -460,8 +460,8 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
             ast.Assign(targets=[ast.Name(id='spam')], value=ast.Name(id='None')),
             "spam = None")
 
-    @unittest.skipUnless((3, 4) <= sys.version_info <= (3, 8),
-                         "ast.NameConstant introduced in Python 3.4, deprecated in 3.8")
+    @unittest.skipUnless(sys.version_info >= (3, 4),
+                         "ast.NameConstant introduced in Python 3.4")
     def test_deprecated_name_constants(self):
         self.assertAstEqualsSource(
             ast.Assign(targets=[ast.Name(id='spam')], value=ast.NameConstant(value=True)),
@@ -475,8 +475,6 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
             ast.Assign(targets=[ast.Name(id='spam')], value=ast.NameConstant(value=None)),
             "spam = None")
 
-    @unittest.skipIf(sys.version_info >= (3, 8),
-                     "ast.Bytes, ast.Ellipsis, ast.Num, and ast.Str deprecated in Python 3.8")
     def test_deprecated_constant_nodes(self):
         self.assertAstEqualsSource(
             ast.Assign(targets=[ast.Name(id='spam')], value=ast.Num(3)),
