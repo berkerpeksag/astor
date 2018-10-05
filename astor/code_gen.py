@@ -539,53 +539,20 @@ class SourceGenerator(ExplicitNodeVisitor):
         if isinstance(value, (float, complex)):
             self._handle_numeric_constant(value)
         elif isinstance(value, str):
-            precedence = self.get__pp(node)
-            self._handle_string_constant(value, precedence)
+            self._handle_string_constant(node)
         elif value is Ellipsis:
             self.write('...')
         else:
             self.write(repr(value))
 
     def visit_JoinedStr(self, node):
-        precedence = self.get__pp(node)
+        self._handle_string_constant(node, is_joined=True)
 
-        has_ast_constant = sys.version_info >= (3, 6)
-
-        def recurse(node):
-            for value in node.values:
-                if isinstance(value, ast.Str):
-                    self.write(value.s)
-                elif isinstance(value, ast.FormattedValue):
-                    with self.delimit('{}'):
-                        self.visit(value.value)
-                        if value.conversion != -1:
-                            self.write('!%s' % chr(value.conversion))
-                        if value.format_spec is not None:
-                            self.write(':')
-                            recurse(value.format_spec)
-                elif has_ast_constant and isinstance(value, ast.Constant):
-                    self.write(value.value)
-                else:
-                    kind = type(value).__name__
-                    assert False, 'Invalid node %s inside JoinedStr' % kind
-
-        self._handle_string_constant(node, precedence, join_fn=lambda: recurse(node))
-
-    def _handle_string_constant(self, value, precedence, join_fn=None):
-        """Private helper which emits string literals in all cases.
-
-        `value` is the inner string value of the current node.
-
-        `precedence` should be passed from the main visitor function by
-        calling `self.get__pp` on the node.
-
-        `join_fn` is a function of no arguments which, if provided, is called for
-        string constants which should be joined. The join_fn can close over the
-        input node, if it is needed, since this function does not have access
-        to the original AST node."""
+    def _handle_string_constant(self, node, is_joined=False):
         # embedded is used to control when we might want
         # to use a triple-quoted string.  We determine
         # if we are in an assignment and/or in an expression
+        precedence = self.get__pp(node)
         embedded = ((precedence > Precedence.Expr) +
                     (precedence >= Precedence.Assign))
 
@@ -604,13 +571,33 @@ class SourceGenerator(ExplicitNodeVisitor):
             current_line[0] = current_line[0][str_index:]
         current_line = ''.join(current_line)
 
-        if join_fn:
+        has_ast_constant = sys.version_info >= (3, 6)
+
+        if is_joined:
             # Handle new f-strings.  This is a bit complicated, because
             # the tree can contain subnodes that recurse back to JoinedStr
             # subnodes...
 
+            def recurse(node):
+                for value in node.values:
+                    if isinstance(value, ast.Str):
+                        self.write(value.s)
+                    elif isinstance(value, ast.FormattedValue):
+                        with self.delimit('{}'):
+                            self.visit(value.value)
+                            if value.conversion != -1:
+                                self.write('!%s' % chr(value.conversion))
+                            if value.format_spec is not None:
+                                self.write(':')
+                                recurse(value.format_spec)
+                    elif has_ast_constant and isinstance(value, ast.Constant):
+                        self.write(value.value)
+                    else:
+                        kind = type(value).__name__
+                        assert False, 'Invalid node %s inside JoinedStr' % kind
+
             index = len(result)
-            join_fn()
+            recurse(node)
 
             # Flush trailing newlines (so that they are part of mystr)
             self.write('')
@@ -620,12 +607,18 @@ class SourceGenerator(ExplicitNodeVisitor):
             uni_lit = False  # No formatted byte strings
 
         else:
-            mystr = value
+            if isinstance(node, ast.Str):
+                mystr = node.s
+            elif has_ast_constant and isinstance(node, ast.Constant):
+                mystr = node.value
+            else:
+                kind = type(node).__name__
+                assert False, 'Invalid string node type %s' % kind
             uni_lit = self.using_unicode_literals
 
         mystr = self.pretty_string(mystr, embedded, current_line, uni_lit)
 
-        if join_fn:
+        if is_joined:
             mystr = 'f' + mystr
 
         self.write(mystr)
@@ -636,8 +629,7 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     # deprecated in Python 3.8
     def visit_Str(self, node):
-        precedence = self.get__pp(node)
-        self._handle_string_constant(node.s, precedence)
+        self._handle_string_constant(node)
 
     # deprecated in Python 3.8
     def visit_Bytes(self, node):
