@@ -539,16 +539,16 @@ class SourceGenerator(ExplicitNodeVisitor):
         if isinstance(value, (float, complex)):
             self._handle_numeric_constant(value)
         elif isinstance(value, str):
-            self._handle_string_constant(node)
+            self._handle_string_constant(node, node.value)
         elif value is Ellipsis:
             self.write('...')
         else:
             self.write(repr(value))
 
     def visit_JoinedStr(self, node):
-        self._handle_string_constant(node, is_joined=True)
+        self._handle_string_constant(node, None, is_joined=True)
 
-    def _handle_string_constant(self, node, is_joined=False):
+    def _handle_string_constant(self, node, value, is_joined=False):
         # embedded is used to control when we might want
         # to use a triple-quoted string.  We determine
         # if we are in an assignment and/or in an expression
@@ -607,13 +607,8 @@ class SourceGenerator(ExplicitNodeVisitor):
             uni_lit = False  # No formatted byte strings
 
         else:
-            if isinstance(node, ast.Str):
-                mystr = node.s
-            elif has_ast_constant and isinstance(node, ast.Constant):
-                mystr = node.value
-            else:
-                kind = type(node).__name__
-                assert False, 'Invalid string node type %s' % kind
+            assert value is not None, "Node value cannot be None"
+            mystr = value
             uni_lit = self.using_unicode_literals
 
         mystr = self.pretty_string(mystr, embedded, current_line, uni_lit)
@@ -629,7 +624,7 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     # deprecated in Python 3.8
     def visit_Str(self, node):
-        self._handle_string_constant(node)
+        self._handle_string_constant(node, node.s)
 
     # deprecated in Python 3.8
     def visit_Bytes(self, node):
