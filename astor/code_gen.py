@@ -566,7 +566,7 @@ class SourceGenerator(ExplicitNodeVisitor):
             def recurse(node):
                 for value in node.values:
                     if isinstance(value, ast.Str):
-                        self.write(value.s)
+                        self.result.append(value.s)
                     elif isinstance(value, ast.FormattedValue):
                         with self.delimit('{}'):
                             self.visit(value.value)
