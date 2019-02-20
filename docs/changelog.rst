@@ -13,7 +13,8 @@ New features
 Bug fixes
 ~~~~~~~~~
 
-*
+* Fix string parsing with newline in f-string (Reported by Adam and fixed by
+  Felix Yan in `Issue 119`_.)
 
 0.7.1 - 2018-07-06
 ------------------

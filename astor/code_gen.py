@@ -168,8 +168,6 @@ class SourceGenerator(ExplicitNodeVisitor):
                     visit(item)
                 elif callable(item):
                     item()
-                elif item == '\n':
-                    newline()
                 else:
                     if self.new_lines:
                         append('\n' * self.new_lines)
@@ -566,7 +564,7 @@ class SourceGenerator(ExplicitNodeVisitor):
             def recurse(node):
                 for value in node.values:
                     if isinstance(value, ast.Str):
-                        self.result.append(value.s)
+                        self.write(value.s)
                     elif isinstance(value, ast.FormattedValue):
                         with self.delimit('{}'):
                             self.visit(value.value)
