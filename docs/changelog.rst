@@ -13,7 +13,10 @@ New features
 Bug fixes
 ~~~~~~~~~
 
-*
+* Fixed code generation with escaped braces in f-strings.
+  (Reported by Felix Yan and fixed by Kodi Arfer in `Issue 125`_.)
+
+.. _`Issue 125`: https://github.com/berkerpeksag/astor/issues/125
 
 0.7.1 - 2018-07-06
 ------------------
