@@ -35,6 +35,12 @@ Bug fixes
 
 .. _`PR 133`: https://github.com/berkerpeksag/astor/pull/133
 
+* Fixed code generation with very large integers.
+  (Reported by Adam Kucz in `Issue 127`_ and fixed by Kodi Arfer in `PR 130`_.)
+
+.. _`Issue 127`: https://github.com/berkerpeksag/astor/issues/127
+.. _`PR 130`: https://github.com/berkerpeksag/astor/pull/130
+
 0.7.1 - 2018-07-06
 ------------------
 

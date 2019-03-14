@@ -639,12 +639,17 @@ class SourceGenerator(ExplicitNodeVisitor):
         def part(p, imaginary):
             # Represent infinity as 1e1000 and NaN as 1e1000-1e1000.
             s = 'j' if imaginary else ''
-            if math.isinf(p):
-                if p < 0:
-                    return '-1e1000' + s
-                return '1e1000' + s
-            if math.isnan(p):
-                return '(1e1000%s-1e1000%s)' % (s, s)
+            try:
+                if math.isinf(p):
+                    if p < 0:
+                        return '-1e1000' + s
+                    return '1e1000' + s
+                if math.isnan(p):
+                    return '(1e1000%s-1e1000%s)' % (s, s)
+            except OverflowError:
+                # math.isinf will raise this when given an integer
+                # that's too large to convert to a float.
+                pass
             return repr(p) + s
 
         real = part(x.real if isinstance(x, complex) else x, imaginary=False)

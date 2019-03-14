@@ -266,6 +266,11 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         """
         self.assertAstRoundtripsGtVer(source, (2, 7))
 
+    def test_huge_int(self):
+        for n in (10**10000,
+                  0xdfa21cd2a530ccc8c870aa60d9feb3b35deeab81c3215a96557abbd683d21f4600f38e475d87100da9a4404220eeb3bb5584e5a2b5b48ffda58530ea19104a32577d7459d91e76aa711b241050f4cc6d5327ccee254f371bcad3be56d46eb5919b73f20dbdb1177b700f00891c5bf4ed128bb90ed541b778288285bcfa28432ab5cbcb8321b6e24760e998e0daa519f093a631e44276d7dd252ce0c08c75e2ab28a7349ead779f97d0f20a6d413bf3623cd216dc35375f6366690bcc41e3b2d5465840ec7ee0dc7e3f1c101d674a0c7dbccbc3942788b111396add2f8153b46a0e4b50d66e57ee92958f1c860dd97cc0e40e32febff915343ed53573142bdf4b):
+            self.assertEqual(astornum(n), n)
+
     def test_complex(self):
         source = """
             (3) + (4j) + (1+2j) + (1+0j)
