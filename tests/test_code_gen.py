@@ -619,6 +619,16 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         '''
         self.assertSrcRoundtripsGtVer(source, (3, 6))
 
+    def test_fstring_escaped_braces(self):
+        source = '''
+        x = f'{{hello world}}'
+        '''
+        self.assertSrcRoundtripsGtVer(source, (3, 6))
+        source = '''
+        x = f'{f.name}={{self.{f.name}!r}}'
+        '''
+        self.assertSrcRoundtripsGtVer(source, (3, 6))
+
     def test_docstring_function(self):
         source = '''
         def f(arg):

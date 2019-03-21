@@ -17,6 +17,8 @@ matrix:
   - python: 3.8-dev
     sudo: required
     dist: xenial
+  allow_failures:
+  - python: 3.8-dev
 cache: pip
 install:
   - pip install tox-travis
