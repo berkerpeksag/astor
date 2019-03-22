@@ -618,6 +618,11 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         x = f"""{host}\n\t{port}\n"""
         '''
         self.assertSrcRoundtripsGtVer(source, (3, 6))
+        source = '''
+        if 1:
+            x = f'{host}\\n\\t{port}\\n'
+        '''
+        self.assertSrcRoundtripsGtVer(source, (3, 6))
 
     def test_fstring_escaped_braces(self):
         source = '''

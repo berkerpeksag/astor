@@ -71,7 +71,7 @@ def wrap_line(line, maxline=79, result=[], count=count):
 
     indentation = line[0]
     lenfirst = len(indentation)
-    indent = lenfirst - len(indentation.strip())
+    indent = lenfirst - len(indentation.lstrip())
     assert indent in (0, lenfirst)
     indentation = line.pop(0) if indent else ''
 
