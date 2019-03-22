@@ -8,7 +8,9 @@ Release Notes
 New features
 ~~~~~~~~~~~~
 
-*
+* Support ``ast.Constant`` nodes being emitted by Python 3.8 (and initially
+  created in Python 3.6).
+  (Reported and fixed by Chris Rink in `Issue 120`_.)
 
 Bug fixes
 ~~~~~~~~~
