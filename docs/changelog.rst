@@ -13,12 +13,14 @@ New features
 Bug fixes
 ~~~~~~~~~
 
-* Fix string parsing with newline in f-string (Reported by Adam and fixed by
-  Felix Yan in `Issue 119`_.)
+* Fix string parsing when there is a newline inside an f-string. (Reported by
+  Adam Cécile in `Issue 119`_ and fixed by Felix Yan in `PR 123`_.)
+
 * Fixed code generation with escaped braces in f-strings.
   (Reported by Felix Yan in `Issue 124`_ and fixed by Kodi Arfer in `PR 125`_.)
 
 .. _`Issue 119`: https://github.com/berkerpeksag/astor/issues/119
+.. _`PR 123`: https://github.com/berkerpeksag/astor/pull/123
 .. _`Issue 124`: https://github.com/berkerpeksag/astor/issues/124
 .. _`PR 125`: https://github.com/berkerpeksag/astor/pull/125
 
