@@ -168,8 +168,6 @@ class SourceGenerator(ExplicitNodeVisitor):
                     visit(item)
                 elif callable(item):
                     item()
-                elif item == '\n':
-                    newline()
                 else:
                     if self.new_lines:
                         append('\n' * self.new_lines)
@@ -220,7 +218,7 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def else_body(self, elsewhat):
         if elsewhat:
-            self.write('\n', 'else:')
+            self.write(self.newline, 'else:')
             self.body(elsewhat)
 
     def body_or_else(self, node):
@@ -359,7 +357,7 @@ class SourceGenerator(ExplicitNodeVisitor):
             if len(else_) == 1 and isinstance(else_[0], ast.If):
                 node = else_[0]
                 set_precedence(node, node.test)
-                self.write('\n', 'elif ', node.test, ':')
+                self.write(self.newline, 'elif ', node.test, ':')
                 self.body(node.body)
             else:
                 self.else_body(else_)
