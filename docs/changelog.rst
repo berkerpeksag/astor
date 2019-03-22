@@ -8,7 +8,12 @@ Release Notes
 New features
 ~~~~~~~~~~~~
 
-*
+* Support ``ast.Constant`` nodes being emitted by Python 3.8 (and initially
+  created in Python 3.6).
+  (Reported and fixed by Chris Rink in `Issue 120`_ and `PR 121`_.)
+
+.. _`Issue 120`: https://github.com/berkerpeksag/astor/issues/120
+.. _`PR 121`: https://github.com/berkerpeksag/astor/pull/121
 
 Bug fixes
 ~~~~~~~~~

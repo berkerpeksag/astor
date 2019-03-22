@@ -38,6 +38,9 @@ class Comparisons(object):
         dmp2 = astor.dump_tree(ast2)
         self.assertEqual(dmp1, dmp2)
 
+    def assertAstEqualsSource(self, tree, source):
+        self.assertEqual(self.to_source(tree).rstrip(), source)
+
     def assertAstRoundtrips(self, srctxt):
         """This asserts that the reconstituted source
            code can be compiled into the exact same AST
@@ -441,6 +444,105 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         return f"functools.{qualname}({', '.join(args)})"
         """
         self.assertSrcRoundtripsGtVer(source, (3, 6))
+
+    @unittest.skipUnless(sys.version_info <= (3, 3),
+                         "ast.Name used for True, False, None until Python 3.4")
+    def test_deprecated_constants_as_name(self):
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Name(id='True')),
+            "spam = True")
+
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Name(id='False')),
+            "spam = False")
+
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Name(id='None')),
+            "spam = None")
+
+    @unittest.skipUnless(sys.version_info >= (3, 4),
+                         "ast.NameConstant introduced in Python 3.4")
+    def test_deprecated_name_constants(self):
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.NameConstant(value=True)),
+            "spam = True")
+
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.NameConstant(value=False)),
+            "spam = False")
+
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.NameConstant(value=None)),
+            "spam = None")
+
+    def test_deprecated_constant_nodes(self):
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Num(3)),
+            "spam = 3")
+
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Num(-93)),
+            "spam = -93")
+
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Num(837.3888)),
+            "spam = 837.3888")
+
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Num(-0.9877)),
+            "spam = -0.9877")
+
+        self.assertAstEqualsSource(ast.Ellipsis(), "...")
+
+        if sys.version_info >= (3, 0):
+            self.assertAstEqualsSource(
+                ast.Assign(targets=[ast.Name(id='spam')], value=ast.Bytes(b"Bytes")),
+                "spam = b'Bytes'")
+
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Str("String")),
+            "spam = 'String'")
+
+    @unittest.skipUnless(sys.version_info >= (3, 6),
+                         "ast.Constant introduced in Python 3.6")
+    def test_constant_nodes(self):
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value=3)),
+            "spam = 3")
+
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value=-93)),
+            "spam = -93")
+
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value=837.3888)),
+            "spam = 837.3888")
+
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value=-0.9877)),
+            "spam = -0.9877")
+
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value=True)),
+            "spam = True")
+
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value=False)),
+            "spam = False")
+
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value=None)),
+            "spam = None")
+
+        self.assertAstEqualsSource(ast.Constant(value=Ellipsis), "...")
+
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(b"Bytes")),
+            "spam = b'Bytes'")
+
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value="String")),
+            "spam = 'String'")
 
     def test_annassign(self):
         source = """

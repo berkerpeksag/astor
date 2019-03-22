@@ -398,8 +398,9 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.write(node.context_expr)
         self.conditional_write(' as ', node.optional_vars)
 
+    # deprecated in Python 3.8
     def visit_NameConstant(self, node):
-        self.write(str(node.value))
+        self.write(repr(node.value))
 
     def visit_Pass(self, node):
         self.statement(node, 'pass')
@@ -528,11 +529,24 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_Name(self, node):
         self.write(node.id)
 
+    # ast.Constant is new in Python 3.6 and it replaces ast.Bytes,
+    # ast.Ellipsis, ast.NameConstant, ast.Num, ast.Str in Python 3.8
+    def visit_Constant(self, node):
+        value = node.value
+
+        if isinstance(value, (float, complex)):
+            self._handle_numeric_constant(value)
+        elif isinstance(value, str):
+            self._handle_string_constant(node, node.value)
+        elif value is Ellipsis:
+            self.write('...')
+        else:
+            self.write(repr(value))
+
     def visit_JoinedStr(self, node):
-        self.visit_Str(node, True)
+        self._handle_string_constant(node, None, is_joined=True)
 
-    def visit_Str(self, node, is_joined=False):
-
+    def _handle_string_constant(self, node, value, is_joined=False):
         # embedded is used to control when we might want
         # to use a triple-quoted string.  We determine
         # if we are in an assignment and/or in an expression
@@ -555,8 +569,9 @@ class SourceGenerator(ExplicitNodeVisitor):
             current_line[0] = current_line[0][str_index:]
         current_line = ''.join(current_line)
 
-        if is_joined:
+        has_ast_constant = sys.version_info >= (3, 6)
 
+        if is_joined:
             # Handle new f-strings.  This is a bit complicated, because
             # the tree can contain subnodes that recurse back to JoinedStr
             # subnodes...
@@ -574,6 +589,8 @@ class SourceGenerator(ExplicitNodeVisitor):
                             if value.format_spec is not None:
                                 self.write(':')
                                 recurse(value.format_spec)
+                    elif has_ast_constant and isinstance(value, ast.Constant):
+                        self.write(value.value)
                     else:
                         kind = type(value).__name__
                         assert False, 'Invalid node %s inside JoinedStr' % kind
@@ -589,7 +606,8 @@ class SourceGenerator(ExplicitNodeVisitor):
             uni_lit = False  # No formatted byte strings
 
         else:
-            mystr = node.s
+            assert value is not None, "Node value cannot be None"
+            mystr = value
             uni_lit = self.using_unicode_literals
 
         mystr = self.pretty_string(mystr, embedded, current_line, uni_lit)
@@ -603,39 +621,51 @@ class SourceGenerator(ExplicitNodeVisitor):
         if lf:
             self.colinfo = len(result) - 1, lf
 
+    # deprecated in Python 3.8
+    def visit_Str(self, node):
+        self._handle_string_constant(node, node.s)
+
+    # deprecated in Python 3.8
     def visit_Bytes(self, node):
         self.write(repr(node.s))
+
+    def _handle_numeric_constant(self, value):
+        x = value
+
+        def part(p, imaginary):
+            # Represent infinity as 1e1000 and NaN as 1e1000-1e1000.
+            s = 'j' if imaginary else ''
+            if math.isinf(p):
+                if p < 0:
+                    return '-1e1000' + s
+                return '1e1000' + s
+            if math.isnan(p):
+                return '(1e1000%s-1e1000%s)' % (s, s)
+            return repr(p) + s
+
+        real = part(x.real if isinstance(x, complex) else x, imaginary=False)
+        if isinstance(x, complex):
+            imag = part(x.imag, imaginary=True)
+            if x.real == 0:
+                s = imag
+            elif x.imag == 0:
+                s = '(%s+0j)' % real
+            else:
+                # x has nonzero real and imaginary parts.
+                s = '(%s%s%s)' % (real, ['+', ''][imag.startswith('-')], imag)
+        else:
+            s = real
+        self.write(s)
 
     def visit_Num(self, node,
                   # constants
                   new=sys.version_info >= (3, 0)):
         with self.delimit(node) as delimiters:
-            x = node.n
+            self._handle_numeric_constant(node.n)
 
-            def part(p, imaginary):
-                # Represent infinity as 1e1000 and NaN as 1e1000-1e1000.
-                s = 'j' if imaginary else ''
-                if math.isinf(p):
-                    if p < 0:
-                        return '-1e1000' + s
-                    return '1e1000' + s
-                if math.isnan(p):
-                    return '(1e1000%s-1e1000%s)' % (s, s)
-                return repr(p) + s
-
-            real = part(x.real if isinstance(x, complex) else x, imaginary=False)
-            if isinstance(x, complex):
-                imag = part(x.imag, imaginary=True)
-                if x.real == 0:
-                    s = imag
-                elif x.imag == 0:
-                    s = '(%s+0j)' % real
-                else:
-                    # x has nonzero real and imaginary parts.
-                    s = '(%s%s%s)' % (real, ['+', ''][imag.startswith('-')], imag)
-            else:
-                s = real
-            self.write(s)
+            # We can leave the delimiters handling in visit_Num
+            # since this is meant to handle a Python 2.x specific
+            # issue and ast.Constant exists only in 3.6+
 
             # The Python 2.x compiler merges a unary minus
             # with a number.  This is a premature optimization
