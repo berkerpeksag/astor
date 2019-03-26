@@ -5,7 +5,7 @@ try:
 except ImportError:
     import unittest
 
-import test_code_gen
+from . import test_code_gen
 
 import astunparse
 

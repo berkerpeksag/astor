@@ -33,7 +33,7 @@ except ImportError:
         import all_expr_2_6 as mymod
     except ImportError:
         print("Expression list does not exist -- building")
-        import build_expressions
+        from . import build_expressions
         build_expressions.makelib()
         print("Expression list built")
         import all_expr_2_6 as mymod
@@ -44,7 +44,7 @@ else:
         mymod = importlib.import_module(mymodname)
     except ImportError:
         print("Expression list does not exist -- building")
-        import build_expressions
+        from . import build_expressions
         build_expressions.makelib()
         print("Expression list built")
         mymod = importlib.import_module(mymodname)
