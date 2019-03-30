@@ -29,7 +29,8 @@ Bug fixes
 .. _`Issue 124`: https://github.com/berkerpeksag/astor/issues/124
 .. _`PR 125`: https://github.com/berkerpeksag/astor/pull/125
 
-* Fixed code generation with attributes of integer literals.
+* Fixed code generation with attributes of integer literals, and
+  with ``u``-prefixed string literals.
   (Fixed by Kodi Arfer in `PR 133`_.)
 
 .. _`PR 133`: https://github.com/berkerpeksag/astor/pull/133

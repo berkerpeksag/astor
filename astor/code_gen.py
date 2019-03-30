@@ -615,6 +615,9 @@ class SourceGenerator(ExplicitNodeVisitor):
 
         if is_joined:
             mystr = 'f' + mystr
+        elif getattr(node, 'kind', False):
+            # Constant.kind is a Python 3.8 addition.
+            mystr = node.kind + mystr
 
         self.write(mystr)
 
