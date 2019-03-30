@@ -78,6 +78,7 @@ op_data = """
              Pow   **           1
            Await                1
              Num                1
+        Constant                1
 """
 
 op_data = [x.split() for x in op_data.splitlines()]

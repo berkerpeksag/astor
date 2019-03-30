@@ -534,8 +534,9 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_Constant(self, node):
         value = node.value
 
-        if isinstance(value, (float, complex)):
-            self._handle_numeric_constant(value)
+        if isinstance(value, (int, float, complex)):
+            with self.delimit(node):
+                self._handle_numeric_constant(value)
         elif isinstance(value, str):
             self._handle_string_constant(node, node.value)
         elif value is Ellipsis:
@@ -614,6 +615,9 @@ class SourceGenerator(ExplicitNodeVisitor):
 
         if is_joined:
             mystr = 'f' + mystr
+        elif getattr(node, 'kind', False):
+            # Constant.kind is a Python 3.8 addition.
+            mystr = node.kind + mystr
 
         self.write(mystr)
 
