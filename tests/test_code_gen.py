@@ -181,6 +181,10 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         # Probably also works on < 3.4, but doesn't work on 2.7...
         self.assertSrcRoundtripsGtVer(source, (3, 4), (2, 7))
 
+    def test_attribute(self):
+        self.assertSrcRoundtrips("x.foo")
+        self.assertSrcRoundtrips("(5).foo")
+
     def test_matrix_multiplication(self):
         for source in ("(a @ b)", "a @= b"):
             self.assertAstRoundtripsGtVer(source, (3, 5))

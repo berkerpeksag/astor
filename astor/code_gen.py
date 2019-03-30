@@ -534,8 +534,9 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_Constant(self, node):
         value = node.value
 
-        if isinstance(value, (float, complex)):
-            self._handle_numeric_constant(value)
+        if isinstance(value, (int, float, complex)):
+            with self.delimit(node):
+                self._handle_numeric_constant(value)
         elif isinstance(value, str):
             self._handle_string_constant(node, node.value)
         elif value is Ellipsis:
