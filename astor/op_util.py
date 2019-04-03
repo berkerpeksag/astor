@@ -36,6 +36,7 @@ op_data = """
            Tuple                0
 
            Comma                1
+       NamedExpr                1
           Assert                0
            Raise                0
     call_one_arg                1

@@ -741,6 +741,22 @@ class SourceGenerator(ExplicitNodeVisitor):
             for op, right in zip(node.ops, node.comparators):
                 self.write(get_op_symbol(op, ' %s '), right)
 
+    # assignment expressions; new for Python 3.8
+    def visit_NamedExpr(self, node):
+        with self.delimit(node) as delimiters:
+            p = delimiters.p
+            set_precedence(p, node.target)
+            set_precedence(p + 1, node.value)
+            # Python is picky about delimiters for assignment
+            # expressions: it requires at least one pair in any
+            # statement that uses an assignment expression, even
+            # when not necessary according to the precedence
+            # rules. We address this with the kludge of forcing a
+            # pair of parentheses around every assignment
+            # expression.
+            delimiters.discard = False
+            self.write(node.target, ' := ', node.value)
+
     def visit_UnaryOp(self, node):
         with self.delimit(node, node.op) as delimiters:
             set_precedence(delimiters.p, node.operand)
