@@ -454,6 +454,27 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         """
         self.assertSrcRoundtripsGtVer(source, (3, 6))
 
+    def test_assignment_expr(self):
+        cases = (
+            "(x := 3)",
+            "1 + (x := y)",
+            "x = (y := 0)",
+            "1 + (p := 1 if 2 else 3)",
+            "[y := f(x), y**2, y**3]",
+            "(2 ** 3 * 4 + 5 and 6, x := 2 ** 3 * 4 + 5 and 6)",
+            "foo(x := 3, cat='vector')",
+            "foo(x=(y := f(x)))",
+            "any(len(longline := line) >= 100 for line in lines)",
+            "[[y := f(x), x/y] for x in range(5)]",
+            "lambda: (x := 1)",
+            "def foo(answer=(p := 42)): pass",
+            "def foo(answer: (p := 42) = 5): pass",
+            "if reductor := dispatch_table.get(cls): pass",
+            "while line := fp.readline(): pass",
+            "while (command := input('> ')) != 'quit': pass")
+        for case in cases:
+            self.assertAstRoundtripsGtVer(case, (3, 8))
+
     @unittest.skipUnless(sys.version_info <= (3, 3),
                          "ast.Name used for True, False, None until Python 3.4")
     def test_deprecated_constants_as_name(self):

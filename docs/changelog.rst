@@ -15,6 +15,12 @@ New features
 .. _`Issue 120`: https://github.com/berkerpeksag/astor/issues/120
 .. _`PR 121`: https://github.com/berkerpeksag/astor/pull/121
 
+* Support Python 3.8's assignment expressions.
+  (Reported and fixed by Kodi Arfer in `Issue 126`_ and `PR 134`_.)
+
+.. _`Issue 126`: https://github.com/berkerpeksag/astor/issues/126
+.. _`PR 134`: https://github.com/berkerpeksag/astor/pull/134
+
 Bug fixes
 ~~~~~~~~~
 
