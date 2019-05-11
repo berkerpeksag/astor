@@ -47,6 +47,8 @@ Bug fixes
 .. _`Issue 127`: https://github.com/berkerpeksag/astor/issues/127
 .. _`PR 130`: https://github.com/berkerpeksag/astor/pull/130
 
+* Fixed auto completion error with ``TreeWalk`` (`Issue 136`, `PR 137`)
+
 0.7.1 - 2018-07-06
 ------------------
 

@@ -64,5 +64,12 @@ class FastCompareTestCase(unittest.TestCase):
         check('a = 3 - (3, 4, 5)', 'a = 3 - (3, 4, 6)')
 
 
+class TreeWalkTestCase(unittest.TestCase):
+
+    def test_class_dict(self):
+        tw = astor.TreeWalk()
+        tw.__dict__
+
+
 if __name__ == '__main__':
     unittest.main()
