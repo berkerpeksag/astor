@@ -584,7 +584,10 @@ class SourceGenerator(ExplicitNodeVisitor):
                         self.write(value.s.replace('{', '{{').replace('}', '}}'))
                     elif isinstance(value, ast.FormattedValue):
                         with self.delimit('{}'):
-                            self.visit(value.value)
+                            if sys.version_info >= (3, 8) and value.expr_text:
+                                self.write(value.expr_text)
+                            else:
+                                self.visit(value.value)
                             if value.conversion != -1:
                                 self.write('!%s' % chr(value.conversion))
                             if value.format_spec is not None:

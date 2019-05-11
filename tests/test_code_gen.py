@@ -664,6 +664,16 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         '''
         self.assertSrcRoundtripsGtVer(source, (3, 6))
 
+    @unittest.skipUnless(sys.version_info >= (3, 8),
+                         "f-string debugging introduced in Python 3.8")
+    def test_fstring_debugging(self):
+        source = '''
+        x = f'{5=}'
+        y = f'{5=!r}'
+        z = f'{3*x+15=}'
+        '''
+        self.assertAstRoundtripsGtVer(source, (3, 8))
+
     def test_docstring_function(self):
         source = '''
         def f(arg):
