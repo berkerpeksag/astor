@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# coding: utf-8
 """
 Part of the astor library for Python AST manipulation
 
@@ -665,18 +665,18 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         '''
         self.assertSrcRoundtripsGtVer(source, (3, 6))
 
-    @unittest.skipUnless(sys.version_info >= (3, 8),
+    @unittest.skipUnless(sys.version_info >= (3, 8, 0, "alpha", 4),
                          "f-string debugging introduced in Python 3.8")
     def test_fstring_debugging(self):
-        source = '''
+        source = """
         x = f'{5=}'
         y = f'{5=!r}'
         z = f'{3*x+15=}'
         f'{x=:}'
         f'{x=:.2f}'
         f'alpha α {pi=} ω omega'
-        '''
-        self.assertAstRoundtripsGtVer(source, (3, 8, 0, 'alpha', 4))
+        """
+        self.assertAstRoundtripsGtVer(source, (3, 8))
 
     def test_docstring_function(self):
         source = '''
