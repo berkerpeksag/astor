@@ -584,7 +584,8 @@ class SourceGenerator(ExplicitNodeVisitor):
                         self.write(value.s.replace('{', '{{').replace('}', '}}'))
                     elif isinstance(value, ast.FormattedValue):
                         with self.delimit('{}'):
-                            if sys.version_info >= (3, 8) and value.expr_text:
+                            if getattr(value, 'expr_text', None):
+                                # expr_text used for supporting f-string debugging
                                 self.write(value.expr_text)
                             else:
                                 self.visit(value.value)

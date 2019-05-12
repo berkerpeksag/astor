@@ -671,6 +671,9 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         x = f'{5=}'
         y = f'{5=!r}'
         z = f'{3*x+15=}'
+        f'{x=:}'
+        f'{x=:.2f}'
+        f'alpha α {pi=} ω omega'
         '''
         self.assertAstRoundtripsGtVer(source, (3, 8))
 
