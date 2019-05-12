@@ -64,5 +64,17 @@ class FastCompareTestCase(unittest.TestCase):
         check('a = 3 - (3, 4, 5)', 'a = 3 - (3, 4, 6)')
 
 
+class TreeWalkTestCase(unittest.TestCase):
+
+    def test_auto_generated_attributes(self):
+        # See #136 for more details.
+        treewalk = astor.TreeWalk()
+        self.assertIsInstance(treewalk.__dict__, dict)
+        # Check that the inital state of the instance is empty.
+        self.assertEqual(treewalk.__dict__['nodestack'], [])
+        self.assertEqual(treewalk.__dict__['pre_handlers'], {})
+        self.assertEqual(treewalk.__dict__['post_handlers'], {})
+
+
 if __name__ == '__main__':
     unittest.main()

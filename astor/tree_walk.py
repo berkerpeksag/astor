@@ -30,6 +30,9 @@ class MetaFlatten(type):
             if base not in newbases:
                 newdict.update(vars(base))
         newdict.update(clsdict)
+        # These are class-bound, we should let Python recreate them.
+        newdict.pop('__dict__', None)
+        newdict.pop('__weakref__', None)
         # Delegate the real work to type
         return type.__new__(clstype, name, newbases, newdict)
 
