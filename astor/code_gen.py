@@ -584,7 +584,11 @@ class SourceGenerator(ExplicitNodeVisitor):
                         self.write(value.s.replace('{', '{{').replace('}', '}}'))
                     elif isinstance(value, ast.FormattedValue):
                         with self.delimit('{}'):
-                            self.visit(value.value)
+                            # expr_text used for f-string debugging syntax.
+                            if getattr(value, 'expr_text', None):
+                                self.write(value.expr_text)
+                            else:
+                                self.visit(value.value)
                             if value.conversion != -1:
                                 self.write('!%s' % chr(value.conversion))
                             if value.format_spec is not None:

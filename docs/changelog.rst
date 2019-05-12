@@ -21,6 +21,12 @@ New features
 .. _`Issue 126`: https://github.com/berkerpeksag/astor/issues/126
 .. _`PR 134`: https://github.com/berkerpeksag/astor/pull/134
 
+* Support Python 3.8's f-string debugging syntax.
+  (Reported and fixed by Batuhan Taskaya in `Issue 138`_ and `PR 139`_.)
+
+.. _`Issue 138`: https://github.com/berkerpeksag/astor/issues/138
+.. _`PR 139`: https://github.com/berkerpeksag/astor/pull/139
+
 Bug fixes
 ~~~~~~~~~
 
