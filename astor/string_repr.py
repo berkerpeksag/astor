@@ -107,6 +107,6 @@ def pretty_string(s, embedded, current_line, uni_lit=False,
     try:
         if eval(fancy) == s and '\r' not in fancy:
             return fancy
-    except:
+    except Exception:
         pass
     return default
