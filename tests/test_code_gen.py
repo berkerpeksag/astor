@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 """
 Part of the astor library for Python AST manipulation
 
