@@ -3,6 +3,6 @@ branch = True
 omit = 
     # omit the codegen because of deprecation
     astor/codegen.py
-
+    .tox/*
 [report]
 show_missing = True
