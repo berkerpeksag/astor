@@ -47,7 +47,12 @@ Bug fixes
 .. _`Issue 127`: https://github.com/berkerpeksag/astor/issues/127
 .. _`PR 130`: https://github.com/berkerpeksag/astor/pull/130
 
-* Fixed auto completion error with ``TreeWalk`` (`Issue 136`, `PR 137`)
+* Fixed :class:`astor.tree_walk.TreeWalk` when attempting to access attributes
+  created by Python's type system (such as ``__dict__`` and ``__weakref__``)
+  (Reported and fixed by esupoff in `Issue 136`, `PR 137`)
+  
+.. _`Issue 136`: https://github.com/berkerpeksag/astor/issues/136
+.. _`PR 137`: https://github.com/berkerpeksag/astor/pull/137
 
 0.7.1 - 2018-07-06
 ------------------
