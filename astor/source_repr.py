@@ -101,8 +101,8 @@ def wrap_line(line, maxline=79, result=[], count=count):
     pos = indent + count(first)
     indentation += '    '
     indent += 4
-    if indent >= maxline/2:
-        maxline = maxline/2 + indent
+    if indent >= maxline / 2:
+        maxline = maxline / 2 + indent
 
     for sg, nsg in zip(splittable, unsplittable[1:]):
 

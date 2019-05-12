@@ -23,7 +23,7 @@ import sys
 
 from .op_util import get_op_symbol, get_op_precedence, Precedence
 from .node_util import ExplicitNodeVisitor
-from .string_repr import pretty_string, string_triplequote_repr
+from .string_repr import pretty_string
 from .source_repr import pretty_source
 
 
@@ -155,7 +155,6 @@ class SourceGenerator(ExplicitNodeVisitor):
         AST = ast.AST
 
         visit = self.visit
-        newline = self.newline
         result = self.result
         append = result.append
 

@@ -81,7 +81,7 @@ def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False,
 
         try:
             dsttxt = to_source(srcast)
-        except:
+        except Exception:
             if not ignore_exceptions:
                 raise
             dsttxt = ''
