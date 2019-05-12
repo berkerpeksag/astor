@@ -676,7 +676,7 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         f'{x=:.2f}'
         f'alpha α {pi=} ω omega'
         '''
-        self.assertAstRoundtripsGtVer(source, (3, 8))
+        self.assertAstRoundtripsGtVer(source, (3, 8, 0, 'alpha', 4))
 
     def test_docstring_function(self):
         source = '''
