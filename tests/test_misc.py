@@ -46,6 +46,29 @@ class PublicAPITestCase(unittest.TestCase):
             'astor.code_gen module instead.'
         )
 
+    def test_to_source_invalid_customize_generator(self):
+        class InvalidGenerator:
+            pass
+
+        node = ast.parse('spam = 42')
+
+        with self.assertRaises(TypeError) as cm:
+            astor.to_source(node, source_generator_class=InvalidGenerator)
+        self.assertEqual(
+            str(cm.exception),
+            'source_generator_class should be a subclass of SourceGenerator',
+        )
+
+        with self.assertRaises(TypeError) as cm:
+            astor.to_source(
+                node,
+                source_generator_class=astor.SourceGenerator(indent_with=' ' * 4),
+            )
+        self.assertEqual(
+            str(cm.exception),
+            'source_generator_class should be a callable',
+        )
+
 
 class FastCompareTestCase(unittest.TestCase):
 
