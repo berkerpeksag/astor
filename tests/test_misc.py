@@ -65,7 +65,6 @@ class PublicAPITestCase(unittest.TestCase):
         )
 
 
-
 class FastCompareTestCase(unittest.TestCase):
 
     def test_fast_compare(self):
