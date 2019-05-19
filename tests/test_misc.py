@@ -50,15 +50,17 @@ class PublicAPITestCase(unittest.TestCase):
         class InvalidGenerator:
             pass
 
+        node = ast.parse('spam = 42')
+
         with self.assertRaises(TypeError) as cm:
-            astor.to_source(..., source_generator_class=InvalidGenerator)
+            astor.to_source(node, source_generator_class=InvalidGenerator)
         self.assertEqual(
             str(cm.exception),
             'source_generator_class should be a subclass of SourceGenerator',
         )
 
         with self.assertRaises(TypeError) as cm:
-            astor.to_source(..., source_generator_class=astor.SourceGenerator())
+            astor.to_source(node, source_generator_class=astor.SourceGenerator())
         self.assertEqual(
             str(cm.exception),
             'source_generator_class should be a callable',
