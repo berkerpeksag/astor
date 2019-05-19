@@ -166,33 +166,18 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
 
     @unittest.skipUnless(sys.version_info >= (3, 8, 0, "alpha", 4),
                          "positional only arguments introduced in Python 3.8")
-    def test_pos_only_arguments(self):
+    def test_positional_only_arguments(self):
         source = """
         def test(a, b, /, c, *, d, **kwargs):
             pass
 
-
         def test(a=3, b=4, /, c=7):
             pass
-
 
         def test(a, b=4, /, c=8, d=9):
             pass
         """
         self.assertSrcRoundtrips(source)
-        
-        with self.assertRaises(SyntaxError):
-            invalid_source = """
-            def test(p1, p2=None, /, p_or_kw, *, kw):
-                pass
-
-            def test(p1=None, p2, /, p_or_kw=None, *, kw):
-                pass
-
-            def test(p1=None, p2, /):
-                pass
-            """
-            self.assertSrcRoundtrips(invalid_source)
 
     def test_pass_arguments_node(self):
         source = canonical("""
