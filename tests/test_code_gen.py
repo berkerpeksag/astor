@@ -180,6 +180,19 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
             pass
         """
         self.assertSrcRoundtrips(source)
+        
+        with self.assertRaises(SyntaxError):
+            invalid_source = """
+            def test(p1, p2=None, /, p_or_kw, *, kw):
+                pass
+
+            def test(p1=None, p2, /, p_or_kw=None, *, kw):
+                pass
+
+            def test(p1=None, p2, /):
+                pass
+            """
+            self.assertSrcRoundtrips(invalid_source)
 
     def test_pass_arguments_node(self):
         source = canonical("""

@@ -240,15 +240,15 @@ class SourceGenerator(ExplicitNodeVisitor):
                 self.write(write_comma, arg)
                 self.conditional_write('=', default)
 
-        posonlyargs = getattr(node, "posonlyargs", [])
+        posonlyargs = getattr(node, 'posonlyargs', [])
         offset = 0
         if posonlyargs:
             offset += len(node.defaults) - len(node.args)
             loop_args(posonlyargs, node.defaults[:offset])
-            self.write(write_comma, "/")
+            self.write(write_comma, '/')
 
         loop_args(node.args, node.defaults[offset:])
-        self.conditional_write(write_comma, "*", node.vararg)
+        self.conditional_write(write_comma, '*', node.vararg)
 
         kwonlyargs = self.get_kwonlyargs(node)
         if kwonlyargs:
