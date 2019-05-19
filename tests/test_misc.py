@@ -60,7 +60,10 @@ class PublicAPITestCase(unittest.TestCase):
         )
 
         with self.assertRaises(TypeError) as cm:
-            astor.to_source(node, source_generator_class=astor.SourceGenerator())
+            astor.to_source(
+                node,
+                source_generator_class=astor.SourceGenerator(indent_with=' ' * 4),
+            )
         self.assertEqual(
             str(cm.exception),
             'source_generator_class should be a callable',
