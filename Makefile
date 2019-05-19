@@ -7,7 +7,7 @@ release:
 
 # Test it via `pip install -i https://test.pypi.org/simple/ <project_name>`
 test-release:
-	python setup.py sdist bdist_wheel upload -r test
+	twine upload -r test dist/*
 
 clean:
 	find . -name "*.pyc" -exec rm {} \;
