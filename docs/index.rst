@@ -129,7 +129,8 @@ Functions
 *********
 
 .. function:: to_source(source, indent_with=' ' * 4, \
-                        add_line_information=False)
+                        add_line_information=False,
+                        source_generator_class=astor.SourceGenerator)
 
     Convert a node tree back into Python source code.
 
@@ -139,6 +140,13 @@ Functions
     If *add_line_information* is set to ``True`` comments for the line numbers
     of the nodes are added to the output. This can be used to spot wrong line
     number information of statement nodes.
+
+    *source_generator_class* defaults to :class:`astor.SourceGenerator`, and
+    specifies the class that will be instantiated and used to generate the
+    source code.
+
+    .. versionchanged:: 0.8
+       *source_generator_class* was added.
 
 .. function:: codetoast
 .. function:: code_to_ast(codeobj)

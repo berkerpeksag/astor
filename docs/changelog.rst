@@ -27,6 +27,17 @@ New features
 .. _`Issue 138`: https://github.com/berkerpeksag/astor/issues/138
 .. _`PR 139`: https://github.com/berkerpeksag/astor/pull/139
 
+* :func:`astor.to_source` now has a *source_generator_class* parameter to
+  customize source code generation.
+  (Reported and fixed by matham in `Issue 113`_ and `PR 114`_.)
+
+.. _`Issue 113`: https://github.com/berkerpeksag/astor/issues/113
+.. _`PR 114`: https://github.com/berkerpeksag/astor/pull/114
+
+* The :class:`~SourceGenerator` class can now be imported from the
+  :mod:`astor` package directly. Previously, the ``astor.code_gen``
+  submodule was needed to be imported.
+
 * Support Python3.8's positional only arguments.
   (Reported and fixed by Batuhan Taskaya in `Issue 142`_ and `PR 143`_.)
 
