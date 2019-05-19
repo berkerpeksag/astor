@@ -38,7 +38,8 @@ New features
   :mod:`astor` package directly. Previously, the ``astor.code_gen``
   submodule was needed to be imported.
 
-* Support Python3.8's positional only arguments.
+* Support Python 3.8's positional only arguments. See :pep:`570` for
+  more details.
   (Reported and fixed by Batuhan Taskaya in `Issue 142`_ and `PR 143`_.)
 
 .. _`Issue 142`: https://github.com/berkerpeksag/astor/issues/142
