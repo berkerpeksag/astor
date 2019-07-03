@@ -101,12 +101,12 @@ def get_op_symbol(obj, fmt='%s', symbol_data=symbol_data, type=type):
 def get_op_precedence(obj, precedence_data=precedence_data, type=type):
     """Given an AST node object, returns the precedence.
     """
-    type1 = type(obj)
-    if not type1 in precedence_data:
-        for base in type1.__bases__:
+    clazz = type(obj)
+    if not clazz in precedence_data:
+        for base in clazz.__bases__:
             if base in precedence_data:
                 return precedence_data[base]
-    return precedence_data[type1]
+    return precedence_data[clazz]
 
 
 class Precedence(object):
