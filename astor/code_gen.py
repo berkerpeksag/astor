@@ -84,6 +84,8 @@ def precedence_setter(AST=ast.AST, get_op_precedence=get_op_precedence,
             elif isinstance(node, list):
                 set_precedence(value, *node)
             else:
+                if not node is None:
+                    raise Exception("Expected AST, list or None, got %s"%node)
                 assert node is None, node
 
     return set_precedence
