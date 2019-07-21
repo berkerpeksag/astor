@@ -53,7 +53,7 @@ def to_source(node, indent_with=' ' * 4, add_line_information=False,
     """
     if source_generator_class is None:
         source_generator_class = SourceGenerator
-    elif not isinstance(source_generator_class, SourceGenerator):
+    elif not issubclass(source_generator_class, SourceGenerator):
         raise TypeError('source_generator_class should be a subclass of SourceGenerator')
     elif not callable(source_generator_class):
         raise TypeError('source_generator_class should be a callable')
