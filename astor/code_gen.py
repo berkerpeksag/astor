@@ -653,8 +653,16 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_Bytes(self, node):
         self.write(repr(node.s))
 
+    HEX_THRESHOLD = 10**17 # since that hex is more succinct
     def _handle_numeric_constant(self, value):
         x = value
+        if isinstance(x, int):
+            if abs(x) >= __class__.HEX_THRESHOLD:
+                s = hex(x)
+            else:
+                s = repr(x)
+            self.write(s)
+            return
 
         def part(p, imaginary):
             # Represent infinity as 1e1000 and NaN as 1e1000-1e1000.
