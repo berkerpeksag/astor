@@ -171,8 +171,10 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         def test(a, b, /, c, *, d, **kwargs):
             pass
 
+
         def test(a=3, b=4, /, c=7):
             pass
+
 
         def test(a, b=4, /, c=8, d=9):
             pass
