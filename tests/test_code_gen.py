@@ -458,6 +458,7 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         x = f'{int(x)}'
         x = f'a{b:c}d'
         x = f'a{b!s:c{d}e}f'
+        x = f'{x + y}'
         x = f'""'
         x = f'"\\''
         """
