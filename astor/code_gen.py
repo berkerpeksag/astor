@@ -604,6 +604,7 @@ class SourceGenerator(ExplicitNodeVisitor):
                             if getattr(value, 'expr_text', None):
                                 self.write(value.expr_text)
                             else:
+                                set_precedence(value, value.value)
                                 self.visit(value.value)
                             if value.conversion != -1:
                                 self.write('!%s' % chr(value.conversion))

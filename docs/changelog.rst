@@ -2,6 +2,19 @@
 Release Notes
 =============
 
+0.8.1 - in development
+----------------------
+
+Bug fixes
+~~~~~~~~~
+
+* Fixed precedence issue for f-string expressions that caused
+  redundant parenthesis around expression.
+  (Reported by Ilya Kamenshchikov in `Issue 153`_ and fixed by Batuhan Taskaya in `PR 155`_.)
+
+.. _`Issue 153`: https://github.com/berkerpeksag/astor/issues/153
+.. _`PR 155`: https://github.com/berkerpeksag/astor/pull/155
+
 0.8.0 - 2019-05-19
 ------------------
 
