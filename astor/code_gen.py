@@ -187,6 +187,7 @@ class SourceGenerator(ExplicitNodeVisitor):
                         append(item)
 
         self.write = write
+        self._ignores = {}
 
     def __getattr__(self, name, defaults=dict(keywords=(),
                     _pp=Precedence.highest).get):
@@ -233,6 +234,21 @@ class SourceGenerator(ExplicitNodeVisitor):
     def body_or_else(self, node):
         self.body(node.body)
         self.else_body(node.orelse)
+
+    def type_comment(self, node):
+        comment = None
+        if hasattr(node, 'lineno'):
+            ignore = self._ignores.get(node.lineno)
+        else:
+            ignore = None
+
+        if ignore:
+            comment = 'ignore%s' % ignore.tag
+        elif getattr(node, 'type_comment', None):
+            comment = node.type_comment
+
+        if comment:
+            self.write(' # type: %s' % comment)
 
     def visit_arguments(self, node):
         want_comma = []
@@ -290,6 +306,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         for target in node.targets:
             self.write(target, ' = ')
         self.visit(node.value)
+        self.type_comment(node)
 
     def visit_AugAssign(self, node):
         set_precedence(node, node.value, node.target)
@@ -331,6 +348,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.write(')')
         self.conditional_write(' ->', self.get_returns(node))
         self.write(':')
+        self.type_comment(node)
         self.body(node.body)
         if not self.indentation:
             self.newline(extra=2)
@@ -384,6 +402,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         prefix = 'async ' if is_async else ''
         self.statement(node, '%sfor ' % prefix,
                        node.target, ' in ', node.iter, ':')
+        self.type_comment(node)
         self.body_or_else(node)
 
     # introduced in Python 3.5
@@ -403,6 +422,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         else:                              # Python >= 3.3
             self.comma_list(node.items)
         self.write(':')
+        self.type_comment(node)
         self.body(node.body)
 
     # new for Python 3.5
@@ -873,6 +893,7 @@ class SourceGenerator(ExplicitNodeVisitor):
             self.visit(node.value)
 
     def visit_Module(self, node):
+        self._ignores = {ignore.lineno: ignore for ignore in getattr(node, 'type_ignores', [])}
         self.write(*node.body)
 
     visit_Interactive = visit_Module

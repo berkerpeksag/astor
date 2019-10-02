@@ -62,14 +62,14 @@ class Comparisons(object):
         elif sys.version_info <= max_should_error:
             self.assertRaises(SyntaxError, ast.parse, source)
 
-    def assertSrcRoundtrips(self, srctxt):
+    def assertSrcRoundtrips(self, srctxt, **parse_options):
         """This asserts that the reconstituted source
            code is identical to the original source code.
            This is a much stronger statement than assertAstRoundtrips,
            which may not always be appropriate.
         """
         srctxt = canonical(srctxt)
-        self.assertEqual(self.to_source(ast.parse(srctxt)).rstrip(), srctxt)
+        self.assertEqual(self.to_source(ast.parse(srctxt, **parse_options)).rstrip(), srctxt)
 
     def assertSrcDoesNotRoundtrip(self, srctxt):
         srctxt = canonical(srctxt)
@@ -741,6 +741,53 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         '''
         self.assertSrcRoundtrips(source)
 
+    @unittest.skipUnless(sys.version_info >= (3, 8),
+                         "typed_ast merged to master in Python 3.8")
+    def test_type_comments_function(self):
+        source = """
+        def foo(): # type: () -> int
+            pass
+
+
+        def bar(x, y): # type: (int, int) -> None
+            pass
+
+
+        def baz(x, y): # type: (int, int) -> int
+            pass
+
+
+        def bazz(x, y): # type: ignore
+            pass
+
+
+        def bazz(x, y): # type: ignore BLABLA
+            pass
+        """
+        self.assertSrcRoundtrips(source, type_comments=True)
+
+    @unittest.skipUnless(sys.version_info >= (3, 8),
+                         "typed_ast merged to master in Python 3.8")
+    def test_type_comments_variable_decl(self):
+        source = """
+        a = 0 # type: int
+        b = demo() # type: ignore
+        c = [1, 'a'] # type: Custom[int, str]
+        """
+        self.assertSrcRoundtrips(source, type_comments=True)
+
+    @unittest.skipUnless(sys.version_info >= (3, 8),
+                         "typed_ast merged to master in Python 3.8")
+    def test_type_comments_statements(self):
+        source = """
+        for a in []: # type: int
+            pass
+        with context(): # type: int
+            pass
+        with blabla():
+            inner = x # type: ignore
+        """
+        self.assertSrcRoundtrips(source, type_comments=True)
 
 if __name__ == '__main__':
     unittest.main()
