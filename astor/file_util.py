@@ -145,7 +145,7 @@ class JsonToAst(object):
 
         if sys.version_info.major == 2:
             for k, v in args.iteritems():
-                if isinstance(v, unicode):
+                if isinstance(v, unicode):  # noqa F821; skip flake8 check for unicode
                     try:
                         args[k] = v.encode("ascii")
                     except UnicodeEncodeError:
