@@ -5,18 +5,15 @@ python:
   - 3.4
   - 3.5
   - 3.6
+  - 3.7
+  - 3.8
+  - 3.9-dev
   - pypy
   - pypy3.5
 matrix:
-  include:
-  # See https://github.com/travis-ci/travis-ci/issues/9069
-  # for more information.
-  - python: 3.7
-    sudo: required
-    dist: xenial
-  - python: 3.8-dev
-    sudo: required
-    dist: xenial
+  fast_finish: true
+  allow_failures:
+    - python: 3.9-dev
 cache: pip
 install:
   - pip install tox-travis
