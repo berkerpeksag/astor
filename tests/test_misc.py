@@ -8,6 +8,8 @@ except ImportError:
 
 import astor
 
+from astor.source_repr import split_lines
+
 from .support import import_fresh_module
 
 
@@ -97,6 +99,19 @@ class TreeWalkTestCase(unittest.TestCase):
         self.assertEqual(treewalk.__dict__['nodestack'], [])
         self.assertEqual(treewalk.__dict__['pre_handlers'], {})
         self.assertEqual(treewalk.__dict__['post_handlers'], {})
+
+
+class SourceReprTestCase(unittest.TestCase):
+    """
+    Tests for helpers in astor.source_repr module.
+
+    Note that these APIs are not public.
+    """
+
+    @unittest.skipUnless(sys.version_info[0] == 2, 'only applies to Python 2')
+    def test_split_lines_unicode_support(self):
+        source = [u'copy', '\n']
+        self.assertEqual(split_lines(source), source)
 
 
 if __name__ == '__main__':

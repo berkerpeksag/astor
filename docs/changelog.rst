@@ -22,6 +22,11 @@ Bug fixes
 .. _`Issue 158`: https://github.com/berkerpeksag/astor/issues/158
 .. _`PR 164`: https://github.com/berkerpeksag/astor/pull/164
 
+* Fixed :exc:`TypeError` when AST nodes with unicode strings are passed to
+  :func:`astor.to_source`.
+  (Reported and fixed by Dominik Moritz in `PR 154`_.)
+
+.. _`PR 154`: https://github.com/berkerpeksag/astor/pull/154
 
 0.8.0 - 2019-05-19
 ------------------
