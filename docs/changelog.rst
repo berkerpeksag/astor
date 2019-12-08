@@ -15,6 +15,11 @@ Bug fixes
 .. _`Issue 153`: https://github.com/berkerpeksag/astor/issues/153
 .. _`PR 155`: https://github.com/berkerpeksag/astor/pull/155
 
+* Fixed :func:`astor.to_source` incorrectly checking whether *source_generator_class* is a subclass of :class:`astor.code_gen.SourceGenerator`
+
+.. _`PR 164`: https://github.com/berkerpeksag/astor/pull/164
+
+
 0.8.0 - 2019-05-19
 ------------------
 
@@ -87,7 +92,7 @@ Bug fixes
 * Fixed :class:`astor.tree_walk.TreeWalk` when attempting to access attributes
   created by Python's type system (such as ``__dict__`` and ``__weakref__``)
   (Reported and fixed by esupoff in `Issue 136`_ and `PR 137`_.)
-  
+
 .. _`Issue 136`: https://github.com/berkerpeksag/astor/issues/136
 .. _`PR 137`: https://github.com/berkerpeksag/astor/pull/137
 
