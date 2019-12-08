@@ -95,7 +95,7 @@ Bug fixes
 * Fixed :class:`astor.tree_walk.TreeWalk` when attempting to access attributes
   created by Python's type system (such as ``__dict__`` and ``__weakref__``)
   (Reported and fixed by esupoff in `Issue 136`_ and `PR 137`_.)
-
+  
 .. _`Issue 136`: https://github.com/berkerpeksag/astor/issues/136
 .. _`PR 137`: https://github.com/berkerpeksag/astor/pull/137
 
