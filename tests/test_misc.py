@@ -66,7 +66,7 @@ class PublicAPITestCase(unittest.TestCase):
             )
         self.assertEqual(
             str(cm.exception),
-            'source_generator_class should be a class'
+            'source_generator_class should be a class',
         )
 
 
