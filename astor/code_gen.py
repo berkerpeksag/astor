@@ -18,9 +18,9 @@ this code came from here (in 2012):
 """
 
 import ast
+import inspect
 import math
 import sys
-import inspect
 
 from .op_util import get_op_symbol, get_op_precedence, Precedence
 from .node_util import ExplicitNodeVisitor
@@ -58,7 +58,8 @@ def to_source(node, indent_with=' ' * 4, add_line_information=False,
         raise TypeError('source_generator_class should be a class')
     elif not issubclass(source_generator_class, SourceGenerator):
         raise TypeError('source_generator_class should be a subclass of SourceGenerator')
-    generator = source_generator_class(indent_with, add_line_information, pretty_string)
+    generator = source_generator_class(
+        indent_with, add_line_information, pretty_string)
     generator.visit(node)
     generator.result.append('\n')
     if set(generator.result[0]) == set('\n'):
