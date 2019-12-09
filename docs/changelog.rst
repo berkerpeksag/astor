@@ -28,6 +28,13 @@ Bug fixes
 
 .. _`PR 154`: https://github.com/berkerpeksag/astor/pull/154
 
+* Fixed installation issue with setuptools 41.4.0 or later due to the use of
+  an undocumented feature.
+  (Reported and fixed by Jonathan Ringer in `Issue 162`_ and `PR 163`_.)
+
+.. _`Issue 162`: https://github.com/berkerpeksag/astor/issues/162
+.. _`PR 163`: https://github.com/berkerpeksag/astor/pull/163
+
 0.8.0 - 2019-05-19
 ------------------
 
