@@ -3,7 +3,7 @@ Release Notes
 =============
 
 0.9 - in development
-----------------------
+--------------------
 
 New Features
 ~~~~~~~~~~~~
@@ -13,6 +13,39 @@ New Features
 
 .. _`Issue 159`: https://github.com/berkerpeksag/astor/issues/159
 .. _`PR 160`: https://github.com/berkerpeksag/astor/pull/160
+
+0.8.1 - in development
+----------------------
+
+Bug fixes
+~~~~~~~~~
+
+* Fixed precedence issue for f-string expressions that caused
+  redundant parenthesis around expression.
+  (Reported by Ilya Kamenshchikov in `Issue 153`_ and fixed by Batuhan Taskaya in `PR 155`_.)
+
+.. _`Issue 153`: https://github.com/berkerpeksag/astor/issues/153
+.. _`PR 155`: https://github.com/berkerpeksag/astor/pull/155
+
+* Fixed :func:`astor.to_source` incorrectly checking whether
+  *source_generator_class* is a subclass of :class:`astor.code_gen.SourceGenerator`.
+  (Reported by Yu-Chia "Hank" Liu in `Issue 158`_ and fixed by Will Crichton in `PR 164`_.)
+
+.. _`Issue 158`: https://github.com/berkerpeksag/astor/issues/158
+.. _`PR 164`: https://github.com/berkerpeksag/astor/pull/164
+
+* Fixed :exc:`TypeError` when AST nodes with unicode strings are passed to
+  :func:`astor.to_source`.
+  (Reported and fixed by Dominik Moritz in `PR 154`_.)
+
+.. _`PR 154`: https://github.com/berkerpeksag/astor/pull/154
+
+* Fixed installation issue with setuptools 41.4.0 or later due to the use of
+  an undocumented feature.
+  (Reported and fixed by Jonathan Ringer in `Issue 162`_ and `PR 163`_.)
+
+.. _`Issue 162`: https://github.com/berkerpeksag/astor/issues/162
+.. _`PR 163`: https://github.com/berkerpeksag/astor/pull/163
 
 0.8.0 - 2019-05-19
 ------------------

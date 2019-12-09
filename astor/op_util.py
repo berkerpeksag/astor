@@ -34,6 +34,7 @@ op_data = """
         ExtSlice                1
     comprehension_target        1
            Tuple                0
+  FormattedValue                0
 
            Comma                1
        NamedExpr                1
