@@ -2,6 +2,18 @@
 Release Notes
 =============
 
+0.9 - in development
+----------------------
+
+New Features
+~~~~~~~~~~~~
+
+* Support type comments in code generation.
+  (Reported and fixed by Batuhan Taskaya in `Issue 159`_ and `PR 160`_.)
+
+.. _`Issue 159`: https://github.com/berkerpeksag/astor/issues/159
+.. _`PR 160`: https://github.com/berkerpeksag/astor/pull/160
+
 0.8.0 - 2019-05-19
 ------------------
 
