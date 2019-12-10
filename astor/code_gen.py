@@ -556,6 +556,12 @@ class SourceGenerator(ExplicitNodeVisitor):
                 self._handle_numeric_constant(value)
         elif isinstance(value, str):
             self._handle_string_constant(node, node.value)
+        elif isinstance(value, tuple):
+            tuple_node = ast.Tuple(
+                elts = [ast.Constant(value=elt) for elt in value],
+                ctx = ast.Load()
+            )
+            self.visit_Tuple(tuple_node)
         elif value is Ellipsis:
             self.write('...')
         else:

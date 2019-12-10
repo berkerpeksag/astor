@@ -593,6 +593,25 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
             ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value="String")),
             "spam = 'String'")
 
+    @unittest.skipUnless(sys.version_info >= (3, 6),
+                         "ast.Constant introduced in Python 3.6")
+    def test_constant_tuple_nodes(self):
+        tuples = (
+            (1,),
+            (1, 2, 3),
+            ("a",),
+            ("a", "b", "c")
+        )
+
+        for constant in tuples:
+            self.assertAstEqualsSource(ast.Constant(value=constant),
+                repr(constant))
+
+        for constant in tuples:
+            constant += (1e1000, 1e1000j)
+            self.assertAstEqualsSource(ast.Constant(value=constant),
+                repr(constant).replace('inf', '1e1000'))
+
     def test_annassign(self):
         source = """
             a: int
