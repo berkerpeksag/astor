@@ -3,13 +3,13 @@ Release Notes
 =============
 
 0.9.0 - in development
---------------------
+----------------------
 
-Bug Fixes
+Bug fixes
 ~~~~~~~~~
 
 * Change formatting of function and assignment type annotations to be more
-  PEP8 friendly.
+  :pep:`8` friendly.
   (Contributed by Venkatesh-Prasad Ranganath in `PR 170`_.)
 
 .. _`PR 170`: https://github.com/berkerpeksag/astor/pull/170
