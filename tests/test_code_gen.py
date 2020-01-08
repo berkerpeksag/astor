@@ -611,6 +611,22 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         """
         self.assertAstRoundtripsGtVer(source, (3, 6))
 
+    @unittest.skipUnless(sys.version_info >= (3, 6),
+                         "typing and annotated assignment was introduced in "
+                         "Python 3.6")
+    def test_function_typing(self):
+        source = canonical("""
+        def foo(x : int) ->str:
+            i : str = '3'
+            return i
+        """)
+        target = canonical("""
+        def foo(x: int) -> str:
+            i: str = '3'
+            return i
+        """)
+        self.assertAstEqualsSource(ast.parse(source), target)
+
     def test_compile_types(self):
         code = '(a + b + c) * (d + e + f)\n'
         for mode in 'exec eval single'.split():

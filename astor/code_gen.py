@@ -330,7 +330,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.statement(node, '%sdef %s' % (prefix, node.name), '(')
         self.visit_arguments(node.args)
         self.write(')')
-        self.conditional_write(' ->', self.get_returns(node))
+        self.conditional_write(' -> ', self.get_returns(node))
         self.write(':')
         self.body(node.body)
         if not self.indentation:
