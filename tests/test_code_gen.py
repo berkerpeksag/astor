@@ -764,7 +764,27 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         astor.to_source(ast.parse(source))
         self.assertAstEqualsSource(ast.parse(source), target)
 
+        source = 'spam = {3:4}'
+        target = 'spam = {3: 4}'
+        astor.to_source(ast.parse(source))
+        self.assertAstEqualsSource(ast.parse(source), target)
+
+        source = 'spam = {(3.0):4}'
+        target = 'spam = {3.0: 4}'
+        astor.to_source(ast.parse(source))
+        self.assertAstEqualsSource(ast.parse(source), target)
+
+        source = 'spam = {3.0:4}'
+        target = 'spam = {3.0: 4}'
+        astor.to_source(ast.parse(source))
+        self.assertAstEqualsSource(ast.parse(source), target)
+
         source = 'spam = {(3+4):4}'
+        target = 'spam = {3 + 4: 4}'
+        astor.to_source(ast.parse(source))
+        self.assertAstEqualsSource(ast.parse(source), target)
+
+        source = 'spam = {3+4:4}'
         target = 'spam = {3 + 4: 4}'
         astor.to_source(ast.parse(source))
         self.assertAstEqualsSource(ast.parse(source), target)
