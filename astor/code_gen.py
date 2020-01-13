@@ -729,6 +729,7 @@ class SourceGenerator(ExplicitNodeVisitor):
             self.write('{1}.__class__()')
 
     def visit_Dict(self, node):
+        set_precedence(Precedence.Comma, *node.keys)
         set_precedence(Precedence.Comma, *node.values)
         with self.delimit('{}'):
             for idx, (key, value) in enumerate(zip(node.keys, node.values)):
