@@ -8,6 +8,11 @@ Release Notes
 Bug fixes
 ~~~~~~~~~
 
+* Use the codeobj name in the key rather than the line number.
+  (Reported by David Charboneau in `Issue 174`_ and fixed by David Charboneau in `PR 175`_.)
+
+.. _`PR 175`: https://github.com/berkerpeksag/astor/pull/175
+
 * Change formatting of function and assignment type annotations to be more
   :pep:`8` friendly.
   (Contributed by Venkatesh-Prasad Ranganath in `PR 170`_.)
