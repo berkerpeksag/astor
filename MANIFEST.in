@@ -1,3 +1,2 @@
 include README.rst AUTHORS LICENSE
-include setuputils.py
 recursive-include tests *.py
