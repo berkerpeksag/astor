@@ -1,4 +1,3 @@
-include README.rst AUTHORS LICENSE CHANGES
+include README.rst AUTHORS LICENSE
 include setuputils.py
-include astor/VERSION
 recursive-include tests *.py

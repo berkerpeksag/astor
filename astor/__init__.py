@@ -9,7 +9,6 @@ Copyright 2013 (c) Berker Peksag
 
 """
 
-import os
 import warnings
 
 from .code_gen import SourceGenerator, to_source  # NOQA
@@ -20,9 +19,7 @@ from .op_util import get_op_symbol, get_op_precedence  # NOQA
 from .op_util import symbol_data  # NOQA
 from .tree_walk import TreeWalk  # NOQA
 
-ROOT = os.path.dirname(__file__)
-with open(os.path.join(ROOT, 'VERSION')) as version_file:
-    __version__ = version_file.read().strip()
+__version__ = '0.8.1'
 
 parse_file = code_to_ast.parse_file
 
