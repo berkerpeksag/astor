@@ -174,6 +174,9 @@ class TreeWalk(MetaFlatten):
                                                index)
         parent = prev[0]
         if isinstance(parent, list):
-            parent[index] = new_node
+            if isinstance(new_node, list):
+                parent[index:index+1] = new_node
+            else:
+                parent[index] = new_node
         else:
             setattr(parent, name, new_node)
