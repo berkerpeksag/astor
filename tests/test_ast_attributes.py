@@ -16,6 +16,11 @@ class OptionalAttributesTestCase(unittest.TestCase):
         )
         self.assertIsInstance(astor.to_source(tree), str)
 
+    def test_alias(self):
+        """ Check alias node without 'asname' attribute """
+        tree = ast.alias(name='math')
+        self.assertIsInstance(astor.to_source(tree), str)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -890,7 +890,8 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def visit_alias(self, node):
         self.write(node.name)
-        self.conditional_write(' as ', node.asname)
+        if hasattr(node, 'asname'):
+            self.conditional_write(' as ', node.asname)
 
     def visit_comprehension(self, node):
         set_precedence(node, node.iter, *node.ifs)
