@@ -16,6 +16,17 @@ class OptionalAttributesTestCase(unittest.TestCase):
         )
         self.assertIsInstance(astor.to_source(tree), str)
 
+    def test_arguments(self):
+        """ Check argument node without 'vararg' and 'kwarg attributes """
+        tree = ast.arguments(
+            posonlyargs=[],
+            args=[],
+            kwonlyargs=[],
+            kw_defaults=[],
+            defaults=[],
+        )
+        self.assertIsInstance(astor.to_source(tree), str)
+
     def test_alias(self):
         """ Check alias node without 'asname' attribute """
         tree = ast.alias(name='math')

@@ -259,14 +259,16 @@ class SourceGenerator(ExplicitNodeVisitor):
             self.write(write_comma, '/')
 
         loop_args(node.args, node.defaults[offset:])
-        self.conditional_write(write_comma, '*', node.vararg)
+        if hasattr(node, 'vararg'):
+            self.conditional_write(write_comma, '*', node.vararg)
 
         kwonlyargs = self.get_kwonlyargs(node)
         if kwonlyargs:
             if node.vararg is None:
                 self.write(write_comma, '*')
             loop_args(kwonlyargs, node.kw_defaults)
-        self.conditional_write(write_comma, '**', node.kwarg)
+        if hasattr(node, 'kwarg'):
+            self.conditional_write(write_comma, '**', node.kwarg)
 
     def statement(self, node, *params, **kw):
         self.newline(node)
