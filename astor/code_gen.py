@@ -888,7 +888,8 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def visit_arg(self, node):
         self.write(node.arg)
-        self.conditional_write(': ', node.annotation)
+        if hasattr(node, 'annotation'):
+            self.conditional_write(': ', node.annotation)
 
     def visit_alias(self, node):
         self.write(node.name)

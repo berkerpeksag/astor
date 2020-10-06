@@ -27,6 +27,11 @@ class OptionalAttributesTestCase(unittest.TestCase):
         )
         self.assertIsInstance(astor.to_source(tree), str)
 
+    def test_arg(self):
+        """ Check arg node without 'annotation' and 'type_comment' attribute """
+        tree = ast.arg(arg='a')
+        self.assertIsInstance(astor.to_source(tree), str)
+
     def test_alias(self):
         """ Check alias node without 'asname' attribute """
         tree = ast.alias(name='math')
