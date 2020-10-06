@@ -307,11 +307,15 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.conditional_write(' = ', node.value)
 
     def visit_ImportFrom(self, node):
-        self.statement(node, 'from ', node.level * '.',
-                       node.module or '', ' import ')
+        if hasattr(node, 'level'): node_level = node.level
+        else: node_level = 0
+        if hasattr(node, 'module'): node_module = node.module
+        else: node_module = ''
+        self.statement(node, 'from ', node_level * '.',
+                        node_module or '', ' import ')
         self.comma_list(node.names)
         # Goofy stuff for Python 2.7 _pyio module
-        if node.module == '__future__' and 'unicode_literals' in (
+        if node_module == '__future__' and 'unicode_literals' in (
                 x.name for x in node.names):
             self.using_unicode_literals = True
 
