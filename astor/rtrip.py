@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Part of the astor library for Python AST manipulation.
@@ -160,7 +160,7 @@ def usage(msg):
 
         Usage:
 
-            python -m astor.rtrip [readonly] [<source>]
+            python3 -m astor.rtrip [readonly] [<source>]
 
 
         This utility tests round-tripping of Python source to AST
