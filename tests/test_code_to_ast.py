@@ -1,33 +1,72 @@
-from astor import code_to_ast
-from functools import wraps
+import functools
+import unittest
 
-def example_decorator(f):
-    @wraps(f)
+from astor import code_to_ast
+
+
+def decorator(f):
+    @functools.wraps(f)
     def wrapper(*args, **kwargs):
         return f(*args, **kwargs)
     return wrapper
 
-@example_decorator
-def example_decorated_func():
+
+def simple_decorator(f):
+    f.__decorated__ = True
+    return f
+
+
+def undecorated_func():
     pass
 
-def example_undecorated_func():
+
+@decorator
+def decorated_func():
     pass
 
-@example_decorator
-@example_decorator
+
+@decorator
+@decorator
 def twice_decorated_func():
     pass
 
-def test_code_to_ast():
-    # validate we can get the ast for a decorated function
-    ast = code_to_ast(example_decorated_func)
-    assert ast is not None
 
-    # validate we can get the ast for an undecorated function
-    ast = code_to_ast(example_undecorated_func)
-    assert ast is not None
+@simple_decorator
+def plain_decorated_func():
+    pass
 
-    # validate we can get the ast for a multiply decorated function
-    ast = code_to_ast(twice_decorated_func)
-    assert ast is not None
+
+@simple_decorator
+def simple_decorated_func():
+    pass
+
+
+@simple_decorator
+@decorator
+def twice_decorated_func_2():
+    pass
+
+
+class CodeToASTTestCase(unittest.TestCase):
+
+    def test_decorated(self):
+        self.assertIsNotNone(code_to_ast(decorated_func))
+
+    def test_undecorated(self):
+        self.assertIsNotNone(code_to_ast(undecorated_func))
+
+    def test_twice_decorated(self):
+        self.assertIsNotNone(code_to_ast(twice_decorated_func))
+
+    def test_twice_decorated_2(self):
+        self.assertIsNotNone(code_to_ast(twice_decorated_func_2))
+
+    def test_plain_decorator(self):
+        self.assertIsNotNone(code_to_ast(simple_decorated_func))
+
+    def test_module(self):
+        self.assertIsNotNone(code_to_ast(unittest))
+
+
+if __name__ == '__main__':
+    unittest.main()

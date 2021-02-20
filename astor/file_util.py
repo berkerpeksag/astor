@@ -95,12 +95,12 @@ class CodeToAst(object):
 
     def __call__(self, codeobj):
         cache = self.cache
-        fname, lineno = self.get_file_info(codeobj)
+        fname = self.get_file_info(codeobj)[0]
         key = (fname, codeobj.__name__)
         result = cache.get(key)
         if result is not None:
             return result
-        cache[(fname, 0)] = mod_ast = self.parse_file(fname)
+        cache[key] = mod_ast = self.parse_file(fname)
         for obj in mod_ast.body:
             if not isinstance(obj, ast.FunctionDef):
                 continue
