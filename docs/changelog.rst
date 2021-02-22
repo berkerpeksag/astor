@@ -8,6 +8,14 @@ Release Notes
 Bug fixes
 ~~~~~~~~~
 
+* Use ``codeobj.__name__`` in the key for the internal cache of
+  :class:`astor.file_util.CodeToAst` rather than the line number to
+  prevent :exc:`KeyError`.
+  (Reported and fixed by David Charboneau in `Issue 174`_ and `PR 175`_.)
+
+.. _`Issue 174`: https://github.com/berkerpeksag/astor/pull/174
+.. _`PR 175`: https://github.com/berkerpeksag/astor/pull/175
+
 * Change formatting of function and assignment type annotations to be more
   :pep:`8` friendly.
   (Contributed by Venkatesh-Prasad Ranganath in `PR 170`_.)
