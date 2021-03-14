@@ -380,6 +380,28 @@ class SourceGenerator(ExplicitNodeVisitor):
                 self.else_body(else_)
                 break
 
+    # introduced in Python 3.10
+    def visit_Match(self, node):
+        # set_precedence(node, node.subject)
+        self.statement(node, 'match ', node.subject, ':')
+        self.body(node.cases)
+
+    def visit_match_case(self, node):
+        # set_precedence(node, node.pattern, node.guard)
+        if node.guard is not None:
+            self.statement(node, 'case ', node.pattern, ' if ', node.guard, ':')
+        else:
+            self.statement(node, 'case ', node.pattern, ':')
+        self.body(node.body)
+
+    def visit_MatchAs(self, node):
+        self.write(node.pattern, ' as ', node.name)
+
+    def visit_MatchOr(self, node):
+        self.write(node.patterns[0])
+        for pattern in node.patterns[1:]:
+            self.write(' | ', pattern)
+
     def visit_For(self, node, is_async=False):
         set_precedence(node, node.target)
         prefix = 'async ' if is_async else ''
