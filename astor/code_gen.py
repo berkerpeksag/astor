@@ -144,7 +144,7 @@ class SourceGenerator(ExplicitNodeVisitor):
     """This visitor is able to transform a well formed syntax tree into Python
     sourcecode.
 
-    For more details have a look at the docstring of the `node_to_source`
+    For more details have a look at the docstring of the `to_source`
     function.
 
     """
