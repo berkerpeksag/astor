@@ -217,6 +217,12 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
             our_dict = {'a': 1, **{'b': 2, 'c': 3}}"""
         self.assertSrcRoundtripsGtVer(source, (3, 5))
 
+    def test_dictionary_unpacking_parens(self):
+        self.assertSrcRoundtripsGtVer("f(**x)", (3, 5))
+        self.assertSrcRoundtripsGtVer("{**x}", (3, 5))
+        self.assertSrcRoundtripsGtVer("f(**([] or 5))", (3, 5))
+        self.assertSrcRoundtripsGtVer("{**([] or 5)}", (3, 5))
+
     def test_async_def_with_for(self):
         source = """
             async def read_data(db):

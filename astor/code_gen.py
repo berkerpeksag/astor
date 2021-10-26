@@ -532,7 +532,8 @@ class SourceGenerator(ExplicitNodeVisitor):
         for arg in args:
             write(write_comma, arg)
 
-        set_precedence(Precedence.Comma, *(x.value for x in keywords))
+        set_precedence(Precedence.Comma,
+            *(x.value for x in keywords if x.arg))
         for keyword in keywords:
             # a keyword.arg of None indicates dictionary unpacking
             # (Python >= 3.5)
@@ -729,9 +730,10 @@ class SourceGenerator(ExplicitNodeVisitor):
             self.write('{1}.__class__()')
 
     def visit_Dict(self, node):
-        set_precedence(Precedence.Comma, *node.values)
         with self.delimit('{}'):
             for idx, (key, value) in enumerate(zip(node.keys, node.values)):
+                if key:
+                    set_precedence(Precedence.Comma, value)
                 self.write(', ' if idx else '',
                            key if key else '',
                            ': ' if key else '**', value)
