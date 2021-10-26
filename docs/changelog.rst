@@ -22,6 +22,11 @@ Bug fixes
 
 .. _`PR 170`: https://github.com/berkerpeksag/astor/pull/170
 
+* Include parentheses for keyword unpacking when syntactically required.
+  (Contributed by Kodi Arfer in `PR 202`_.)
+
+.. _`PR 202`: https://github.com/berkerpeksag/astor/pull/202
+
 0.8.1 - 2019-12-10
 ------------------
 
