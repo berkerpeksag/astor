@@ -533,7 +533,7 @@ class SourceGenerator(ExplicitNodeVisitor):
             write(write_comma, arg)
 
         set_precedence(Precedence.Comma,
-            *(x.value for x in keywords if x.arg))
+            *(x.value for x in keywords if x.arg))  # noqa: E128
         for keyword in keywords:
             # a keyword.arg of None indicates dictionary unpacking
             # (Python >= 3.5)
