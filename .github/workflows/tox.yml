@@ -1,6 +1,14 @@
 name: tox
 on: [push, pull_request]
 jobs:
+  tox-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+      - run: pip install --upgrade pip
+      - run: pip install tox
+      - run: tox -e lint  # Perhaps use ${{ job.name }}
   tox:
     strategy:
       fail-fast: false
