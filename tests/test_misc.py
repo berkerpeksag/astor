@@ -95,7 +95,7 @@ class TreeWalkTestCase(unittest.TestCase):
         # See #136 for more details.
         treewalk = astor.TreeWalk()
         self.assertIsInstance(treewalk.__dict__, dict)
-        # Check that the inital state of the instance is empty.
+        # Check that the initial state of the instance is empty.
         self.assertEqual(treewalk.__dict__['nodestack'], [])
         self.assertEqual(treewalk.__dict__['pre_handlers'], {})
         self.assertEqual(treewalk.__dict__['post_handlers'], {})
