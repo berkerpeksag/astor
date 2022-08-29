@@ -28,7 +28,7 @@ from .string_repr import pretty_string
 from .source_repr import pretty_source
 
 
-MAX_LINE_LENGTH = 88
+MAX_LINE_LENGTH = 50
 
 
 def to_source(node, indent_with=' ' * 4, add_line_information=False,
