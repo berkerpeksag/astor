@@ -28,6 +28,9 @@ from .string_repr import pretty_string
 from .source_repr import pretty_source
 
 
+MAX_LINE_LENGTH = 88
+
+
 def to_source(node, indent_with=' ' * 4, add_line_information=False,
               pretty_string=pretty_string, pretty_source=pretty_source,
               source_generator_class=None):
@@ -176,6 +179,15 @@ class SourceGenerator(ExplicitNodeVisitor):
             for item in params:
                 if isinstance(item, AST):
                     visit(item)
+                    if hasattr(item, "value") and hasattr(item.value, "type_comment") and \
+                            item.value.type_comment is not None:
+                        append(
+                            '  # type: {}{}'.format(
+                                item.value.type_comment,
+                                # Support multiline strings, stops it wrapping in parens
+                                '\n' if len(result[-1]) > MAX_LINE_LENGTH else ''
+                            )
+                        )
                 elif callable(item):
                     item()
                 else:
