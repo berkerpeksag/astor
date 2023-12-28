@@ -5,6 +5,14 @@ Release Notes
 0.9.0 - in development
 ----------------------
 
+New features
+~~~~~~~~~~~~
+* Add support for Structural Pattern Matching, see :pep:`634`
+  (Reported by avelican in `Issue 215`_ and contributed by Skurikhin Alexandr in `PR 219`_.)
+
+.. _`Issue 215`: https://github.com/berkerpeksag/astor/issues/215
+.. _`PR 219`: https://github.com/berkerpeksag/astor/pull/219
+
 Bug fixes
 ~~~~~~~~~
 
