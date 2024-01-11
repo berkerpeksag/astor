@@ -641,6 +641,288 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
             if code.strip() != dsttxt.strip():
                 self.assertEqual('(%s)' % code.strip(), dsttxt.strip())
 
+    @unittest.skipUnless(sys.version_info >= (3, 10, 0),
+                         "match statement introduced in Python 3.10")
+    def test_match_sequence(self):
+        source = canonical("""
+            match command.split():
+                case ['quit']:
+                    ...
+                # sequence pattern
+                case [1 | 2]:
+                    ...
+                # group pattern
+                case (1 | 2):
+                    ...
+        """)
+        target = canonical("""
+            match command.split():
+                case ['quit']:
+                    ...
+                case [1 | 2]:
+                    ...
+                case 1 | 2:
+                    ...
+        """)
+        self.assertAstEqualsSource(ast.parse(source), target)
+
+    @unittest.skipUnless(sys.version_info >= (3, 10, 0),
+                         "match statement introduced in Python 3.10")
+    def test_match_sequence_brackets(self):
+        # There is no way to tell if brackets or parentheses were used
+        # from the AST. Syntactically they are identical.
+        source = canonical("""
+            match point:
+                case (Point(x1, y1), Point(x2, y2) as p2):
+                    ...
+                case [Point(x1, y1), Point(x2, y2) as p2]:
+                    ...
+
+        """)
+        target = canonical("""
+            match point:
+                case [Point(x1, y1), Point(x2, y2) as p2]:
+                    ...
+                case [Point(x1, y1), Point(x2, y2) as p2]:
+                    ...
+        """)
+        self.assertAstEqualsSource(ast.parse(source), target)
+
+    @unittest.skipUnless(sys.version_info >= (3, 10, 0),
+                         "match statement introduced in Python 3.10")
+    def test_match_singleton(self):
+        source = canonical("""
+            match x:
+                case 1:
+                    print('Goodbye!')
+                    quit_game()
+        """)
+        target = canonical("""
+            match x:
+                case 1:
+                    print('Goodbye!')
+                    quit_game()
+        """)
+        self.assertAstEqualsSource(ast.parse(source), target)
+
+
+    @unittest.skipUnless(sys.version_info >= (3, 10, 0),
+                         "match statement introduced in Python 3.10")
+    def test_match_star(self):
+        source = canonical("""
+            match x:
+                case [1, 2, *rest]:
+                    print('Goodbye!')
+                    quit_game()
+                case [*_]:
+                    return 'seq'
+        """)
+        target = canonical("""
+            match x:
+                case [1, 2, *rest]:
+                    print('Goodbye!')
+                    quit_game()
+                case [*_]:
+                    return 'seq'
+        """)
+        self.assertAstEqualsSource(ast.parse(source), target)
+
+
+    @unittest.skipUnless(sys.version_info >= (3, 10, 0),
+                         "match statement introduced in Python 3.10")
+    def test_match_mapping(self):
+        source = canonical("""
+            match x:
+                case {'text': message, 'color': c, **rest}:
+                    pass
+                case {1: _, 2: _}:
+                    print('You won!')
+                    win_game()
+                case {**rest}:
+                    print('You Lose!')
+                    lose_game()
+        """)
+        target = canonical("""
+            match x:
+                case {'text': message, 'color': c, **rest}:
+                    pass
+                case {1: _, 2: _}:
+                    print('You won!')
+                    win_game()
+                case {**rest}:
+                    print('You Lose!')
+                    lose_game()
+        """)
+        self.assertAstEqualsSource(ast.parse(source), target)
+
+    @unittest.skipUnless(sys.version_info >= (3, 10, 0),
+                         "match statement introduced in Python 3.10")
+    def test_match_class(self):
+        source = canonical("""
+            match point:
+                case Point(x=0, y=0):
+                    print('Origin')
+                case Point(x=0, y=y):
+                    print(f'Y={y}')
+                case Point(x=x, y=0):
+                    print(f'X={x}')
+                case Point(1, y=1):
+                    print('1, y=1')
+                case Point():
+                    print('Somewhere else')
+                case A.B.C.D:
+                    ...
+                case _:
+                    print('Not a point')
+        """)
+        target = canonical("""
+            match point:
+                case Point(x=0, y=0):
+                    print('Origin')
+                case Point(x=0, y=y):
+                    print(f'Y={y}')
+                case Point(x=x, y=0):
+                    print(f'X={x}')
+                case Point(1, y=1):
+                    print('1, y=1')
+                case Point():
+                    print('Somewhere else')
+                case A.B.C.D:
+                    ...
+                case _:
+                    print('Not a point')
+        """)
+        self.assertAstEqualsSource(ast.parse(source), target)
+
+    @unittest.skipUnless(sys.version_info >= (3, 10, 0),
+                         "match statement introduced in Python 3.10")
+    def test_match_guard(self):
+        source = canonical("""
+            match point:
+                case Point(x, y) if x == y:
+                    print(f'Y=X at {x}')
+                case Point(x, y) if x in (1, 2, 3):
+                    print(f'Not on the diagonal')
+                case Point(x, y) if (x := x[:0]):
+                    ...
+
+        """)
+        target = canonical("""
+            match point:
+                case Point(x, y) if x == y:
+                    print(f'Y=X at {x}')
+                case Point(x, y) if x in (1, 2, 3):
+                    print(f'Not on the diagonal')
+                case Point(x, y) if (x := x[:0]):
+                    ...
+        """)
+        self.assertAstEqualsSource(ast.parse(source), target)
+
+    @unittest.skipUnless(sys.version_info >= (3, 10, 0),
+                         "match statement introduced in Python 3.10")
+    def test_match_capture(self):
+        # For now there is no way to check if there were parentheses around
+        # pattern or not, syntactically they are identical
+        source = canonical("""
+            match point:
+                case [Point(x1, y1), Point(x2, y2) as p2]:
+                    print('p2')
+                case (0 as z) | (1 as z) | (2 as z):
+                    ...
+
+        """)
+        target = canonical("""
+            match point:
+                case [Point(x1, y1), Point(x2, y2) as p2]:
+                    print('p2')
+                case 0 as z | 1 as z | 2 as z:
+                    ...
+        """)
+        self.assertAstEqualsSource(ast.parse(source), target)
+
+    @unittest.skipUnless(sys.version_info >= (3, 10, 0),
+                         "match statement introduced in Python 3.10")
+    def test_match_or(self):
+        source = canonical("""
+            match point:
+                case [x] | y:
+                    ...
+                case [x, y] | [z]:
+                    ...
+                case [x] as y:
+                    ...
+                case {0: [1, 2, {}] | True} | {1: [[]]} | {0: [1, 2, {}]} | [] | 'X' | {}:
+                    ...
+        """)
+        target = canonical("""
+            match point:
+                case [x] | y:
+                    ...
+                case [x, y] | [z]:
+                    ...
+                case [x] as y:
+                    ...
+                case {0: [1, 2, {}] | True} | {1: [[]]} | {0: [1, 2, {}]} | [] | 'X' | {}:
+                    ...
+        """)
+        self.assertAstEqualsSource(ast.parse(source), target)
+
+    @unittest.skipUnless(sys.version_info >= (3, 10, 0),
+                         "match statement introduced in Python 3.10")
+    def test_match_nested(self):
+        source = canonical("""
+            match match:
+                case case:
+                    match match:
+                        case case:
+                            pass
+        """)
+        target = canonical("""
+            match match:
+                case case:
+                    match match:
+                        case case:
+                            pass
+        """)
+        self.assertAstEqualsSource(ast.parse(source), target)
+
+    @unittest.skipUnless(sys.version_info >= (3, 10, 0),
+                         "match statement introduced in Python 3.10")
+    def test_match_call(self):
+        source = canonical("""
+            match Seq():
+                case bool(z):
+                    y = 0
+            match [match.group('grade'), match.group('material')]:
+                case ['MD' | 'HD', 'SS' as code]:
+                    print('You will get here')
+        """)
+        target = canonical("""
+            match Seq():
+                case bool(z):
+                    y = 0
+            match [match.group('grade'), match.group('material')]:
+                case ['MD' | 'HD', 'SS' as code]:
+                    print('You will get here')
+        """)
+        self.assertAstEqualsSource(ast.parse(source), target)
+
+    @unittest.skipUnless(sys.version_info >= (3, 10, 0),
+                         "match statement introduced in Python 3.10")
+    def test_match_num(self):
+        source = canonical("""
+            match 3:
+                case 0 | 1 | 2 | 3:
+                    1
+
+        """)
+        target = canonical("""
+            match 3:
+                case 0 | 1 | 2 | 3:
+                    1
+        """)
+        self.assertAstEqualsSource(ast.parse(source), target)
+
     def test_unicode_literals(self):
         source = """
         from __future__ import (print_function, unicode_literals)

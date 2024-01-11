@@ -169,6 +169,8 @@ class SourceGenerator(ExplicitNodeVisitor):
         result = self.result
         append = result.append
 
+        self.discard_numeric_delim_for_const = False
+
         def write(*params):
             """ self.write is a closure for performance (to reduce the number
                 of attribute lookups).
@@ -503,6 +505,77 @@ class SourceGenerator(ExplicitNodeVisitor):
             self.conditional_write(', ', node.inst)
             self.conditional_write(', ', node.tback)
 
+    # Match statement (introduced in Python 3.10)
+    def visit_Match(self, node):
+        self.discard_numeric_delim_for_const = True
+        self.statement(node, 'match ', node.subject, ':')
+        self.body(node.cases)
+        self.discard_numeric_delim_for_const = False
+
+    def visit_match_case(self, node):
+        self.statement(node, 'case ', node.pattern)
+        self.conditional_write(' if ', node.guard)
+        self.write(':')
+        self.body(node.body)
+
+    def visit_MatchSequence(self, node):
+        with self.delimit('[]'):
+            self.comma_list(node.patterns)
+
+    def visit_MatchValue(self, node):
+        self.write(node.value)
+
+    def visit_MatchSingleton(self, node):
+        self.write(str(node.value))
+
+    def visit_MatchStar(self, node):
+        self.write('*', node.name or '_')
+
+    def visit_MatchMapping(self, node):
+        with self.delimit('{}'):
+            for idx, (key, value) in enumerate(zip(node.keys, node.patterns)):
+                if key:
+                    set_precedence(Precedence.Comma, value)
+                self.write(', ' if idx else '',
+                           key if key else '',
+                           ': ' if key else '**', value)
+            if node.rest:
+                if node.keys:
+                    self.write(', ')
+                self.write('**', node.rest)
+
+    def visit_MatchAs(self, node):
+        if not node.pattern:
+            self.write(node.name or '_')
+        else:
+            self.write(node.pattern, ' as ', node.name)
+
+    def visit_MatchOr(self, node):
+        for idx, pattern in enumerate(node.patterns):
+            self.write(' | ' if idx else '', pattern)
+
+    def visit_MatchClass(self, node):
+        write = self.write
+        want_comma = []
+
+        def write_comma():
+            if want_comma:
+                write(', ')
+            else:
+                want_comma.append(True)
+
+        self.visit(node.cls)
+        with self.delimit('()'):
+            args = node.patterns
+            for arg in args:
+                write(write_comma, arg)
+
+            kwd_attrs = node.kwd_attrs
+            kwd_patterns = node.kwd_patterns
+
+            for key, value in zip(kwd_attrs, kwd_patterns):
+                write(write_comma, key, '=', value)
+
     # Expressions
 
     def visit_Attribute(self, node):
@@ -553,7 +626,9 @@ class SourceGenerator(ExplicitNodeVisitor):
         value = node.value
 
         if isinstance(value, (int, float, complex)):
-            with self.delimit(node):
+            with self.delimit(node) as delimiters:
+                if self.discard_numeric_delim_for_const:
+                    delimiters.discard = True
                 self._handle_numeric_constant(value)
         elif isinstance(value, str):
             self._handle_string_constant(node, node.value)
@@ -756,6 +831,8 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def visit_Compare(self, node):
         with self.delimit(node, node.ops[0]) as delimiters:
+            if self.discard_numeric_delim_for_const:
+                delimiters.discard = True
             set_precedence(delimiters.p + 1, node.left, *node.comparators)
             self.visit(node.left)
             for op, right in zip(node.ops, node.comparators):
