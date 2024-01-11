@@ -7,7 +7,8 @@ Release Notes
 
 New features
 ~~~~~~~~~~~~
-* Add support for Structural Pattern Matching, see :pep:`634`
+* Add support for Structural Pattern Matching, see :pep:`634` for more
+  details.
   (Reported by avelican in `Issue 215`_ and contributed by Skurikhin Alexandr in `PR 219`_.)
 
 .. _`Issue 215`: https://github.com/berkerpeksag/astor/issues/215
