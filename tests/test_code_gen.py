@@ -668,7 +668,6 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
 
     @unittest.skipUnless(sys.version_info >= (3, 10, 0),
                          "match statement introduced in Python 3.10")
-
     def test_match_sequence_brackets(self):
         # There is no way to tell if brackets or parentheses were used
         # from the AST. Syntactically they are identical.
@@ -691,7 +690,6 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
 
     @unittest.skipUnless(sys.version_info >= (3, 10, 0),
                          "match statement introduced in Python 3.10")
-
     def test_match_singleton(self):
         source = canonical("""
             match x:
@@ -710,7 +708,6 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
 
     @unittest.skipUnless(sys.version_info >= (3, 10, 0),
                          "match statement introduced in Python 3.10")
-
     def test_match_star(self):
         source = canonical("""
             match x:
@@ -733,7 +730,6 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
 
     @unittest.skipUnless(sys.version_info >= (3, 10, 0),
                          "match statement introduced in Python 3.10")
-
     def test_match_mapping(self):
         source = canonical("""
             match x:
@@ -761,7 +757,6 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
 
     @unittest.skipUnless(sys.version_info >= (3, 10, 0),
                          "match statement introduced in Python 3.10")
-
     def test_match_class(self):
         source = canonical("""
             match point:
@@ -801,7 +796,6 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
 
     @unittest.skipUnless(sys.version_info >= (3, 10, 0),
                          "match statement introduced in Python 3.10")
-
     def test_match_guard(self):
         source = canonical("""
             match point:
@@ -826,7 +820,6 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
 
     @unittest.skipUnless(sys.version_info >= (3, 10, 0),
                          "match statement introduced in Python 3.10")
-
     def test_match_capture(self):
         # For now there is no way to check if there were parentheses around
         # pattern or not, syntactically they are identical
@@ -849,7 +842,6 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
 
     @unittest.skipUnless(sys.version_info >= (3, 10, 0),
                          "match statement introduced in Python 3.10")
-
     def test_match_or(self):
         source = canonical("""
             match point:
@@ -877,7 +869,6 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
 
     @unittest.skipUnless(sys.version_info >= (3, 10, 0),
                          "match statement introduced in Python 3.10")
-
     def test_match_nested(self):
         source = canonical("""
             match match:
@@ -897,7 +888,6 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
 
     @unittest.skipUnless(sys.version_info >= (3, 10, 0),
                          "match statement introduced in Python 3.10")
-
     def test_match_call(self):
         source = canonical("""
             match Seq():
@@ -919,7 +909,6 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
 
     @unittest.skipUnless(sys.version_info >= (3, 10, 0),
                          "match statement introduced in Python 3.10")
-
     def test_match_num(self):
         source = canonical("""
             match 3:
