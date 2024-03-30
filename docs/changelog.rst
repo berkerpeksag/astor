@@ -14,6 +14,11 @@ New features
 .. _`Issue 215`: https://github.com/berkerpeksag/astor/issues/215
 .. _`PR 219`: https://github.com/berkerpeksag/astor/pull/219
 
+* Add support for Type Parameter Syntax, see :pep:`695` for more details.
+  (Contributed by am230 in `PR 222`_.)
+
+.. _`PR 222`: https://github.com/berkerpeksag/astor/pull/222
+
 Bug fixes
 ~~~~~~~~~
 

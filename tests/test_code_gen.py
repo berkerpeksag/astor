@@ -1046,6 +1046,50 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         '''
         self.assertSrcRoundtrips(source)
 
+    @unittest.skipUnless(sys.version_info >= (3, 12, 0),
+                         "type parameter introduced in Python 3.12")
+    def test_type_parameter_function(self):
+        source = '''
+        def f[T](arg: T) -> T:
+            return arg
+
+
+        def f[*V](*args: *V) -> tuple[*V,]:
+            return args
+
+
+        def f[**P](*args: P.args, **kwargs: P.kwargs):
+            pass
+        '''
+        self.assertSrcRoundtrips(source)
+
+    @unittest.skipUnless(sys.version_info >= (3, 12, 0),
+                            "type parameter introduced in Python 3.12")
+    def test_type_parameter_class(self):
+        source = '''
+        class Class[T]:
+            pass
+
+
+        class Class[*V]:
+            pass
+
+
+        class Class[**P]:
+            pass
+        '''
+        self.assertSrcRoundtrips(source)
+
+    @unittest.skipUnless(sys.version_info >= (3, 12, 0),
+                            "type alias statement introduced in Python 3.12")
+    def test_type_alias(self):
+        source = '''
+        type A = int
+        type B[T] = T
+        type C[*V] = tuple[*V,]
+        '''
+        self.assertSrcRoundtrips(source)
+
 
 if __name__ == '__main__':
     unittest.main()
