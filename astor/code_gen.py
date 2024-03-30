@@ -284,7 +284,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         for idx, item in enumerate(items):
             self.write(', ' if idx else '', item)
         self.write(',' if trailing else '')
-        
+
     def type_params(self, node):
         if getattr(node, 'type_params', []):  # Python >= 3.12
             self.write('[')

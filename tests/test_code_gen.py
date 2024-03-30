@@ -1045,7 +1045,7 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
                 pass
         '''
         self.assertSrcRoundtrips(source)
-        
+
     @unittest.skipUnless(sys.version_info >= (3, 12, 0),
                          "type parameter introduced in Python 3.12")
     def test_type_parameter_function(self):
@@ -1062,7 +1062,7 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
             pass
         '''
         self.assertSrcRoundtrips(source)
-        
+
     @unittest.skipUnless(sys.version_info >= (3, 12, 0),
                             "type parameter introduced in Python 3.12")
     def test_type_parameter_class(self):
@@ -1079,7 +1079,7 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
             pass
         '''
         self.assertSrcRoundtrips(source)
-        
+
     @unittest.skipUnless(sys.version_info >= (3, 12, 0),
                             "type alias statement introduced in Python 3.12")
     def test_type_alias(self):
