@@ -333,7 +333,10 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.generic_visit(node)
 
     def visit_TypeAlias(self, node):
-        self.statement(node, 'type ', node.name, ' = ', node.value)
+        self.statement(node, 'type ', node.name)
+        self.type_params(node)
+        self.write(' = ')
+        self.visit(node.value)
 
     def visit_TypeVar(self, node):
         self.write(node.name)

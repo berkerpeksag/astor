@@ -1085,8 +1085,8 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
     def test_type_alias(self):
         source = '''
         type A = int
-        type B = A
-        type C = B
+        type B[T] = T
+        type C[*V] = tuple[*V,]
         '''
         self.assertSrcRoundtrips(source)
 
