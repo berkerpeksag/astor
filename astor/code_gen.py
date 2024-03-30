@@ -284,6 +284,12 @@ class SourceGenerator(ExplicitNodeVisitor):
         for idx, item in enumerate(items):
             self.write(', ' if idx else '', item)
         self.write(',' if trailing else '')
+        
+    def type_params(self, node):
+        if getattr(node, 'type_params', []):  # Python >= 3.12
+            self.write('[')
+            self.comma_list(node.type_params)
+            self.write(']')
 
     # Statements
 
@@ -326,10 +332,28 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.statement(node)
         self.generic_visit(node)
 
+    def visit_TypeAlias(self, node):
+        self.statement(node, 'type ', node.name, ' = ', node.value)
+
+    def visit_TypeVar(self, node):
+        self.write(node.name)
+        if node.bound:
+            self.write(': ', node.bound)
+
+    def visit_TypeVarTuple(self, node):
+        self.write('*')
+        self.write(node.name)
+
+    def visit_ParamSpec(self, node):
+        self.write('**')
+        self.write(node.name)
+
     def visit_FunctionDef(self, node, is_async=False):
         prefix = 'async ' if is_async else ''
         self.decorators(node, 1 if self.indentation else 2)
-        self.statement(node, '%sdef %s' % (prefix, node.name), '(')
+        self.statement(node, '%sdef %s' % (prefix, node.name))
+        self.type_params(node)
+        self.write('(')
         self.visit_arguments(node.args)
         self.write(')')
         self.conditional_write(' -> ', self.get_returns(node))
@@ -354,6 +378,7 @@ class SourceGenerator(ExplicitNodeVisitor):
 
         self.decorators(node, 2)
         self.statement(node, 'class %s' % node.name)
+        self.type_params(node)
         for base in node.bases:
             self.write(paren_or_comma, base)
         # keywords not available in early version
