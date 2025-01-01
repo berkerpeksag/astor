@@ -481,8 +481,21 @@ class SourceGenerator(ExplicitNodeVisitor):
             self.statement(node, 'finally:')
             self.body(node.finalbody)
 
-    def visit_ExceptHandler(self, node):
+    # except* (introduced in Python 3.11)
+    def visit_TryStar(self, node):
+        self.statement(node, 'try:')
+        self.body(node.body)
+        for handler in node.handlers:
+            self.visit_ExceptHandler(handler, star=True)
+        self.else_body(node.orelse)
+        if node.finalbody:
+            self.statement(node, 'finally:')
+            self.body(node.finalbody)
+
+    def visit_ExceptHandler(self, node, star=False):
         self.statement(node, 'except')
+        if star:
+            self.write('*')
         if self.conditional_write(' ', node.type):
             self.conditional_write(' as ', node.name)
         self.write(':')
