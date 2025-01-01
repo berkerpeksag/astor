@@ -149,6 +149,28 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
                     return sorted(iterable, key=key, reverse=True)[:n]"""
         self.assertAstRoundtrips(source)
 
+    @unittest.skipUnless(sys.version_info >= (3, 11, 0),
+                            "except* introduced in Python 3.11")
+    def test_try_star(self):
+        source = """
+            try:
+                pass
+            except* Exception:
+                pass"""
+        self.assertAstRoundtrips(source)
+        source = """
+            try:
+                pass
+            except* ImportError:
+                pass
+            except* ValueError as e:
+                pass
+            else:
+                pass
+            finally:
+                pass"""
+        self.assertAstRoundtrips(source)
+
     def test_del_statement(self):
         source = "del l[0]"
         self.assertSrcRoundtrips(source)
