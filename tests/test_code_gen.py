@@ -1112,6 +1112,41 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         '''
         self.assertSrcRoundtrips(source)
 
+    def test_do_not_add_excessive_parenthesis_in_keys_of_dict_literals(self):
+        source = 'spam = {(3):4}'
+        target = 'spam = {3: 4}'
+        astor.to_source(ast.parse(source))
+        self.assertAstEqualsSource(ast.parse(source), target)
+
+        source = 'spam = {3:4}'
+        target = 'spam = {3: 4}'
+        astor.to_source(ast.parse(source))
+        self.assertAstEqualsSource(ast.parse(source), target)
+
+        source = 'spam = {(3.0):4}'
+        target = 'spam = {3.0: 4}'
+        astor.to_source(ast.parse(source))
+        self.assertAstEqualsSource(ast.parse(source), target)
+
+        source = 'spam = {3.0:4}'
+        target = 'spam = {3.0: 4}'
+        astor.to_source(ast.parse(source))
+        self.assertAstEqualsSource(ast.parse(source), target)
+
+        source = 'spam = {(3+4):4}'
+        target = 'spam = {3 + 4: 4}'
+        astor.to_source(ast.parse(source))
+        self.assertAstEqualsSource(ast.parse(source), target)
+
+        source = 'spam = {3+4:4}'
+        target = 'spam = {3 + 4: 4}'
+        astor.to_source(ast.parse(source))
+        self.assertAstEqualsSource(ast.parse(source), target)
+
+        source = 'spam = {(3).foo:4}'
+        target = 'spam = {(3).foo: 4}'
+        astor.to_source(ast.parse(source))
+        self.assertAstEqualsSource(ast.parse(source), target)
 
 if __name__ == '__main__':
     unittest.main()

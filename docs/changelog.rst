@@ -46,6 +46,14 @@ Bug fixes
 
 .. _`PR 202`: https://github.com/berkerpeksag/astor/pull/202
 
+* Remove extraneous parenthesis around keys in :class:`dict` literals. Astor
+  will now convert ``{(1): 2}`` and ``{(3 + 4): 5}`` to ``{1: 2}`` and
+  ``{3 + 4: 5}`` respectively.
+
+  (Contributed by Venkatesh-Prasad Ranganath in `PR 171`_.)
+
+.. _`PR 170`: https://github.com/berkerpeksag/astor/pull/171
+
 0.8.1 - 2019-12-10
 ------------------
 

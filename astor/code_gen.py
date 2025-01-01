@@ -849,6 +849,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         with self.delimit('{}'):
             for idx, (key, value) in enumerate(zip(node.keys, node.values)):
                 if key:
+                    set_precedence(Precedence.Comma, key)
                     set_precedence(Precedence.Comma, value)
                 self.write(', ' if idx else '',
                            key if key else '',
