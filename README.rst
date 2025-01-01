@@ -6,10 +6,6 @@ astor -- AST observe/rewrite
 :Documentation: https://astor.readthedocs.io
 :Source: https://github.com/berkerpeksag/astor
 :License: 3-clause BSD
-:Build status:
-    .. image:: https://secure.travis-ci.org/berkerpeksag/astor.svg
-        :alt: Travis CI
-        :target: https://travis-ci.org/berkerpeksag/astor/
 
 astor is designed to allow easy manipulation of Python source via the AST.
 
