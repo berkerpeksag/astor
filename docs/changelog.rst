@@ -5,6 +5,16 @@ Release Notes
 0.9.0 - in development
 ----------------------
 
+Supported Python versions
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Astor now only supports `Python versions`_ maintained by the Python core
+development team, which are Python 3.9 and newer.
+
+Support for Python 2.7 and PyPy have been dropped.
+
+.. _`Python versions`: https://devguide.python.org/versions/#versions
+
 New features
 ~~~~~~~~~~~~
 * Add support for Structural Pattern Matching, see :pep:`634` for more
