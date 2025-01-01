@@ -1,10 +1,7 @@
 import ast
 import sys
+import unittest
 import warnings
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
 
 import astor
 

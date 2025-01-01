@@ -12,11 +12,7 @@ import ast
 import math
 import sys
 import textwrap
-
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 import astor
 
