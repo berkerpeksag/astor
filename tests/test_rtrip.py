@@ -7,11 +7,7 @@ Copyright (c) 2017 Patrick Maupin
 """
 
 import os
-
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 import astor.rtrip
 
