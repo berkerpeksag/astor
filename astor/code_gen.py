@@ -149,8 +149,6 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     """
 
-    using_unicode_literals = False
-
     def __init__(self, indent_with, add_line_information=False,
                  pretty_string=pretty_string,
                  # constants
@@ -318,10 +316,6 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.statement(node, 'from ', node.level * '.',
                        node.module or '', ' import ')
         self.comma_list(node.names)
-        # Goofy stuff for Python 2.7 _pyio module
-        if node.module == '__future__' and 'unicode_literals' in (
-                x.name for x in node.names):
-            self.using_unicode_literals = True
 
     def visit_Import(self, node):
         self.statement(node, 'import ')
@@ -452,15 +446,6 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_Pass(self, node):
         self.statement(node, 'pass')
 
-    def visit_Print(self, node):
-        # XXX: python 2.6 only
-        self.statement(node, 'print ')
-        values = node.values
-        if node.dest is not None:
-            self.write(' >> ')
-            values = [node.dest] + node.values
-        self.comma_list(values, not node.nl)
-
     def visit_Delete(self, node):
         self.statement(node, 'del ')
         self.comma_list(node.targets)
@@ -537,14 +522,9 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.statement(node, 'continue')
 
     def visit_Raise(self, node):
-        # XXX: Python 2.6 / 3.0 compatibility
         self.statement(node, 'raise')
         if self.conditional_write(' ', self.get_exc(node)):
             self.conditional_write(' from ', node.cause)
-        elif self.conditional_write(' ', self.get_type(node)):
-            set_precedence(node, node.inst)
-            self.conditional_write(', ', node.inst)
-            self.conditional_write(', ', node.tback)
 
     # Match statement (introduced in Python 3.10)
     def visit_Match(self, node):
@@ -739,14 +719,12 @@ class SourceGenerator(ExplicitNodeVisitor):
             mystr = ''.join(result[index:])
             del result[index:]
             self.colinfo = res_index, str_index  # Put it back like we found it
-            uni_lit = False  # No formatted byte strings
 
         else:
             assert value is not None, "Node value cannot be None"
             mystr = value
-            uni_lit = self.using_unicode_literals
 
-        mystr = self.pretty_string(mystr, embedded, current_line, uni_lit)
+        mystr = self.pretty_string(mystr, embedded, current_line)
 
         if is_joined:
             mystr = 'f' + mystr
@@ -801,26 +779,9 @@ class SourceGenerator(ExplicitNodeVisitor):
             s = real
         self.write(s)
 
-    def visit_Num(self, node,
-                  # constants
-                  new=sys.version_info >= (3, 0)):
+    def visit_Num(self, node):
         with self.delimit(node) as delimiters:
             self._handle_numeric_constant(node.n)
-
-            # We can leave the delimiters handling in visit_Num
-            # since this is meant to handle a Python 2.x specific
-            # issue and ast.Constant exists only in 3.6+
-
-            # The Python 2.x compiler merges a unary minus
-            # with a number.  This is a premature optimization
-            # that we deal with here...
-            if not new and delimiters.discard:
-                if not isinstance(node.n, complex) and node.n < 0:
-                    pow_lhs = Precedence.Pow + 1
-                    delimiters.discard = delimiters.pp != pow_lhs
-                else:
-                    op = self.get__p_op(node)
-                    delimiters.discard = not isinstance(op, ast.USub)
 
     def visit_Tuple(self, node):
         with self.delimit(node) as delimiters:
@@ -899,6 +860,7 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_UnaryOp(self, node):
         with self.delimit(node, node.op) as delimiters:
             set_precedence(delimiters.p, node.operand)
+            # TODO: Remove this.
             # In Python 2.x, a unary negative of a literal
             # number is merged into the number itself.  This
             # bit of ugliness means it is useful to know
@@ -985,11 +947,6 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def visit_Starred(self, node):
         self.write('*', node.value)
-
-    def visit_Repr(self, node):
-        # XXX: python 2.6 only
-        with self.delimit('``'):
-            self.visit(node.value)
 
     def visit_Module(self, node):
         self.write(*node.body)
