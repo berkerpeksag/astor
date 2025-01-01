@@ -571,10 +571,9 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
 
         self.assertAstEqualsSource(ast.Ellipsis(), "...")
 
-        if sys.version_info >= (3, 0):
-            self.assertAstEqualsSource(
-                ast.Assign(targets=[ast.Name(id='spam')], value=ast.Bytes(b"Bytes")),
-                "spam = b'Bytes'")
+        self.assertAstEqualsSource(
+            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Bytes(b"Bytes")),
+            "spam = b'Bytes'")
 
         self.assertAstEqualsSource(
             ast.Assign(targets=[ast.Name(id='spam')], value=ast.Str("String")),
@@ -944,14 +943,6 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
                     1
         """)
         self.assertAstEqualsSource(ast.parse(source), target)
-
-    def test_unicode_literals(self):
-        source = """
-        from __future__ import (print_function, unicode_literals)
-        x = b'abc'
-        y = u'abc'
-        """
-        self.assertAstRoundtrips(source)
 
     def test_slicing(self):
         source = """

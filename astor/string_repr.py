@@ -13,22 +13,9 @@ or try to format it as a triple-quoted string.
 
 This is a lot harder than you would think.
 
-This has lots of Python 2 / Python 3 ugliness.
-
 """
 
 import re
-
-try:
-    special_unicode = unicode
-except NameError:
-    class special_unicode(object):
-        pass
-
-try:
-    basestring = basestring
-except NameError:
-    basestring = str
 
 
 def _properly_indented(s, line_indent):
@@ -61,8 +48,7 @@ def string_triplequote_repr(s):
     return '"""%s"""' % _prep_triple_quotes(s)
 
 
-def pretty_string(s, embedded, current_line, uni_lit=False,
-                  min_trip_str=20, max_line=100):
+def pretty_string(s, embedded, current_line, min_trip_str=20, max_line=100):
     """There are a lot of reasons why we might not want to or
        be able to return a triple-quoted string.  We can always
        punt back to the default normal string.
@@ -70,10 +56,7 @@ def pretty_string(s, embedded, current_line, uni_lit=False,
 
     default = repr(s)
 
-    # Punt on abnormal strings
-    if (isinstance(s, special_unicode) or not isinstance(s, basestring)):
-        return default
-    if uni_lit and isinstance(s, bytes):
+    if not isinstance(s, str):
         return 'b' + default
 
     len_s = len(default)

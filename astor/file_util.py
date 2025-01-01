@@ -13,12 +13,8 @@ Functions that interact with the filesystem go here.
 
 import ast
 import sys
+import tokenize
 import os
-
-try:
-    from tokenize import open as fopen
-except ImportError:
-    fopen = open
 
 
 class CodeToAst(object):
@@ -56,12 +52,9 @@ class CodeToAst(object):
         """Parse a python file into an AST.
 
         This is a very thin wrapper around ast.parse
-
-            TODO: Handle encodings other than the default for Python 2
-                        (issue #26)
         """
         try:
-            with fopen(fname) as f:
+            with tokenize.open(fname) as f:
                 fstr = f.read()
         except IOError:
             if fname != 'stdin':
