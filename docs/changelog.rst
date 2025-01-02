@@ -15,6 +15,30 @@ Support for Python 2.7 and PyPy have been dropped.
 
 .. _`Python versions`: https://devguide.python.org/versions/#versions
 
+Removal of previously deprecated APIs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The following APIs have been deprecated in Astor 0.6 and they have now
+been removed. Please update your code according to the table below.
+
+========================  ==========================
+astor 0.6.2-0.8.1         astor 0.9
+========================  ==========================
+``astor.codegen``         ``astor.code_gen``
+``astor.misc``            ``astor.file_util``
+``astor.treewalk``        ``astor.tree_walk``
+``astor.codetoast()``     ``astor.code_to_ast()``
+``astor.parsefile()``     ``astor.parse_file()``
+``astor.dump()``          ``astor.dump_tree()``
+``astor.get_anyop()``     ``astor.get_op_symbol()``
+``astor.get_boolop()``    ``astor.get_op_symbol()``
+``astor.get_binop()``     ``astor.get_op_symbol()``
+``astor.get_cmpop()``     ``astor.get_op_symbol()``
+``astor.get_unaryop()``   ``astor.get_op_symbol()``
+``astor.codetoast``       ``astor.code_to_ast``
+``astor.all_symbols``     ``astor.symbol_data``
+========================  ==========================
+
 New features
 ~~~~~~~~~~~~
 * Add support for Structural Pattern Matching, see :pep:`634` for more
@@ -62,7 +86,7 @@ Bug fixes
 
   (Contributed by Venkatesh-Prasad Ranganath in `PR 171`_.)
 
-.. _`PR 170`: https://github.com/berkerpeksag/astor/pull/171
+.. _`PR 171`: https://github.com/berkerpeksag/astor/pull/171
 
 0.8.1 - 2019-12-10
 ------------------
@@ -301,8 +325,7 @@ New features
 
   (Contributed by Ryan Gonzalez.)
 
-* Code cleanup, including renaming for PEP8 and deprecation of old names.
-  See :ref:`deprecations` for more information.
+* Code cleanup, including renaming for :pep:`8` and deprecation of old names.
   (Contributed by Leonard Truong in `Issue 36`_.)
 
 .. _`Issue 36`: https://github.com/berkerpeksag/astor/issues/36
