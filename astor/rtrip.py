@@ -22,12 +22,6 @@ from astor.node_util import (allow_ast_comparison, dump_tree,
 
 dsttree = 'tmp_rtrip'
 
-# TODO:  Remove this workaround once we remove version 2 support
-
-
-def out_prep(s, pre_encoded=(sys.version_info[0] == 2)):
-    return s if pre_encoded else s.encode('utf-8')
-
 
 def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False,
             ignore_exceptions=False, fullcomp=False):
@@ -90,7 +84,7 @@ def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False,
             dstfname = os.path.join(dstpath, fname)
             try:
                 with open(dstfname, 'wb') as f:
-                    f.write(out_prep(dsttxt))
+                    f.write(dsttxt.encode('utf-8'))
             except UnicodeEncodeError:
                 badfiles.add(dstfname)
 
@@ -117,12 +111,12 @@ def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False,
                 if not readonly:
                     try:
                         with open(dstfname[:-3] + '.srcdmp', 'wb') as f:
-                            f.write(out_prep(srcdump))
+                            f.write(srcdump.encode('utf-8'))
                     except UnicodeEncodeError:
                         badfiles.add(dstfname[:-3] + '.srcdmp')
                     try:
                         with open(dstfname[:-3] + '.dstdmp', 'wb') as f:
-                            f.write(out_prep(dstdump))
+                            f.write(dstdump.encode('utf-8'))
                     except UnicodeEncodeError:
                         badfiles.add(dstfname[:-3] + '.dstdmp')
                 elif dumpall:
