@@ -182,8 +182,6 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
                 pass"""
         self.assertSrcRoundtrips(source)
 
-    @unittest.skipUnless(sys.version_info >= (3, 8, 0, "alpha", 4),
-                         "positional only arguments introduced in Python 3.8")
     def test_positional_only_arguments(self):
         source = """
         def test(a, b, /, c, *, d, **kwargs):
@@ -518,23 +516,6 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         for case in cases:
             self.assertAstRoundtripsGtVer(case, (3, 8))
 
-    @unittest.skipUnless(sys.version_info <= (3, 3),
-                         "ast.Name used for True, False, None until Python 3.4")
-    def test_deprecated_constants_as_name(self):
-        self.assertAstEqualsSource(
-            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Name(id='True')),
-            "spam = True")
-
-        self.assertAstEqualsSource(
-            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Name(id='False')),
-            "spam = False")
-
-        self.assertAstEqualsSource(
-            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Name(id='None')),
-            "spam = None")
-
-    @unittest.skipUnless(sys.version_info >= (3, 4),
-                         "ast.NameConstant introduced in Python 3.4")
     def test_deprecated_name_constants(self):
         self.assertAstEqualsSource(
             ast.Assign(targets=[ast.Name(id='spam')], value=ast.NameConstant(value=True)),
@@ -575,8 +556,6 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
             ast.Assign(targets=[ast.Name(id='spam')], value=ast.Str("String")),
             "spam = 'String'")
 
-    @unittest.skipUnless(sys.version_info >= (3, 6),
-                         "ast.Constant introduced in Python 3.6")
     def test_constant_nodes(self):
         self.assertAstEqualsSource(
             ast.Assign(targets=[ast.Name(id='spam')], value=ast.Constant(value=3)),
@@ -634,9 +613,6 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         """
         self.assertAstRoundtripsGtVer(source, (3, 6))
 
-    @unittest.skipUnless(sys.version_info >= (3, 6),
-                         "typing and annotated assignment was introduced in "
-                         "Python 3.6")
     def test_function_typing(self):
         source = canonical("""
         def foo(x : int) ->str:
@@ -649,6 +625,7 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
             return i
         """)
         self.assertAstEqualsSource(ast.parse(source), target)
+        self.assertAstRoundtripsGtVer(source, (3, 6))
 
     def test_compile_types(self):
         code = '(a + b + c) * (d + e + f)\n'
@@ -996,8 +973,6 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         '''
         self.assertSrcRoundtripsGtVer(source, (3, 6))
 
-    @unittest.skipUnless(sys.version_info >= (3, 8, 0, "alpha", 4),
-                         "f-string debugging introduced in Python 3.8")
     def test_fstring_debugging(self):
         source = """
         x = f'{5=}'

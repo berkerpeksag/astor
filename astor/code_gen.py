@@ -684,8 +684,6 @@ class SourceGenerator(ExplicitNodeVisitor):
             current_line[0] = current_line[0][str_index:]
         current_line = ''.join(current_line)
 
-        has_ast_constant = sys.version_info >= (3, 6)
-
         if is_joined:
             # Handle new f-strings.  This is a bit complicated, because
             # the tree can contain subnodes that recurse back to JoinedStr
@@ -705,7 +703,7 @@ class SourceGenerator(ExplicitNodeVisitor):
                             if value.format_spec is not None:
                                 self.write(':')
                                 recurse(value.format_spec)
-                    elif has_ast_constant and isinstance(value, ast.Constant):
+                    elif isinstance(value, ast.Constant):
                         self.write(value.value)
                     else:
                         kind = type(value).__name__
