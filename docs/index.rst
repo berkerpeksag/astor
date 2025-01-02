@@ -73,51 +73,6 @@ areas:
     names
   - Enjoy easy access to parent node(s) for tree rewriting
 
-.. _deprecations:
-
-************
-Deprecations
-************
-
-.. versionadded:: 0.6
-
-Modules
-~~~~~~~
-
-===================  ====================
-astor 0.5            astor 0.6+
-===================  ====================
-``astor.codegen``    ``astor.code_gen``
-``astor.misc``       ``astor.file_util``
-``astor.treewalk``   ``astor.tree_walk``
-===================  ====================
-
-Functions
-~~~~~~~~~
-
-========================  ====================
-astor 0.5                 astor 0.6+
-========================  ====================
-``astor.codetoast()``     ``astor.code_to_ast()``
-``astor.parsefile()``     ``astor.parse_file()``
-``astor.dump()``          ``astor.dump_tree()``
-``astor.get_anyop()``     ``astor.get_op_symbol()``
-``astor.get_boolop()``    ``astor.get_op_symbol()``
-``astor.get_binop()``     ``astor.get_op_symbol()``
-``astor.get_cmpop()``     ``astor.get_op_symbol()``
-``astor.get_unaryop()``   ``astor.get_op_symbol()``
-========================  ====================
-
-Attributes
-~~~~~~~~~~
-
-========================  ====================
-astor 0.5                 astor 0.6+
-========================  ====================
-``astor.codetoast``       ``astor.code_to_ast``
-``astor.all_symbols``     ``astor.symbol_data``
-========================  ====================
-
 
 *********
 Functions
@@ -143,7 +98,6 @@ Functions
     .. versionchanged:: 0.8
        *source_generator_class* was added.
 
-.. function:: codetoast
 .. function:: code_to_ast(codeobj)
 
     Given a module, or a function that was compiled as part
@@ -151,20 +105,13 @@ Functions
     the sub-AST for the function.  Allow caching to reduce
     number of compiles.
 
-    .. deprecated:: 0.6
-       ``codetoast()`` is deprecated.
 
-
-.. function:: astor.parsefile
 .. function:: astor.parse_file
 .. function:: astor.code_to_ast.parse_file(fname)
 
     Parse a Python file into an AST.
 
     This is a very thin wrapper around :func:`ast.parse`.
-
-    .. deprecated:: 0.6
-       ``astor.parsefile()`` is deprecated.
 
     .. versionadded:: 0.6.1
        Added the ``astor.parse_file()`` function as an alias.
@@ -207,15 +154,11 @@ Functions
       attributes that do not exist in fields.
 
 
-.. function:: dump
 .. function:: dump_tree(node, name=None, initial_indent='', \
                         indentation='    ', maxline=120, maxmerged=80)
 
     This function pretty prints an AST or similar structure
     with indentation.
-
-    .. deprecated:: 0.6
-       ``astor.dump()`` is deprecated.
 
 
 .. function:: strip_tree(node)
@@ -231,19 +174,10 @@ Functions
     .. versionadded:: 0.6
 
 
-.. function:: get_boolop
-.. function:: get_binop
-.. function:: get_cmpop
-.. function:: get_unaryop
-.. function:: get_anyop
 .. function:: get_op_symbol(node, fmt='%s')
 
     Given an ast node, returns the string representing the
     corresponding symbol.
-
-    .. deprecated:: 0.6
-       ``get_boolop()``, ``get_binop()``, ``get_cmpop()``, ``get_unaryop()``
-       and ``get_anyop()`` functions are deprecated.
 
 
 *******

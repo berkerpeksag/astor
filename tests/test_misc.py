@@ -21,28 +21,6 @@ class PublicAPITestCase(unittest.TestCase):
     def test_aliases(self):
         self.assertIs(astor.parse_file, astor.code_to_ast.parse_file)
 
-    def test_codegen_from_root(self):
-        with self.assertWarns(DeprecationWarning) as cm:
-            astor = import_fresh_module('astor')
-            astor.codegen.SourceGenerator
-        self.assertEqual(len(cm.warnings), 1)
-        # This message comes from 'astor/__init__.py'.
-        self.assertEqual(
-            str(cm.warning),
-            'astor.codegen is deprecated.  Please use astor.code_gen.'
-        )
-
-    def test_codegen_as_submodule(self):
-        with self.assertWarns(DeprecationWarning) as cm:
-            import astor.codegen
-        self.assertEqual(len(cm.warnings), 1)
-        # This message comes from 'astor/codegen.py'.
-        self.assertEqual(
-            str(cm.warning),
-            'astor.codegen module is deprecated. Please import '
-            'astor.code_gen module instead.'
-        )
-
     def test_to_source_invalid_customize_generator(self):
         class InvalidGenerator:
             pass
