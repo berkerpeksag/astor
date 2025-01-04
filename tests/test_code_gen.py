@@ -58,14 +58,21 @@ class Comparisons(object):
         elif sys.version_info <= max_should_error:
             self.assertRaises(SyntaxError, ast.parse, source)
 
-    def assertSrcRoundtrips(self, srctxt):
+    def assertSrcRoundtrips(self, srctxt, *, dump=False):
         """This asserts that the reconstituted source
            code is identical to the original source code.
            This is a much stronger statement than assertAstRoundtrips,
            which may not always be appropriate.
         """
         srctxt = canonical(srctxt)
-        self.assertEqual(self.to_source(ast.parse(srctxt)).rstrip(), srctxt)
+        tree = ast.parse(srctxt, type_comments=True)
+        gentxt = self.to_source(tree).rstrip()
+        if dump:
+            print(file=sys.stderr)
+            print("Generated code:", file=sys.stderr)
+            print(self.to_source(tree), file=sys.stderr)
+            print(file=sys.stderr)
+        self.assertEqual(srctxt, gentxt)
 
     def assertSrcDoesNotRoundtrip(self, srctxt):
         srctxt = canonical(srctxt)
@@ -83,6 +90,8 @@ class Comparisons(object):
 
 
 class CodegenTestCase(unittest.TestCase, Comparisons):
+
+    maxDiff = None
 
     def test_imports(self):
         source = "import ast"
@@ -457,7 +466,6 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
                 'Action', 'ONE_OR_MORE', 'OPTIONAL', 'PARSER', 'REMAINDER', 'SUPPRESS',
                 'ZERO_OR_MORE']
         """  # NOQA
-        self.maxDiff = 2000
         self.assertSrcRoundtrips(source)
 
     def test_elif(self):
@@ -1109,6 +1117,51 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         target = 'spam = {(3).foo: 4}'
         astor.to_source(ast.parse(source))
         self.assertAstEqualsSource(ast.parse(source), target)
+
+    def test_type_comment_in_variable_declarations(self):
+        source = """
+        foo = 42  # type: int
+        bar = BarObject()  # type: BarObject
+        baz = ['a', 'b', 'c']  # type: List[str]
+        """
+        self.assertSrcRoundtrips(source)
+
+    def test_type_comment_in_functions(self):
+        source = """
+        def func(foo):  # type: str
+            pass
+
+
+        async def bar(wait_until_complete):  # type: (bool) -> None
+            pass
+
+
+        def bar():  # type: () -> None
+            pass
+
+
+        def funcion(
+            a,  # type: str
+            b,  # type: bytes
+        ):
+            pass
+        """
+        self.assertSrcRoundtrips(source)
+
+    def test_type_comment_in_statements(self):
+        source = """
+        for i in range(42):  # type: int
+            pass
+        for x, y in points:  # type: float, float
+            pass
+        async for j in range(10):  # type: int
+            pass
+        with open('/tmp/foo') as f:  # type: TextIO
+            pass
+        async with aio_open('/tmp/bar') as f:  # type: AsyncTextIOWrapper
+            pass
+        """
+        self.assertSrcRoundtrips(source)
 
 if __name__ == '__main__':
     unittest.main()

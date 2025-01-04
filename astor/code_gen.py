@@ -238,18 +238,30 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_arguments(self, node):
         want_comma = []
 
-        def write_comma():
-            if want_comma:
+        def write_comma(add_first_comma=False):
+            if add_first_comma:
                 self.write(', ')
             else:
-                want_comma.append(True)
+                if want_comma:
+                    self.write(', ')
+                else:
+                    want_comma.append(True)
 
         def loop_args(args, defaults):
             set_precedence(Precedence.Comma, defaults)
             padding = [None] * (len(args) - len(defaults))
             for arg, default in zip(args, padding + defaults):
-                self.write(write_comma, arg)
-                self.conditional_write('=', default)
+                if arg.type_comment:
+                    self.newline()
+                    self.indentation += 1
+                    self.write(arg)
+                    self.conditional_write('=', default)
+                    self.conditional_write(lambda: write_comma(True), ' # type: ', arg.type_comment)
+                    self.indentation -= 1
+                    self.newline()
+                else:
+                    self.write(write_comma, arg)
+                    self.conditional_write('=', default)
 
         posonlyargs = getattr(node, 'posonlyargs', [])
         offset = 0
@@ -297,6 +309,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         for target in node.targets:
             self.write(target, ' = ')
         self.visit(node.value)
+        self.add_type_comment(node)
 
     def visit_AugAssign(self, node):
         set_precedence(node, node.value, node.target)
@@ -355,6 +368,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.write(')')
         self.conditional_write(' -> ', self.get_returns(node))
         self.write(':')
+        self.add_type_comment(node)
         self.body(node.body)
         if not self.indentation:
             self.newline(extra=2)
@@ -409,6 +423,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         prefix = 'async ' if is_async else ''
         self.statement(node, '%sfor ' % prefix,
                        node.target, ' in ', node.iter, ':')
+        self.add_type_comment(node)
         self.body_or_else(node)
 
     # introduced in Python 3.5
@@ -423,11 +438,9 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_With(self, node, is_async=False):
         prefix = 'async ' if is_async else ''
         self.statement(node, '%swith ' % prefix)
-        if hasattr(node, "context_expr"):  # Python < 3.3
-            self.visit_withitem(node)
-        else:                              # Python >= 3.3
-            self.comma_list(node.items)
+        self.comma_list(node.items)
         self.write(':')
+        self.add_type_comment(node)
         self.body(node.body)
 
     # new for Python 3.5
@@ -954,8 +967,6 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_Expression(self, node):
         self.visit(node.body)
 
-    # Helper Nodes
-
     def visit_arg(self, node):
         self.write(node.arg)
         self.conditional_write(': ', node.annotation)
@@ -971,3 +982,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.write(stmt, node.target, ' in ', node.iter)
         for if_ in node.ifs:
             self.write(' if ', if_)
+
+    # new for Python 3.8
+    def add_type_comment(self, node):
+        self.conditional_write('  # type: ', node.type_comment)
