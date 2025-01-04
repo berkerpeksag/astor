@@ -36,3 +36,21 @@ jobs:
 
       - name: Run tests
         run: tox -e py${{ matrix.python-version }}
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: pip install tox
+
+      - name: Run lint
+        run: tox -e lint

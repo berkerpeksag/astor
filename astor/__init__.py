@@ -9,8 +9,6 @@ Copyright 2013 (c) Berker Peksag
 
 """
 
-import warnings
-
 from .code_gen import SourceGenerator, to_source  # NOQA
 from .node_util import iter_node, strip_tree, dump_tree  # NOQA
 from .node_util import ExplicitNodeVisitor  # NOQA

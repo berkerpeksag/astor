@@ -20,7 +20,6 @@ this code came from here (in 2012):
 import ast
 import inspect
 import math
-import sys
 
 from .op_util import get_op_symbol, get_op_precedence, Precedence
 from .node_util import ExplicitNodeVisitor
@@ -791,7 +790,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.write(s)
 
     def visit_Num(self, node):
-        with self.delimit(node) as delimiters:
+        with self.delimit(node):
             self._handle_numeric_constant(node.n)
 
     def visit_Tuple(self, node):
