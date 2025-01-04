@@ -53,10 +53,17 @@ New features
 
 .. _`PR 222`: https://github.com/berkerpeksag/astor/pull/222
 
-* Add support for except* Syntax, see :pep:`654` for more details.
+* Add support for ``except*`` syntax, see :pep:`654` for more details.
   (Contributed by am230 in `PR 223`_.)
 
 .. _`PR 223`: https://github.com/berkerpeksag/astor/pull/223
+
+* Add support for type comments (``# type: foo``), see :pep:`484` and :pep:`526` for more
+  details. Note that ``type_comments`` must be set to ``True`` in :func:`ast.parse`.
+  (Reported by Batuhan Taskaya in `Issue 159`_ and contributed by Berker Peksag in `PR 229`_.)
+
+.. _`Issue 159`: https://github.com/berkerpeksag/astor/issues/159
+.. _`PR 229`: https://github.com/berkerpeksag/astor/pull/229
 
 Bug fixes
 ~~~~~~~~~
