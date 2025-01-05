@@ -92,7 +92,12 @@ def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False,
         # round-trip OK
         try:
             dstast = ast.parse(dsttxt) if readonly else parse_file(dstfname)
-        except SyntaxError:
+        except (SyntaxError, ValueError) as exc:
+            print()
+            print("File", srcfname)
+            print(exc)
+            l = dsttxt.find("\\0")
+            print("Location:", dsttxt[l-20:l+20])
             dstast = []
         if fullcomp:
             unknown_src_nodes.update(strip_tree(srcast))
