@@ -23,8 +23,115 @@ import math
 
 from .op_util import get_op_symbol, get_op_precedence, Precedence
 from .node_util import ExplicitNodeVisitor
-from .string_repr import pretty_string
+# from .string_repr import pretty_string
 from .source_repr import pretty_source
+
+
+def escape_string(s: str, quote_char: str = '"', is_docstring: bool = False) -> str:
+    """
+    Comprehensively escape a Python string, handling all special characters.
+    Preserves newlines in docstrings.
+
+    Args:
+        s: The input string to escape
+        quote_char: The quote character to use (either ' or ")
+        is_docstring: Whether this string is a docstring
+
+    Returns:
+        Properly escaped string that can be safely represented in Python code
+    """
+    result = []
+    i = 0
+    length = len(s)
+
+    # Common escape sequences
+    escape_dict = {
+        '\r': '\\r',
+        '\t': '\\t',
+        '\f': '\\f',
+        '\b': '\\b',
+        '\a': '\\a',
+        '\v': '\\v',
+        '\\': '\\\\',
+        '\0': '\\0',
+    }
+
+    # Add \n to escape_dict only if this is not a docstring
+    if not is_docstring:
+        escape_dict['\n'] = '\\n'
+
+    while i < length:
+        char = s[i]
+
+        # Handle quotes
+        if char == quote_char and not is_docstring:  # TODO: added doc string check
+            result.append('\\' + char)
+        # Handle predefined escape sequences
+        elif char in escape_dict:
+            result.append(escape_dict[char])
+        # Handle newlines in docstrings
+        elif char == '\n' and is_docstring:
+            result.append(char)
+        # Handle non-printable ASCII characters
+        elif ord(char) < 32 or ord(char) == 127:
+            if char != '\n' or not is_docstring:  # Don't escape newline in docstrings
+                result.append(f'\\x{ord(char):02x}')
+            else:
+                result.append(char)
+        # Handle non-ASCII characters
+        elif ord(char) > 127:
+            # Use short form if possible
+            if ord(char) <= 0xFFFF:
+                result.append(f'\\u{ord(char):04x}')
+            else:
+                result.append(f'\\U{ord(char):08x}')
+        # Handle already escaped sequences
+        elif char == '\\' and i + 1 < length:
+            next_char = s[i + 1]
+            chars = {'n', 'r', 't', '0', '1', 'x', 'u', 'U', '\\', '"', "'"}
+            #if is_docstring:
+            #    chars -= {'"', "'"}
+            if next_char in chars:
+                result.append('\\\\' + next_char)
+                i += 1
+            else:
+                result.append(char)
+        else:
+            result.append(char)
+        i += 1
+
+    return ''.join(result)
+
+def pretty_string(string: str, embedded: bool = False, current_line: str = '', is_docstring: bool = False) -> str:
+    """
+    Format a string with proper quotes and comprehensive escape handling.
+
+    Args:
+        string: The input string to format
+        embedded: Whether the string is embedded in an expression
+        current_line: The current line being processed
+        is_docstring: Whether this string is a docstring
+
+    Returns:
+        Properly formatted string with appropriate quotes and escaping
+    """
+    # Handle empty strings
+    if not string:
+        # TODO: Add this for this
+        return '""' if '"' in current_line else "''"
+
+    # Check if this is a multiline string
+    lines = string.splitlines(keepends=True)
+    if len(lines) > 1 or is_docstring:
+        # For multiline strings and docstrings, use triple quotes and escape any embedded triple quotes
+        escaped = escape_string(string, '"', is_docstring=True)
+        if '"""' in escaped:
+            escaped = escaped.replace('"""', '\\"\\"\\"')
+        return f'"""{escaped}"""'
+
+    # For single line strings, choose quotes based on content
+    quote_char = "'" if "'" not in string or '"""' in string else '"'
+    return quote_char + escape_string(string, quote_char, is_docstring=False) + quote_char
 
 
 def to_source(node, indent_with=' ' * 4, add_line_information=False,
@@ -159,7 +266,6 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.new_lines = 0  # Number of lines to insert before next code
         self.colinfo = 0, 0  # index in result of string containing linefeed, and
                              # position of last linefeed in that string
-        self.pretty_string = pretty_string
         AST = ast.AST
 
         visit = self.visit
@@ -167,6 +273,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         append = result.append
 
         self.discard_numeric_delim_for_const = False
+        self.preserve_quotes = False
 
         def write(*params):
             """ self.write is a closure for performance (to reduce the number
@@ -220,11 +327,6 @@ class SourceGenerator(ExplicitNodeVisitor):
             self.write('# line: %s' % node.lineno)
             self.new_lines = 1
 
-    def body(self, statements):
-        self.indentation += 1
-        self.write(*statements)
-        self.indentation -= 1
-
     def else_body(self, elsewhat):
         if elsewhat:
             self.write(self.newline, 'else:')
@@ -265,7 +367,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         posonlyargs = getattr(node, 'posonlyargs', [])
         offset = 0
         if posonlyargs:
-            offset += len(node.defaults) - len(node.args)
+            offset = max(0, len(node.defaults) - len(node.args))
             loop_args(posonlyargs, node.defaults[:offset])
             self.write(write_comma, '/')
 
@@ -368,7 +470,8 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.conditional_write(' -> ', self.get_returns(node))
         self.write(':')
         self.add_type_comment(node)
-        self.body(node.body)
+        self.newline()
+        self.body(node.body, is_docstring=True)
         if not self.indentation:
             self.newline(extra=2)
 
@@ -398,7 +501,8 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.conditional_write(paren_or_comma, '*', self.get_starargs(node))
         self.conditional_write(paren_or_comma, '**', self.get_kwargs(node))
         self.write(have_args and '):' or ':')
-        self.body(node.body)
+        self.newline()
+        self.body(node.body, is_docstring=True)
         if not self.indentation:
             self.newline(extra=2)
 
@@ -664,7 +768,8 @@ class SourceGenerator(ExplicitNodeVisitor):
                     delimiters.discard = True
                 self._handle_numeric_constant(value)
         elif isinstance(value, str):
-            self._handle_string_constant(node, node.value)
+            quote_char = '"' if self.preserve_quotes else None
+            self._handle_string_constant(node, node.value, quote_preference=quote_char)
         elif value is Ellipsis:
             self.write('...')
         else:
@@ -673,80 +778,228 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_JoinedStr(self, node):
         self._handle_string_constant(node, None, is_joined=True)
 
-    def _handle_string_constant(self, node, value, is_joined=False):
-        # embedded is used to control when we might want
-        # to use a triple-quoted string.  We determine
-        # if we are in an assignment and/or in an expression
-        precedence = self.get__pp(node)
-        embedded = ((precedence > Precedence.Expr) +
-                    (precedence >= Precedence.Assign))
-
-        # Flush any pending newlines, because we're about
-        # to severely abuse the result list.
-        self.write('')
-        result = self.result
-
-        # Calculate the string representing the line
-        # we are working on, up to but not including
-        # the string we are adding.
-
-        res_index, str_index = self.colinfo
-        current_line = self.result[res_index:]
-        if str_index:
-            current_line[0] = current_line[0][str_index:]
-        current_line = ''.join(current_line)
-
-        if is_joined:
-            # Handle new f-strings.  This is a bit complicated, because
-            # the tree can contain subnodes that recurse back to JoinedStr
-            # subnodes...
-
-            def recurse(node):
-                for value in node.values:
-                    if isinstance(value, ast.Str):
-                        # Double up braces to escape them.
-                        self.write(value.s.replace('{', '{{').replace('}', '}}'))
-                    elif isinstance(value, ast.FormattedValue):
-                        with self.delimit('{}'):
-                            set_precedence(value, value.value)
-                            self.visit(value.value)
-                            if value.conversion != -1:
-                                self.write('!%s' % chr(value.conversion))
-                            if value.format_spec is not None:
-                                self.write(':')
-                                recurse(value.format_spec)
-                    elif isinstance(value, ast.Constant):
-                        self.write(value.value)
+    def process_fstring_nodes(self, node):
+        for value in node.values:
+            if isinstance(value, ast.Str):
+                content = value.s
+                if '\\' in content:
+                    content = content.replace('\\', '\\\\')
+                content = content.replace('{', '{{').replace('}', '}}')
+                result_chars = []
+                for c in content:
+                    if c == '\n':
+                        result_chars.append('\\n')
+                    elif c == '\t':
+                        result_chars.append('\\t')
+                    elif c == '\r':
+                        result_chars.append('\\r')
+                    elif c == '\0':
+                        result_chars.append('\\0')
+                    elif c == '\a':
+                        result_chars.append('\\a')
+                    elif c == '\b':
+                        result_chars.append('\\b')
+                    elif c == '\f':
+                        result_chars.append('\\f')
+                    elif c == '\v':
+                        result_chars.append('\\v')
+                    elif ord(c) < 32 or ord(c) == 127:
+                        result_chars.append(f'\\x{ord(c):02x}')
                     else:
-                        kind = type(value).__name__
-                        assert False, 'Invalid node %s inside JoinedStr' % kind
+                        result_chars.append(c)
+                content = ''.join(result_chars)
+                self.write(content)
+            elif isinstance(value, ast.FormattedValue):
+                self.write('{')
+                set_precedence(value, value.value)
+                self.visit(value.value)
+                if value.conversion != -1:
+                    self.write('!%s' % chr(value.conversion))
+                if value.format_spec is not None:
+                    self.write(':')
+                    self.process_fstring_nodes(value.format_spec)
+                self.write('}')
+            elif isinstance(value, ast.Constant):
+                content = str(value.value)
+                result_chars = []
+                for c in content:
+                    if c == '\n':
+                        result_chars.append('\\n')
+                    elif c == '\t':
+                        result_chars.append('\\t')
+                    elif c == '\r':
+                        result_chars.append('\\r')
+                    elif c == '\0':
+                        result_chars.append('\\0')
+                    elif c == '\a':
+                        result_chars.append('\\a')
+                    elif c == '\b':
+                        result_chars.append('\\b')
+                    elif c == '\f':
+                        result_chars.append('\\f')
+                    elif c == '\v':
+                        result_chars.append('\\v')
+                    elif ord(c) < 32 or ord(c) == 127:
+                        result_chars.append(f'\\x{ord(c):02x}')
+                    else:
+                        result_chars.append(c)
+                content = ''.join(result_chars)
+                self.write(content)
 
-            index = len(result)
-            recurse(node)
-
-            # Flush trailing newlines (so that they are part of mystr)
-            self.write('')
-            mystr = ''.join(result[index:])
-            del result[index:]
-            self.colinfo = res_index, str_index  # Put it back like we found it
-
-        else:
-            assert value is not None, "Node value cannot be None"
-            mystr = value
-
-        mystr = self.pretty_string(mystr, embedded, current_line)
+    def _analyze_string_quotes(self, node, value, is_joined):
+        """First pass: Analyze string content for quotes"""
+        has_single = False
+        has_double = False
 
         if is_joined:
-            mystr = 'f' + mystr
-        elif getattr(node, 'kind', False):
-            # Constant.kind is a Python 3.8 addition.
-            mystr = node.kind + mystr
+            # For f-strings, analyze expressions
+            values = node.values if isinstance(node.values, list) else []
+            for value in values:
+                if isinstance(value, ast.FormattedValue):
+                    # Capture output to analyze
+                    expr_start = len(self.result)
+                    self.visit(value.value)
+                    expr_text = ''.join(self.result[expr_start:])
+                    del self.result[expr_start:]
 
-        self.write(mystr)
+                    has_single = has_single or ("'" in expr_text)
+                    has_double = has_double or ('"' in expr_text)
 
-        lf = mystr.rfind('\n') + 1
-        if lf:
-            self.colinfo = len(result) - 1, lf
+                    if value.format_spec:
+                        # Also check format spec for quotes
+                        spec_start = len(self.result)
+                        self.visit(value.format_spec)
+                        spec_text = ''.join(self.result[spec_start:])
+                        del self.result[spec_start:]
+
+                        has_single = has_single or ("'" in spec_text)
+                        has_double = has_double or ('"' in spec_text)
+        else:
+            # Regular string
+            if value is not None:
+                has_single = "'" in value
+                has_double = '"' in value
+
+        return has_single, has_double
+
+    def _determine_quote_style(self, has_single, has_double):
+        """Second pass: Determine quote style based on analysis"""
+        if has_single and has_double:
+            return '"""'
+        elif has_single:
+            return '"'
+        elif has_double:
+            return "'"
+        else:
+            return "'"  # Default to single quotes when no quotes present
+
+    def body(self, statements, is_docstring=False):
+        """Handle body of functions, classes, modules etc."""
+        if is_docstring and statements and isinstance(statements[0], ast.Expr) and \
+           isinstance(statements[0].value, ast.Constant) and \
+           isinstance(statements[0].value.value, str):
+            # Handle docstring
+            self.indentation += 1
+            self._handle_docstring(statements[0].value.value)
+            self.write(*statements[1:])  # Handle remaining statements normally
+            self.indentation -= 1
+        else:
+            # No docstring - handle all statements normally
+            self.indentation += 1
+            self.write(*statements)
+            self.indentation -= 1
+
+    def visit_Module(self, node):
+        """Handle module nodes, including docstrings."""
+        if node.body and isinstance(node.body[0], ast.Expr) and \
+           isinstance(node.body[0].value, ast.Constant) and \
+           isinstance(node.body[0].value.value, str):
+            # Module-level docstring
+            docstring = node.body[0].value.value
+            self._handle_docstring(docstring)
+            self.write(*node.body[1:])
+        else:
+            self.write(*node.body)
+
+    def _handle_docstring(self, value):
+        """Convert raw docstring to regular docstring with proper escaping."""
+        content = ""
+        i = 0
+        while i < len(value):
+            if value[i] == '\\':
+                content += '\\\\'  # Double the backslash
+                if i + 1 < len(value):
+                    if value[i + 1] == '\\':
+                        content += '\\\\'  # Double escape for literal backslash
+                    else:
+                        content += value[i + 1]  # Normal escape for other chars
+                i += 2
+            else:
+                content += value[i]
+                i += 1
+
+        # Choose quote style to avoid issues with trailing quotes
+        if content.endswith('"'):
+            if "'''" not in content:
+                self.write("'''" + content + "'''")
+            else:
+                # Content has ''' and ends with " — escape the trailing "
+                content = content[:-1] + '\\"'
+                self.write('"""' + content + '"""')
+        else:
+            self.write('"""' + content + '"""')
+
+    def _handle_string_constant(self, node, value, is_joined=False, is_docstring=False, quote_preference=None):
+        """Handle string constants and preserve escape sequences."""
+        self.write('')  # Process any pending newlines
+
+        if is_docstring:
+            self._handle_docstring(value)
+            return
+
+        if is_joined:
+            self.preserve_quotes = True
+            index = len(self.result)
+            self.process_fstring_nodes(node)
+            self.preserve_quotes = False
+            fstring_content = ''.join(self.result[index:])
+            del self.result[index:]
+
+            # Convert actual newlines back to \n escape sequences
+            fstring_content = fstring_content.replace('\n', '\\n')
+
+            has_single = "'" in fstring_content
+            has_double = '"' in fstring_content
+            if has_single and has_double:
+                # Both quote types present — use triple quotes
+                if "'''" not in fstring_content:
+                    quote = "'''"
+                elif '"""' not in fstring_content:
+                    quote = '"""'
+                else:
+                    quote = '"""'
+                    fstring_content = fstring_content.replace('"""', '\\"\\"\\"')
+                # Handle trailing quote matching delimiter
+                if fstring_content and fstring_content[-1] == quote[0]:
+                    fstring_content = fstring_content[:-1] + '\\' + fstring_content[-1]
+                self.write('f' + quote + fstring_content + quote)
+            elif has_single:
+                self.write('f"' + fstring_content + '"')
+            else:
+                self.write("f'" + fstring_content + "'")
+        else:
+            # Regular strings
+            if value is not None:
+                string_repr = repr(value)
+                # If we have a kind (like 'u' for unicode), prepend it
+                kind = getattr(node, 'kind', None)
+                if kind:
+                    # Remove the quote at the start, add kind, then put quote back
+                    self.write(kind + string_repr[0] + string_repr[1:])
+                else:
+                    self.write(string_repr)
+            else:
+                self.write("''")
 
     # deprecated in Python 3.8
     def visit_Str(self, node):
@@ -958,8 +1211,6 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_Starred(self, node):
         self.write('*', node.value)
 
-    def visit_Module(self, node):
-        self.write(*node.body)
 
     visit_Interactive = visit_Module
 
