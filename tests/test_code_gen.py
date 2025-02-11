@@ -987,6 +987,12 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
         '''
         self.assertSrcRoundtripsGtVer(source, (3, 6))
 
+    def test_fstring_quoted_replacement_field_with_conditional_expression(self):
+        source = r"""
+            matches.append(f'"{"yes" if match else "no"}"')
+        """
+        self.assertAstRoundtrips(source)
+
     @unittest.skipUnless(sys.version_info >= (3, 8, 0, "alpha", 4),
                          "f-string debugging introduced in Python 3.8")
     def test_fstring_debugging(self):
