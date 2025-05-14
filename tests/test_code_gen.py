@@ -28,7 +28,10 @@ def astorexpr(x):
     return eval(astor.to_source(ast.Expression(body=x)))
 
 def astornum(x):
-    return astorexpr(ast.Num(n=x))
+    if sys.version_info >= (3, 6):
+        return astorexpr(ast.Constant(x))
+    else:
+        return astorexpr(ast.Num(n=x))
 
 class Comparisons(object):
 
@@ -515,8 +518,8 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
             ast.Assign(targets=[ast.Name(id='spam')], value=ast.Name(id='None')),
             "spam = None")
 
-    @unittest.skipUnless(sys.version_info >= (3, 4),
-                         "ast.NameConstant introduced in Python 3.4")
+    @unittest.skipUnless((3, 4) <= sys.version_info < (3, 14),
+                         "ast.NameConstant introduced in Python 3.4, removed in 3.14")
     def test_deprecated_name_constants(self):
         self.assertAstEqualsSource(
             ast.Assign(targets=[ast.Name(id='spam')], value=ast.NameConstant(value=True)),
@@ -530,6 +533,8 @@ class CodegenTestCase(unittest.TestCase, Comparisons):
             ast.Assign(targets=[ast.Name(id='spam')], value=ast.NameConstant(value=None)),
             "spam = None")
 
+    @unittest.skipIf(sys.version_info >= (3, 14),
+                     "Deprecated Constant nodes removed in Python 3.14")
     def test_deprecated_constant_nodes(self):
         self.assertAstEqualsSource(
             ast.Assign(targets=[ast.Name(id='spam')], value=ast.Num(3)),
