@@ -692,6 +692,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         current_line = ''.join(current_line)
 
         has_ast_constant = sys.version_info >= (3, 6)
+        has_ast_str = sys.version_info < (3, 14)
 
         if is_joined:
             # Handle new f-strings.  This is a bit complicated, because
@@ -700,7 +701,7 @@ class SourceGenerator(ExplicitNodeVisitor):
 
             def recurse(node):
                 for value in node.values:
-                    if isinstance(value, ast.Str):
+                    if has_ast_str and isinstance(value, ast.Str):
                         # Double up braces to escape them.
                         self.write(value.s.replace('{', '{{').replace('}', '}}'))
                     elif isinstance(value, ast.FormattedValue):
@@ -713,7 +714,11 @@ class SourceGenerator(ExplicitNodeVisitor):
                                 self.write(':')
                                 recurse(value.format_spec)
                     elif has_ast_constant and isinstance(value, ast.Constant):
-                        self.write(value.value)
+                        if isinstance(value.value, str):
+                            # Double up braces to escape them.
+                            self.write(value.value.replace('{', '{{').replace('}', '}}'))
+                        else:
+                            self.write(value.value)
                     else:
                         kind = type(value).__name__
                         assert False, 'Invalid node %s inside JoinedStr' % kind
