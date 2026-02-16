@@ -89,8 +89,8 @@ def escape_string(s: str, quote_char: str = '"', is_docstring: bool = False) -> 
         elif char == '\\' and i + 1 < length:
             next_char = s[i + 1]
             chars = {'n', 'r', 't', '0', '1', 'x', 'u', 'U', '\\', '"', "'"}
-            #if is_docstring:
-            #    chars -= {'"', "'"}
+            # if is_docstring:
+            #     chars -= {'"', "'"}
             if next_char in chars:
                 result.append('\\\\' + next_char)
                 i += 1
@@ -101,6 +101,7 @@ def escape_string(s: str, quote_char: str = '"', is_docstring: bool = False) -> 
         i += 1
 
     return ''.join(result)
+
 
 def pretty_string(string: str, embedded: bool = False, current_line: str = '', is_docstring: bool = False) -> str:
     """
@@ -1223,7 +1224,6 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def visit_Starred(self, node):
         self.write('*', node.value)
-
 
     visit_Interactive = visit_Module
 
