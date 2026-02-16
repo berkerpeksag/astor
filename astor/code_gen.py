@@ -790,6 +790,27 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_JoinedStr(self, node):
         self._handle_string_constant(node, None, is_joined=True)
 
+    _FSTRING_ESCAPE_MAP = {
+        '\n': '\\n', '\t': '\\t', '\r': '\\r', '\0': '\\0',
+        '\a': '\\a', '\b': '\\b', '\f': '\\f', '\v': '\\v',
+    }
+
+    @staticmethod
+    def _escape_fstring_literal(content):
+        escape_map = SourceGenerator._FSTRING_ESCAPE_MAP
+        result_chars = []
+        for c in content:
+            escaped = escape_map.get(c)
+            if escaped:
+                result_chars.append(escaped)
+            elif ord(c) < 32 or ord(c) == 127:
+                result_chars.append(f'\\x{ord(c):02x}')
+            elif 0xD800 <= ord(c) <= 0xDFFF:
+                result_chars.append(f'\\u{ord(c):04x}')
+            else:
+                result_chars.append(c)
+        return ''.join(result_chars)
+
     def process_fstring_nodes(self, node):
         for value in node.values:
             if isinstance(value, ast.Str):
@@ -797,30 +818,7 @@ class SourceGenerator(ExplicitNodeVisitor):
                 if '\\' in content:
                     content = content.replace('\\', '\\\\')
                 content = content.replace('{', '{{').replace('}', '}}')
-                result_chars = []
-                for c in content:
-                    if c == '\n':
-                        result_chars.append('\\n')
-                    elif c == '\t':
-                        result_chars.append('\\t')
-                    elif c == '\r':
-                        result_chars.append('\\r')
-                    elif c == '\0':
-                        result_chars.append('\\0')
-                    elif c == '\a':
-                        result_chars.append('\\a')
-                    elif c == '\b':
-                        result_chars.append('\\b')
-                    elif c == '\f':
-                        result_chars.append('\\f')
-                    elif c == '\v':
-                        result_chars.append('\\v')
-                    elif ord(c) < 32 or ord(c) == 127:
-                        result_chars.append(f'\\x{ord(c):02x}')
-                    else:
-                        result_chars.append(c)
-                content = ''.join(result_chars)
-                self.write(content)
+                self.write(self._escape_fstring_literal(content))
             elif isinstance(value, ast.FormattedValue):
                 # Add space after { if expression starts with { (dict/set)
                 # to avoid {{ being interpreted as escaped brace
@@ -838,30 +836,7 @@ class SourceGenerator(ExplicitNodeVisitor):
                 self.write('}')
             elif isinstance(value, ast.Constant):
                 content = str(value.value)
-                result_chars = []
-                for c in content:
-                    if c == '\n':
-                        result_chars.append('\\n')
-                    elif c == '\t':
-                        result_chars.append('\\t')
-                    elif c == '\r':
-                        result_chars.append('\\r')
-                    elif c == '\0':
-                        result_chars.append('\\0')
-                    elif c == '\a':
-                        result_chars.append('\\a')
-                    elif c == '\b':
-                        result_chars.append('\\b')
-                    elif c == '\f':
-                        result_chars.append('\\f')
-                    elif c == '\v':
-                        result_chars.append('\\v')
-                    elif ord(c) < 32 or ord(c) == 127:
-                        result_chars.append(f'\\x{ord(c):02x}')
-                    else:
-                        result_chars.append(c)
-                content = ''.join(result_chars)
-                self.write(content)
+                self.write(self._escape_fstring_literal(content))
 
     def _analyze_string_quotes(self, node, value, is_joined):
         """First pass: Analyze string content for quotes"""
@@ -958,6 +933,8 @@ class SourceGenerator(ExplicitNodeVisitor):
                 content += escaped
             elif ord(ch) < 32 and ch not in ('\n', '\t'):
                 content += '\\x{:02x}'.format(ord(ch))
+            elif 0xD800 <= ord(ch) <= 0xDFFF:
+                content += '\\u{:04x}'.format(ord(ch))
             else:
                 content += ch
 

@@ -1276,6 +1276,16 @@ class StdlibRoundtripRegressionTestCase(unittest.TestCase, Comparisons):
         source = """f"{'''it's'''}" """
         self.assertGeneratedCompiles(source)
 
+    # -- F-string with surrogate codepoints --
+    # From: test/test_pathlib.py (3.11+)
+    # Bug: surrogate codepoints (U+D800–U+DFFF) in f-string literal text
+    # were emitted as raw characters which can't be encoded to UTF-8.
+
+    def test_fstring_surrogate(self):
+        r"""F-string with \udfff surrogate in literal text."""
+        source = r"x = f'{v}\udfff'"
+        self.assertGeneratedCompiles(source)
+
 
 if __name__ == '__main__':
     unittest.main()
