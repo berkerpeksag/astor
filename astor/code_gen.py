@@ -672,6 +672,7 @@ class SourceGenerator(ExplicitNodeVisitor):
         with self.delimit('{}'):
             for idx, (key, value) in enumerate(zip(node.keys, node.patterns)):
                 if key:
+                    set_precedence(Precedence.Expr, key)
                     set_precedence(Precedence.Comma, value)
                 self.write(', ' if idx else '',
                            key if key else '',
@@ -684,12 +685,18 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_MatchAs(self, node):
         if not node.pattern:
             self.write(node.name or '_')
+        elif isinstance(node.pattern, ast.MatchAs) and node.pattern.pattern:
+            self.write('(', node.pattern, ')', ' as ', node.name)
         else:
             self.write(node.pattern, ' as ', node.name)
 
     def visit_MatchOr(self, node):
         for idx, pattern in enumerate(node.patterns):
-            self.write(' | ' if idx else '', pattern)
+            prefix = ' | ' if idx else ''
+            if isinstance(pattern, ast.MatchAs) and pattern.pattern:
+                self.write(prefix, '(', pattern, ')')
+            else:
+                self.write(prefix, pattern)
 
     def visit_MatchClass(self, node):
         write = self.write
@@ -921,22 +928,28 @@ class SourceGenerator(ExplicitNodeVisitor):
         else:
             self.write(*node.body)
 
+    _DOCSTRING_ESCAPE_MAP = {
+        '\\': '\\\\',
+        '\0': '\\0',
+        '\a': '\\a',
+        '\b': '\\b',
+        '\f': '\\f',
+        '\r': '\\r',
+        '\v': '\\v',
+    }
+
     def _handle_docstring(self, value):
         """Convert raw docstring to regular docstring with proper escaping."""
+        escape_map = self._DOCSTRING_ESCAPE_MAP
         content = ""
-        i = 0
-        while i < len(value):
-            if value[i] == '\\':
-                content += '\\\\'  # Double the backslash
-                if i + 1 < len(value):
-                    if value[i + 1] == '\\':
-                        content += '\\\\'  # Double escape for literal backslash
-                    else:
-                        content += value[i + 1]  # Normal escape for other chars
-                i += 2
+        for ch in value:
+            escaped = escape_map.get(ch)
+            if escaped:
+                content += escaped
+            elif ord(ch) < 32 and ch not in ('\n', '\t'):
+                content += '\\x{:02x}'.format(ord(ch))
             else:
-                content += value[i]
-                i += 1
+                content += ch
 
         # Choose quote style to avoid issues with trailing quotes
         if content.endswith('"'):

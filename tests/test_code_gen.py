@@ -838,8 +838,6 @@ def _mdiff():
     @unittest.skipUnless(sys.version_info >= (3, 10, 0),
                          "match statement introduced in Python 3.10")
     def test_match_capture(self):
-        # For now there is no way to check if there were parentheses around
-        # pattern or not, syntactically they are identical
         source = canonical("""
             match point:
                 case [Point(x1, y1), Point(x2, y2) as p2]:
@@ -848,14 +846,7 @@ def _mdiff():
                     ...
 
         """)
-        target = canonical("""
-            match point:
-                case [Point(x1, y1), Point(x2, y2) as p2]:
-                    print('p2')
-                case 0 as z | 1 as z | 2 as z:
-                    ...
-        """)
-        self.assertAstEqualsSource(ast.parse(source), target)
+        self.assertSrcRoundtrips(source)
 
     @unittest.skipUnless(sys.version_info >= (3, 10, 0),
                          "match statement introduced in Python 3.10")
