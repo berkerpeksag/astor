@@ -694,7 +694,11 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_MatchOr(self, node):
         for idx, pattern in enumerate(node.patterns):
             prefix = ' | ' if idx else ''
-            if isinstance(pattern, ast.MatchAs) and pattern.pattern:
+            needs_parens = (
+                isinstance(pattern, ast.MatchOr) or
+                (isinstance(pattern, ast.MatchAs) and pattern.pattern)
+            )
+            if needs_parens:
                 self.write(prefix, '(', pattern, ')')
             else:
                 self.write(prefix, pattern)
@@ -818,7 +822,12 @@ class SourceGenerator(ExplicitNodeVisitor):
                 content = ''.join(result_chars)
                 self.write(content)
             elif isinstance(value, ast.FormattedValue):
-                self.write('{')
+                # Add space after { if expression starts with { (dict/set)
+                # to avoid {{ being interpreted as escaped brace
+                needs_space = isinstance(value.value, (
+                    ast.Dict, ast.Set, ast.DictComp, ast.SetComp,
+                ))
+                self.write('{ ' if needs_space else '{')
                 set_precedence(value, value.value)
                 self.visit(value.value)
                 if value.conversion != -1:
