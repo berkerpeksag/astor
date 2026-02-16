@@ -96,8 +96,8 @@ def convert(srctree, dsttree=dsttree, readonly=False, dumpall=False,
             print()
             print("File", srcfname)
             print(exc)
-            l = dsttxt.find("\\0")
-            print("Location:", dsttxt[l-20:l+20])
+            loc = dsttxt.find("\\0")
+            print("Location:", dsttxt[loc - 20:loc + 20])
             dstast = []
         if fullcomp:
             unknown_src_nodes.update(strip_tree(srcast))
