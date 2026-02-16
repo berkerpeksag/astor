@@ -9,7 +9,7 @@ Supported Python versions
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Astor now only supports `Python versions`_ maintained by the Python core
-development team, which are Python 3.9 and newer.
+development team, which are Python 3.10 and newer.
 
 Support for Python 2.7 and PyPy have been dropped.
 
