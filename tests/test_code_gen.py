@@ -1286,6 +1286,64 @@ class StdlibRoundtripRegressionTestCase(unittest.TestCase, Comparisons):
         source = r"x = f'{v}\udfff'"
         self.assertGeneratedCompiles(source)
 
+    # -- F-string with dict/set literal expression --
+    # From: test/test_fstring.py (3.10+)
+    # Bug: f-string containing a dict comprehension like f'{ {x: y ...}}'
+    # was emitted as f'{{x: y ...}}' where {{ is an escaped literal brace.
+
+    def test_fstring_dict_expression(self):
+        """F-string with dict comprehension expression."""
+        source = "x = f'result={ {k: v for k, v in items}}'"
+        self.assertAstRoundtrips(source)
+
+    def test_fstring_set_expression(self):
+        """F-string with set literal expression."""
+        source = "x = f'result={ {1, 2, 3}}'"
+        self.assertAstRoundtrips(source)
+
+    # -- Nested MatchOr patterns --
+    # From: test/test_patma.py (3.10+)
+    # Bug: nested MatchOr like (0 | 1) | 2 was emitted without parens
+    # as 0 | 1 | 2, flattening the AST structure.
+
+    @unittest.skipUnless(sys.version_info >= (3, 10, 0),
+                         "match statement introduced in Python 3.10")
+    def test_nested_match_or(self):
+        """Nested MatchOr must be parenthesized to preserve AST structure."""
+        source = canonical("""
+            match x:
+                case (0 | 1) | 2:
+                    pass
+        """)
+        self.assertSrcRoundtrips(source)
+
+    @unittest.skipUnless(sys.version_info >= (3, 10, 0),
+                         "match statement introduced in Python 3.10")
+    def test_right_nested_match_or(self):
+        """Right-nested MatchOr: 0 | (1 | 2)."""
+        source = canonical("""
+            match x:
+                case 0 | (1 | 2):
+                    pass
+        """)
+        self.assertSrcRoundtrips(source)
+
+    # -- MatchMapping key precedence --
+    # From: test/test_patma.py (3.10+)
+    # Bug: complex number keys in mapping patterns got wrapped in
+    # parentheses like {(-0-0j): ...} which is invalid pattern syntax.
+
+    @unittest.skipUnless(sys.version_info >= (3, 10, 0),
+                         "match statement introduced in Python 3.10")
+    def test_match_mapping_complex_key(self):
+        """Complex number as mapping pattern key must not be parenthesized."""
+        source = canonical("""
+            match x:
+                case {-0 - 0j: v}:
+                    pass
+        """)
+        self.assertAstRoundtrips(source)
+
 
 if __name__ == '__main__':
     unittest.main()
