@@ -23,7 +23,6 @@ import math
 
 from .op_util import get_op_symbol, get_op_precedence, Precedence
 from .node_util import ExplicitNodeVisitor
-# from .string_repr import pretty_string
 from .source_repr import pretty_source
 
 
@@ -89,8 +88,6 @@ def escape_string(s: str, quote_char: str = '"', is_docstring: bool = False) -> 
         elif char == '\\' and i + 1 < length:
             next_char = s[i + 1]
             chars = {'n', 'r', 't', '0', '1', 'x', 'u', 'U', '\\', '"', "'"}
-            # if is_docstring:
-            #     chars -= {'"', "'"}
             if next_char in chars:
                 result.append('\\\\' + next_char)
                 i += 1
