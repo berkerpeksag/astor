@@ -1123,12 +1123,6 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_UnaryOp(self, node):
         with self.delimit(node, node.op) as delimiters:
             set_precedence(delimiters.p, node.operand)
-            # TODO: Remove this.
-            # In Python 2.x, a unary negative of a literal
-            # number is merged into the number itself.  This
-            # bit of ugliness means it is useful to know
-            # what the parent operation was...
-            node.operand._p_op = node.op
             sym = get_op_symbol(node.op)
             self.write(sym, ' ' if sym.isalpha() else '', node.operand)
 
