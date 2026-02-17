@@ -164,7 +164,6 @@ class SourceGenerator(ExplicitNodeVisitor):
         append = result.append
 
         self.discard_numeric_delim_for_const = False
-        self.preserve_quotes = False
 
         def write(*params):
             """ self.write is a closure for performance (to reduce the number
@@ -389,8 +388,6 @@ class SourceGenerator(ExplicitNodeVisitor):
         for keyword in self.get_keywords(node):
             self.write(paren_or_comma, keyword.arg or '',
                        '=' if keyword.arg else '**', keyword.value)
-        self.conditional_write(paren_or_comma, '*', self.get_starargs(node))
-        self.conditional_write(paren_or_comma, '**', self.get_kwargs(node))
         self.write(have_args and '):' or ':')
         self.newline()
         self.body(node.body, is_docstring=True)
@@ -453,13 +450,6 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.statement(node, 'del ')
         self.comma_list(node.targets)
 
-    def visit_TryExcept(self, node):
-        self.statement(node, 'try:')
-        self.body(node.body)
-        self.write(*node.handlers)
-        self.else_body(node.orelse)
-
-    # new for Python 3.3
     def visit_Try(self, node):
         self.statement(node, 'try:')
         self.body(node.body)
@@ -488,19 +478,6 @@ class SourceGenerator(ExplicitNodeVisitor):
             self.conditional_write(' as ', node.name)
         self.write(':')
         self.body(node.body)
-
-    def visit_TryFinally(self, node):
-        self.statement(node, 'try:')
-        self.body(node.body)
-        self.statement(node, 'finally:')
-        self.body(node.finalbody)
-
-    def visit_Exec(self, node):
-        dicts = node.globals, node.locals
-        dicts = dicts[::-1] if dicts[0] is None else dicts
-        self.statement(node, 'exec ', node.body)
-        self.conditional_write(' in ', dicts[0])
-        self.conditional_write(', ', dicts[1])
 
     def visit_Assert(self, node):
         set_precedence(node, node.test, node.msg)
@@ -628,11 +605,7 @@ class SourceGenerator(ExplicitNodeVisitor):
 
         args = node.args
         keywords = node.keywords
-        starargs = self.get_starargs(node)
-        kwargs = self.get_kwargs(node)
         numargs = len(args) + len(keywords)
-        numargs += starargs is not None
-        numargs += kwargs is not None
         p = Precedence.Comma if numargs > 1 else Precedence.call_one_arg
         set_precedence(p, *args)
         self.visit(node.func)
@@ -647,9 +620,6 @@ class SourceGenerator(ExplicitNodeVisitor):
             # (Python >= 3.5)
             arg = keyword.arg or ''
             write(write_comma, arg, '=' if arg else '**', keyword.value)
-        # 3.5 no longer has these
-        self.conditional_write(write_comma, '*', starargs)
-        self.conditional_write(write_comma, '**', kwargs)
         write(')')
 
     def visit_Name(self, node):
@@ -664,8 +634,7 @@ class SourceGenerator(ExplicitNodeVisitor):
                     delimiters.discard = True
                 self._handle_numeric_constant(value)
         elif isinstance(value, str):
-            quote_char = '"' if self.preserve_quotes else None
-            self._handle_string_constant(node, node.value, quote_preference=quote_char)
+            self._handle_string_constant(node, node.value)
         elif value is Ellipsis:
             self.write('...')
         else:
@@ -718,53 +687,6 @@ class SourceGenerator(ExplicitNodeVisitor):
                     content = content.replace('\\', '\\\\')
                 content = content.replace('{', '{{').replace('}', '}}')
                 self.write(self._escape_fstring_literal(content))
-
-    def _analyze_string_quotes(self, node, value, is_joined):
-        """First pass: Analyze string content for quotes"""
-        has_single = False
-        has_double = False
-
-        if is_joined:
-            # For f-strings, analyze expressions
-            values = node.values if isinstance(node.values, list) else []
-            for value in values:
-                if isinstance(value, ast.FormattedValue):
-                    # Capture output to analyze
-                    expr_start = len(self.result)
-                    self.visit(value.value)
-                    expr_text = ''.join(self.result[expr_start:])
-                    del self.result[expr_start:]
-
-                    has_single = has_single or ("'" in expr_text)
-                    has_double = has_double or ('"' in expr_text)
-
-                    if value.format_spec:
-                        # Also check format spec for quotes
-                        spec_start = len(self.result)
-                        self.visit(value.format_spec)
-                        spec_text = ''.join(self.result[spec_start:])
-                        del self.result[spec_start:]
-
-                        has_single = has_single or ("'" in spec_text)
-                        has_double = has_double or ('"' in spec_text)
-        else:
-            # Regular string
-            if value is not None:
-                has_single = "'" in value
-                has_double = '"' in value
-
-        return has_single, has_double
-
-    def _determine_quote_style(self, has_single, has_double):
-        """Second pass: Determine quote style based on analysis"""
-        if has_single and has_double:
-            return '"""'
-        elif has_single:
-            return '"'
-        elif has_double:
-            return "'"
-        else:
-            return "'"  # Default to single quotes when no quotes present
 
     def body(self, statements, is_docstring=False):
         """Handle body of functions, classes, modules etc."""
@@ -830,19 +752,13 @@ class SourceGenerator(ExplicitNodeVisitor):
         else:
             self.write('"""' + content + '"""')
 
-    def _handle_string_constant(self, node, value, is_joined=False, is_docstring=False, quote_preference=None):
+    def _handle_string_constant(self, node, value, is_joined=False):
         """Handle string constants and preserve escape sequences."""
         self.write('')  # Process any pending newlines
 
-        if is_docstring:
-            self._handle_docstring(value)
-            return
-
         if is_joined:
-            self.preserve_quotes = True
             index = len(self.result)
             self.process_fstring_nodes(node)
-            self.preserve_quotes = False
             fstring_content = ''.join(self.result[index:])
             del self.result[index:]
 
@@ -1018,16 +934,6 @@ class SourceGenerator(ExplicitNodeVisitor):
             if not (isinstance(node.step, ast.Name) and
                     node.step.id == 'None'):
                 self.visit(node.step)
-
-    def visit_Index(self, node):
-        with self.delimit(node) as delimiters:
-            set_precedence(delimiters.p, node.value)
-            self.visit(node.value)
-
-    def visit_ExtSlice(self, node):
-        dims = node.dims
-        set_precedence(node, *dims)
-        self.comma_list(dims, len(dims) == 1)
 
     def visit_Yield(self, node):
         with self.delimit(node):
