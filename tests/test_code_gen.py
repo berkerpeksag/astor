@@ -24,7 +24,7 @@ def astorexpr(x):
     return eval(astor.to_source(ast.Expression(body=x)))
 
 def astornum(x):
-    return astorexpr(ast.Num(n=x))
+    return astorexpr(ast.Constant(value=x))
 
 class Comparisons(object):
 
@@ -538,46 +538,6 @@ def _mdiff():
             "while (command := input('> ')) != 'quit': pass")
         for case in cases:
             self.assertAstRoundtripsGtVer(case, (3, 8))
-
-    def test_deprecated_name_constants(self):
-        self.assertAstEqualsSource(
-            ast.Assign(targets=[ast.Name(id='spam')], value=ast.NameConstant(value=True)),
-            "spam = True")
-
-        self.assertAstEqualsSource(
-            ast.Assign(targets=[ast.Name(id='spam')], value=ast.NameConstant(value=False)),
-            "spam = False")
-
-        self.assertAstEqualsSource(
-            ast.Assign(targets=[ast.Name(id='spam')], value=ast.NameConstant(value=None)),
-            "spam = None")
-
-    def test_deprecated_constant_nodes(self):
-        self.assertAstEqualsSource(
-            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Num(3)),
-            "spam = 3")
-
-        self.assertAstEqualsSource(
-            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Num(-93)),
-            "spam = -93")
-
-        self.assertAstEqualsSource(
-            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Num(837.3888)),
-            "spam = 837.3888")
-
-        self.assertAstEqualsSource(
-            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Num(-0.9877)),
-            "spam = -0.9877")
-
-        self.assertAstEqualsSource(ast.Ellipsis(), "...")
-
-        self.assertAstEqualsSource(
-            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Bytes(b"Bytes")),
-            "spam = b'Bytes'")
-
-        self.assertAstEqualsSource(
-            ast.Assign(targets=[ast.Name(id='spam')], value=ast.Str("String")),
-            "spam = 'String'")
 
     def test_constant_nodes(self):
         self.assertAstEqualsSource(
