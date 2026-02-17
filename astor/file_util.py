@@ -41,9 +41,6 @@ class CodeToAst(object):
         if not os.path.isdir(srctree):
             yield os.path.split(srctree)
         for srcpath, dirs, fnames in os.walk(srctree):
-            # Skip site-packages (third-party, not part of stdlib)
-            dirs[:] = [d for d in dirs
-                       if d not in ('site-packages', 'dist-packages')]
             # Avoid infinite recursion for silly users
             if ignore is not None and ignore in srcpath:
                 continue
