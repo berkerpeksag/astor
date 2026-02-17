@@ -445,10 +445,6 @@ class SourceGenerator(ExplicitNodeVisitor):
         self.write(node.context_expr)
         self.conditional_write(' as ', node.optional_vars)
 
-    # deprecated in Python 3.8
-    def visit_NameConstant(self, node):
-        self.write(repr(node.value))
-
     def visit_Pass(self, node):
         self.statement(node, 'pass')
 
@@ -658,8 +654,6 @@ class SourceGenerator(ExplicitNodeVisitor):
     def visit_Name(self, node):
         self.write(node.id)
 
-    # ast.Constant is new in Python 3.6 and it replaces ast.Bytes,
-    # ast.Ellipsis, ast.NameConstant, ast.Num, ast.Str in Python 3.8
     def visit_Constant(self, node):
         value = node.value
 
@@ -702,13 +696,7 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def process_fstring_nodes(self, node):
         for value in node.values:
-            if isinstance(value, ast.Str):
-                content = value.s
-                if '\\' in content:
-                    content = content.replace('\\', '\\\\')
-                content = content.replace('{', '{{').replace('}', '}}')
-                self.write(self._escape_fstring_literal(content))
-            elif isinstance(value, ast.FormattedValue):
+            if isinstance(value, ast.FormattedValue):
                 # Add space after { if expression starts with { (dict/set)
                 # to avoid {{ being interpreted as escaped brace
                 needs_space = isinstance(value.value, (
@@ -725,6 +713,9 @@ class SourceGenerator(ExplicitNodeVisitor):
                 self.write('}')
             elif isinstance(value, ast.Constant):
                 content = str(value.value)
+                if '\\' in content:
+                    content = content.replace('\\', '\\\\')
+                content = content.replace('{', '{{').replace('}', '}}')
                 self.write(self._escape_fstring_literal(content))
 
     def _analyze_string_quotes(self, node, value, is_joined):
@@ -890,14 +881,6 @@ class SourceGenerator(ExplicitNodeVisitor):
             else:
                 self.write("''")
 
-    # deprecated in Python 3.8
-    def visit_Str(self, node):
-        self._handle_string_constant(node, node.s)
-
-    # deprecated in Python 3.8
-    def visit_Bytes(self, node):
-        self.write(repr(node.s))
-
     def _handle_numeric_constant(self, value):
         x = value
 
@@ -930,10 +913,6 @@ class SourceGenerator(ExplicitNodeVisitor):
         else:
             s = real
         self.write(s)
-
-    def visit_Num(self, node):
-        with self.delimit(node):
-            self._handle_numeric_constant(node.n)
 
     def visit_Tuple(self, node):
         with self.delimit(node) as delimiters:
@@ -1062,9 +1041,6 @@ class SourceGenerator(ExplicitNodeVisitor):
             self.write('lambda ')
             self.visit_arguments(node.args)
             self.write(': ', node.body)
-
-    def visit_Ellipsis(self, node):
-        self.write('...')
 
     def visit_ListComp(self, node):
         with self.delimit('[]'):
