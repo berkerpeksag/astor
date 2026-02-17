@@ -596,6 +596,10 @@ def _mdiff():
         """
         self.assertAstRoundtripsGtVer(source, (3, 6))
 
+    def test_long_annotated_assignment(self):
+        source = "result: MetadataForBuildWheelResult | MetadataForBuildEditableResult | None = hook(self.meta_folder, config)\n"
+        self.assertAstRoundtrips(source)
+
     def test_function_typing(self):
         source = canonical("""
         def foo(x : int) ->str:
