@@ -11,9 +11,20 @@ Supported Python versions
 Astor now only supports `Python versions`_ maintained by the Python core
 development team, which are Python 3.10 and newer.
 
-Support for Python 2.7 and PyPy have been dropped.
+Support for Python 2.7, 3.9, and PyPy have been dropped.
 
 .. _`Python versions`: https://devguide.python.org/versions/#versions
+
+API changes
+~~~~~~~~~~~
+
+* The ``pretty_string`` parameter has been removed from
+  :func:`astor.to_source` and :class:`astor.code_gen.SourceGenerator`.
+  It was accepted but never used.
+
+* The ``astor.string_repr`` module has been removed. It was unused
+  internally since the string handling was moved into
+  :class:`~astor.code_gen.SourceGenerator`.
 
 Removal of previously deprecated APIs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
