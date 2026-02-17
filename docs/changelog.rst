@@ -98,6 +98,15 @@ Bug fixes
 
 .. _`PR 202`: https://github.com/berkerpeksag/astor/pull/202
 
+* Preserve parentheses around starred expressions in subscripts on
+  Python 3.10. Astor will now correctly round-trip ``a[(x, *y)]`` instead
+  of producing the invalid ``a[x, *y]``. On Python 3.11+, the
+  unparenthesized form is valid (:pep:`646`) so parentheses are
+  not required.
+  (Reported by Batuhan Taskaya in `Issue 180`_.)
+
+.. _`Issue 180`: https://github.com/berkerpeksag/astor/issues/180
+
 * Remove extraneous parenthesis around keys in :class:`dict` literals. Astor
   will now convert ``{(1): 2}`` and ``{(3 + 4): 5}`` to ``{1: 2}`` and
   ``{3 + 4: 5}`` respectively.

@@ -20,6 +20,7 @@ this code came from here (in 2012):
 import ast
 import inspect
 import math
+import sys
 
 from .op_util import get_op_symbol, get_op_precedence, Precedence
 from .node_util import ExplicitNodeVisitor
@@ -996,7 +997,16 @@ class SourceGenerator(ExplicitNodeVisitor):
 
     def visit_Subscript(self, node):
         set_precedence(node, node.slice)
-        self.write(node.value, '[', node.slice, ']')
+        # A tuple slice with starred elements needs explicit parentheses
+        # because a[x, *y] is a SyntaxError (Python < 3.11).
+        # In Python 3.11+, PEP 646 made this valid, so only parenthesize
+        # on older versions.
+        if (sys.version_info < (3, 11) and
+                isinstance(node.slice, ast.Tuple) and
+                any(isinstance(e, ast.Starred) for e in node.slice.elts)):
+            self.write(node.value, '[(', node.slice, ')]')
+        else:
+            self.write(node.value, '[', node.slice, ']')
 
     def visit_Slice(self, node):
         set_precedence(node, node.lower, node.upper, node.step)

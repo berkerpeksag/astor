@@ -920,6 +920,25 @@ def _mdiff():
         """
         self.assertAstRoundtrips(source)
 
+    @unittest.skipIf(sys.version_info >= (3, 11),
+                     "PEP 646 made a[x, *y] valid syntax in Python 3.11+")
+    def test_starred_in_subscript(self):
+        # On Python < 3.11, a[x, *y] is a SyntaxError so parentheses
+        # must be preserved for the source to remain valid.
+        self.assertSrcRoundtrips('a[(x, *y)]')
+        self.assertSrcRoundtrips('a[(*x,)]')
+        self.assertSrcRoundtrips('a[(x, *y, z)]')
+
+    @unittest.skipIf(sys.version_info < (3, 11),
+                     "PEP 646 unpacking syntax requires Python 3.11+")
+    def test_starred_in_subscript_pep646(self):
+        # On Python 3.11+, a[x, *y] is valid (PEP 646) so the
+        # parenthesized form normalizes to the unparenthesized form.
+        # AST structure is preserved either way.
+        self.assertAstRoundtrips('a[(x, *y)]')
+        self.assertAstRoundtrips('a[(*x,)]')
+        self.assertAstRoundtrips('a[(x, *y, z)]')
+
     def test_string_with_quotes_in_method_call(self):
         source = '",".join(i for i in range(10))'
         self.assertAstRoundtrips(source)
