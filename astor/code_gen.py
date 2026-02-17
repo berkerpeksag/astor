@@ -26,114 +26,8 @@ from .node_util import ExplicitNodeVisitor
 from .source_repr import pretty_source
 
 
-def escape_string(s: str, quote_char: str = '"', is_docstring: bool = False) -> str:
-    """
-    Comprehensively escape a Python string, handling all special characters.
-    Preserves newlines in docstrings.
-
-    Args:
-        s: The input string to escape
-        quote_char: The quote character to use (either ' or ")
-        is_docstring: Whether this string is a docstring
-
-    Returns:
-        Properly escaped string that can be safely represented in Python code
-    """
-    result = []
-    i = 0
-    length = len(s)
-
-    # Common escape sequences
-    escape_dict = {
-        '\r': '\\r',
-        '\t': '\\t',
-        '\f': '\\f',
-        '\b': '\\b',
-        '\a': '\\a',
-        '\v': '\\v',
-        '\\': '\\\\',
-        '\0': '\\0',
-    }
-
-    # Add \n to escape_dict only if this is not a docstring
-    if not is_docstring:
-        escape_dict['\n'] = '\\n'
-
-    while i < length:
-        char = s[i]
-
-        # Handle quotes
-        if char == quote_char and not is_docstring:  # TODO: added doc string check
-            result.append('\\' + char)
-        # Handle predefined escape sequences
-        elif char in escape_dict:
-            result.append(escape_dict[char])
-        # Handle newlines in docstrings
-        elif char == '\n' and is_docstring:
-            result.append(char)
-        # Handle non-printable ASCII characters
-        elif ord(char) < 32 or ord(char) == 127:
-            if char != '\n' or not is_docstring:  # Don't escape newline in docstrings
-                result.append(f'\\x{ord(char):02x}')
-            else:
-                result.append(char)
-        # Handle non-ASCII characters
-        elif ord(char) > 127:
-            # Use short form if possible
-            if ord(char) <= 0xFFFF:
-                result.append(f'\\u{ord(char):04x}')
-            else:
-                result.append(f'\\U{ord(char):08x}')
-        # Handle already escaped sequences
-        elif char == '\\' and i + 1 < length:
-            next_char = s[i + 1]
-            chars = {'n', 'r', 't', '0', '1', 'x', 'u', 'U', '\\', '"', "'"}
-            if next_char in chars:
-                result.append('\\\\' + next_char)
-                i += 1
-            else:
-                result.append(char)
-        else:
-            result.append(char)
-        i += 1
-
-    return ''.join(result)
-
-
-def pretty_string(string: str, embedded: bool = False, current_line: str = '', is_docstring: bool = False) -> str:
-    """
-    Format a string with proper quotes and comprehensive escape handling.
-
-    Args:
-        string: The input string to format
-        embedded: Whether the string is embedded in an expression
-        current_line: The current line being processed
-        is_docstring: Whether this string is a docstring
-
-    Returns:
-        Properly formatted string with appropriate quotes and escaping
-    """
-    # Handle empty strings
-    if not string:
-        # TODO: Add this for this
-        return '""' if '"' in current_line else "''"
-
-    # Check if this is a multiline string
-    lines = string.splitlines(keepends=True)
-    if len(lines) > 1 or is_docstring:
-        # For multiline strings and docstrings, use triple quotes and escape any embedded triple quotes
-        escaped = escape_string(string, '"', is_docstring=True)
-        if '"""' in escaped:
-            escaped = escaped.replace('"""', '\\"\\"\\"')
-        return f'"""{escaped}"""'
-
-    # For single line strings, choose quotes based on content
-    quote_char = "'" if "'" not in string or '"""' in string else '"'
-    return quote_char + escape_string(string, quote_char, is_docstring=False) + quote_char
-
-
 def to_source(node, indent_with=' ' * 4, add_line_information=False,
-              pretty_string=pretty_string, pretty_source=pretty_source,
+              pretty_source=pretty_source,
               source_generator_class=None):
     """This function can convert a node tree back into python sourcecode.
     This is useful for debugging purposes, especially if you're dealing with
@@ -162,8 +56,7 @@ def to_source(node, indent_with=' ' * 4, add_line_information=False,
         raise TypeError('source_generator_class should be a class')
     elif not issubclass(source_generator_class, SourceGenerator):
         raise TypeError('source_generator_class should be a subclass of SourceGenerator')
-    generator = source_generator_class(
-        indent_with, add_line_information, pretty_string)
+    generator = source_generator_class(indent_with, add_line_information)
     generator.visit(node)
     generator.result.append('\n')
     if set(generator.result[0]) == set('\n'):
@@ -254,7 +147,6 @@ class SourceGenerator(ExplicitNodeVisitor):
     """
 
     def __init__(self, indent_with, add_line_information=False,
-                 pretty_string=pretty_string,
                  # constants
                  len=len, isinstance=isinstance, callable=callable):
         self.result = []
