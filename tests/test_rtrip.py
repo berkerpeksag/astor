@@ -8,6 +8,7 @@ Copyright (c) 2017 Patrick Maupin
 
 import os
 import unittest
+import warnings
 
 import astor.rtrip
 
@@ -18,7 +19,11 @@ class RtripTestCase(unittest.TestCase):
 
     def test_convert_stdlib(self):
         srcdir = os.path.dirname(os.__file__)
-        result = astor.rtrip.convert(srcdir, readonly=True)
+        # Suppress SyntaxWarning from stdlib test files that contain
+        # intentionally invalid escape sequences (e.g. test_fstring.py).
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', SyntaxWarning)
+            result = astor.rtrip.convert(srcdir, readonly=True)
         self.assertEqual([], result)
 
 
