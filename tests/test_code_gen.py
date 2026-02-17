@@ -920,6 +920,10 @@ def _mdiff():
         """
         self.assertAstRoundtrips(source)
 
+    def test_string_with_quotes_in_method_call(self):
+        source = '",".join(i for i in range(10))'
+        self.assertAstRoundtrips(source)
+
     def test_non_string_leakage(self):
         source = '''
         tar_compression = {'gzip': 'gz', None: ''}
