@@ -243,6 +243,10 @@ def add_parens(line, maxline, indent, statements=statements, count=count):
         for group in groups[:-1]:
             didwrap = False  # Only want to know about last group
             if len(group) > 1:
+                # Don't wrap annotated assignment LHS;
+                # (target: annotation) = value is invalid syntax.
+                if ': ' in group:
+                    continue
                 group.insert(0, '(')
                 group.insert(-1, ')')
                 didwrap = True
